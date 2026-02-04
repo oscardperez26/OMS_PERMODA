@@ -1,0 +1,80 @@
+.odp-page {
+  padding: 16px;
+}
+
+.odp-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.odp-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.odp-subtitle {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+.odp-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.odp-back {
+  text-decoration: none;
+  border: 1px solid #cfd8e3;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+}
+
+.odp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 12px;
+}
+
+.odp-card {
+  border: 1px solid #d7e3ef;
+  background: #fff;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.odp-card h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.odp-pre {
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.odp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.odp-table th,
+.odp-table td {
+  border-top: 1px solid #e5eef7;
+  padding: 6px;
+  text-align: left;
+}
+
+.right {
+  text-align: right;
+}
+    

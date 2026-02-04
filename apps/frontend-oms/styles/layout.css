@@ -1,0 +1,103 @@
+/* layout.css
+   ----------
+   Estilos base del panel:
+   - Sidebar oscuro
+   - Secciones + grupos colapsables
+   - NavLink activo resaltado
+*/
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: 100vh;
+}
+
+.sidebar {
+  background: #2f343a;
+  color: white;
+  padding: 12px 10px;
+  overflow: auto;
+}
+
+.sidebar-brand {
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 8px;
+}
+
+.brand-title {
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+}
+
+.sidebar-section {
+  margin-top: 10px;
+}
+
+.section-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.55);
+  padding: 10px 10px 6px;
+  text-transform: uppercase;
+}
+
+.sidebar-group {
+  margin-bottom: 6px;
+}
+
+.group-toggle {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.85);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+}
+
+.group-toggle:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.chev {
+  opacity: 0.7;
+}
+
+.group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 14px;
+  margin-top: 4px;
+}
+
+.nav-item {
+  text-decoration: none;
+  color: rgba(255,255,255,0.85);
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.nav-item.active {
+  background: rgba(0, 180, 255, 0.25);
+  border-left: 3px solid #00b4ff;
+}
+
+.app-content {
+  background: #f6f7f8;
+  padding: 16px;
+  overflow: auto;
+}

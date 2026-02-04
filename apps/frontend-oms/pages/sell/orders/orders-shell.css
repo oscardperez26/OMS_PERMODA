@@ -1,0 +1,48 @@
+/**
+ * orders-shell.css
+ * ----------------
+ * Estilos básicos para replicar la caja blanca del OMS anterior.
+ * (No dependemos de librerías externas).
+ */
+
+.orders-shell {
+  padding: 12px;
+}
+
+.orders-card {
+  background: #fff;
+  border: 1px solid #d7e3ef;
+  border-radius: 4px;
+}
+
+.orders-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 10px 12px;
+  border-bottom: 1px solid #d7e3ef;
+}
+
+.orders-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.orders-gear {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.85;
+}
+
+.orders-gear:hover {
+  opacity: 1;
+}
+
+.orders-card-body {
+  /* aquí después entrará la tabla */
+  padding: 0;
+}

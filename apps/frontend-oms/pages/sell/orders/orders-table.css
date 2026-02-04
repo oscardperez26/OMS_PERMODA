@@ -1,0 +1,248 @@
+/**
+ * orders-table.css
+ * ----------------
+ * Estilos para replicar la tabla del OMS anterior.
+ */
+
+.orders-table-container {
+  overflow-x: auto;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+/* Encabezados */
+.orders-head-row th {
+  padding: 10px 8px;
+  border-top: 1px solid #d7e3ef;
+  border-bottom: 2px solid #2b90d9;
+  text-align: left;
+  background: #fff;
+  color: #1f2937;
+  font-weight: 700;
+}
+
+/* Fila de filtros */
+.orders-filter-row th {
+  padding: 10px 8px;
+  border-bottom: 1px solid #d7e3ef;
+  background: #fff;
+}
+
+.orders-body-row td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #d7e3ef;
+  background: #fff;
+  white-space: nowrap;
+}
+
+.center {
+  text-align: center;
+}
+
+.col-check {
+  width: 40px;
+}
+
+.orders-input,
+.orders-select {
+  width: 100%;
+  height: 28px;
+  border: 1px solid #cfd8e3;
+  border-radius: 3px;
+  padding: 0 8px;
+  font-size: 12px;
+  outline: none;
+  background: #fff;
+}
+
+.orders-date-range {
+  display: grid;
+  grid-template-columns: 1fr 22px 1fr 22px;
+  gap: 6px;
+  align-items: center;
+}
+
+.cal {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 22px;
+  height: 28px;
+  border: 1px solid #cfd8e3;
+  border-radius: 3px;
+  background: #f3f7fb;
+  font-size: 12px;
+}
+
+.orders-search-btn {
+  width: 100%;
+  height: 28px;
+  border: 1px solid #cfd8e3;
+  border-radius: 3px;
+  background: #f3f4f6;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.orders-icon-btn {
+  border: 1px solid #cfd8e3;
+  background: #fff;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+/* Link de cliente */
+.orders-link {
+  color: #2b90d9;
+  text-decoration: none;
+}
+
+.orders-link:hover {
+  text-decoration: underline;
+}
+
+/* Badges */
+.orders-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.orders-badge.green {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.orders-badge.blue {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.orders-badge.yellow {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.orders-badge.gray {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.orders-empty {
+  padding: 14px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* Botón limpiar */
+.orders-clear-btn {
+  width: 100%;
+  height: 28px;
+  border: 1px solid #cfd8e3;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+  color: #374151;
+  font-size: 12px;
+}
+/* detalle de la orede */
+
+.odm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.odm-panel {
+  width: 760px;
+  max-width: 95vw;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.odm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.odm-title {
+  font-weight: 800;
+  font-size: 16px;
+  color: #111827;
+}
+
+.odm-subtitle {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+.odm-close {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.odm-body {
+  padding: 14px;
+}
+
+.odm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.odm-info {
+  border: 1px solid #f0f2f5;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fafafa;
+}
+
+.odm-label {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.odm-value {
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.odm-section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.odm-section-title {
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.odm-muted {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.7;
+}

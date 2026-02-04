@@ -1,0 +1,41 @@
+.store-shell {
+  min-height: 100vh;
+  background: #f6f7fb;
+}
+
+.store-header {
+  height: 56px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+}
+
+.store-brand {
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.store-nav a {
+  margin-right: 12px;
+  text-decoration: none;
+  color: #111827;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.store-actions .store-back-panel {
+  text-decoration: none;
+  border: 1px solid #cfd8e3;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+  font-size: 13px;
+}
+
+.store-content {
+  padding: 16px;
+}
