@@ -29,6 +29,9 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { StoreLoginPage } from "../layout/tienda/loginpage/StoreLoginPage";
 import { PanelLoginPage } from "../layout/panel/loginpage/PanelLoginPage";
 
+//Tienda
+
+
 // CONFIGURE
 //import { StoreParamsPage } from '../pages/configure/StoreParamsPage';
 //import { AdvancedParamsPage } from '../pages/configure/AdvancedParamsPage';

@@ -1,14 +1,41 @@
+h2,
+p {
+  margin: 10px;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+ul li {
+  float: left;
+}
+
+ul li a {
+  display: block;
+  color: black;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+ul li a:hover {
+  background-color: #f7f0f0;
+}
+
 .store-shell {
   min-height: 100vh;
   background: #f6f7fb;
 }
 
 .store-header {
-  height: 56px;
+  height: 100px;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
-  align-items: center;
   justify-content: space-between;
   padding: 0 14px;
 }
