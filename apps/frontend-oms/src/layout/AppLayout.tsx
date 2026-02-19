@@ -1,37 +1,38 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Sidebar } from './panel/Sidebar/Sidebar';
-import '../../styles/layout.css'; 
+import { useAuth } from '../auth/AuthContext';
+import '../../styles/layout.css';
 
 /**
  * AppLayout
  * ---------
- * Base del panel:
- * - Sidebar fijo
- * - Contenido cambia por ruta (Outlet)
+ * Layout base del panel admin.
  */
 export function AppLayout() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
-function logout() {
-  localStorage.removeItem("role");
-  navigate("/panel/login");
-}
+  async function handleLogout() {
+    await logout();
+    navigate('/panel/login');
+  }
 
-// botón donde quieras
-<button onClick={logout}>Salir</button>
   return (
     <div className="app-shell">
       <Sidebar />
       <main className="app-content">
-        <div className="link-gestor-tiendas"> 
-          <button className="btn-gestor-tiendas" onClick={() => {
-            window.location.href = '/tienda/orders';
-          }}>
+        <div className="link-gestor-tiendas">
+          <button
+            className="btn-gestor-tiendas"
+            onClick={() => {
+              window.location.href = '/tienda/orders';
+            }}
+          >
             Tienda
           </button>
-<button onClick={logout}>Salir</button>
+          <button onClick={handleLogout}>Salir</button>
         </div>
-      <Outlet />
+        <Outlet />
       </main>
     </div>
   );

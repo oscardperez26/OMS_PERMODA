@@ -1,23 +1,44 @@
-import { Navigate } from "react-router-dom";
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import type { Permission, Role } from '../auth/auth.types';
 
 type Props = {
   children: React.ReactNode;
-  allowedRole: "ADMIN" | "STORE";
+  allowedRoles?: Role[];
+  requiredPermissions?: Permission[];
+  loginPath: string;
 };
 
-export function ProtectedRoute({ children, allowedRole }: Props) {
-  const role = localStorage.getItem("role");
+/**
+ * ProtectedRoute
+ * --------------
+ * Reutilizable para panel y tienda en el mismo frontend:
+ * - valida sesión activa
+ * - valida rol permitido
+ * - valida permisos puntuales cuando aplique
+ */
+export function ProtectedRoute({
+  children,
+  allowedRoles = [],
+  requiredPermissions = [],
+  loginPath,
+}: Props) {
+  const { user, isLoading, hasRole, hasPermissions } = useAuth();
 
-  // No autenticado -> redirige al login correspondiente
-  if (!role) {
-    // redirige al login según el allowedRole
-    return <Navigate to={allowedRole === "ADMIN" ? "/panel/login" : "/tienda/login"} replace />;
+  if (isLoading) {
+    return <div>Cargando sesion...</div>;
   }
 
-  // Role no autorizado -> limpiar y redirigir al login correspondiente
-  if (role !== allowedRole) {
-    localStorage.removeItem("role");
-    return <Navigate to={allowedRole === "ADMIN" ? "/panel/login" : "/tienda/login"} replace />;
+  if (!user) {
+    return <Navigate to={loginPath} replace />;
+  }
+
+  if (allowedRoles.length > 0 && !hasRole(allowedRoles)) {
+    return <Navigate to={loginPath} replace />;
+  }
+
+  if (requiredPermissions.length > 0 && !hasPermissions(requiredPermissions)) {
+    return <Navigate to={loginPath} replace />;
   }
 
   return <>{children}</>;
