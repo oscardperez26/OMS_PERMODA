@@ -39,4 +39,12 @@ export const MOCK_USERS: UserRecord[] = [
     permissions: ['orders.read', 'catalog.read'],
     storeId: 'store-001',
   },
+  {
+    id: 'u-store-admin-2',
+    username: 'tienda2',
+    password: '1234',
+    role: 'STORE_ADMIN',
+    permissions: ['orders.read', 'orders.manage', 'catalog.read'],
+    storeId: 'store-002',
+  }
 ];

@@ -21,7 +21,8 @@ export class AuthService {
   private readonly refreshSessionDurationMs = 7 * 24 * 60 * 60 * 1000;
 
   constructor(private readonly tokenService: TokenService) {}
-
+ // TODO: En un sistema real, las funciones de login y refresh deberían ser atómicas para evitar condiciones de carrera en la actualización de sesiones. Esto se puede lograr con bloqueos o usando una base de datos transaccional.
+ // Además, en producción, las sesiones y usuarios no deberían almacenarse en memoria sino en una base de datos o sistema de cache compartido para soportar múltiples instancias del backend.
   login(username: string, password: string, portal: Portal): LoginResult {
     const userRecord = MOCK_USERS.find(
       (candidate) =>
@@ -63,7 +64,7 @@ export class AuthService {
       refreshToken: this.tokenService.createRefreshToken(authUser),
     };
   }
-
+  // TODO: La función de refresh debería validar que el usuario aún tiene permisos para acceder al portal solicitado, en caso de que los permisos hayan cambiado desde el login inicial. Esto se puede hacer agregando el portal al payload del refresh token y validándolo aquí.
   refresh(refreshToken: string): LoginResult {
     const payload = this.tokenService.verifyRefreshToken(refreshToken);
 
@@ -95,7 +96,7 @@ export class AuthService {
       refreshToken: this.tokenService.createRefreshToken(authUser),
     };
   }
-
+  // Esta función se puede usar para obtener la información del usuario a partir de un access token, por ejemplo, en un guard de autenticación.
   getUserFromAccessToken(accessToken: string): SafeUser {
     const payload = this.tokenService.verifyAccessToken(accessToken);
     const session = this.sessions.get(payload.sessionId);
