@@ -30,7 +30,7 @@ import { StoreLoginPage } from "../layout/tienda/loginpage/StoreLoginPage";
 import { PanelLoginPage } from "../layout/panel/loginpage/PanelLoginPage";
 
 //Tienda
-
+import type { Order } from "../../models/order.model";
 
 // CONFIGURE
 //import { StoreParamsPage } from '../pages/configure/StoreParamsPage';
