@@ -22,37 +22,13 @@ import { AttributesPage } from '../../pages/catalog/AttributesPage';
 import { BrandsPage } from '../../pages/catalog/BrandsPage';
 
 // PERSONALIZE
-<<<<<<< HEAD
+
 import { ModulesPage } from '../../pages/personalize/ModulesPage';
 import { DesignPage } from '../../pages/personalize/DesignPage';
 import { TransportPage } from '../../pages/personalize/TransportPage';
 import { PaymentPage } from '../../pages/personalize/PaymentPage';
 import { StoreOrdersPage } from '../../pages/store/StoreOrdersPage';
-=======
-import { ModulesPage } from "../../pages/personalize/ModulesPage";
-import { DesignPage } from "../../pages/personalize/DesignPage";
-import { TransportPage } from "../../pages/personalize/TransportPage";
-import { PaymentPage } from "../../pages/personalize/PaymentPage";
-import { StoreLayout } from "../layout/tienda/StoreLayout/StoreLayout";
-import { StoreOrdersPage } from "../../pages/store/StoreOrdersPage";
-import { LoginPage } from "../../pages/auth/LoginPage";
-import { ProtectedRoute } from "./ProtectedRoute";
-import { StoreLoginPage } from "../layout/tienda/loginpage/StoreLoginPage";
-import { PanelLoginPage } from "../layout/panel/loginpage/PanelLoginPage";
 
-//Tienda
-import type { Order } from "../../models/order.model";
-
-// CONFIGURE
-//import { StoreParamsPage } from '../pages/configure/StoreParamsPage';
-//import { AdvancedParamsPage } from '../pages/configure/AdvancedParamsPage';
-
-// ORDER MANAGER
-//import { ProfilesPage } from '../pages/order-manager/ProfilesPage';
-//import { EmployeesPage } from '../pages/order-manager/EmployeesPage';
-//import { PermissionsPage } from '../pages/order-manager/PermissionsPage';
-//import { EmployeeAccessPage } from '../pages/order-manager/EmployeeAccessPage';
->>>>>>> a85d4d6704ac73ef5d4dc8ca77062bf0fa6bc076
 
 /**
  * AppRouter

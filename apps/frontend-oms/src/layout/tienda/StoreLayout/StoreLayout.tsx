@@ -67,4 +67,4 @@ export function StoreLayout() {
       </main>
     </div>
   );
-}
+} 
