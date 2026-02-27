@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'STORE_ADMIN' | 'STORE_READONLY' ;
+export type Role = 'ADMIN' | 'PANEL_READONLY' | 'STORE_ADMIN' | 'STORE_READONLY';
 
 export type Permission =
   | 'orders.read'

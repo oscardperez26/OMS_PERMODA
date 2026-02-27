@@ -12,6 +12,7 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { Public } from './auth.decorators';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import type { SafeUser } from './auth.types';
 
 type RequestWithUser = Request & {
@@ -43,7 +44,6 @@ function createRefreshCookie(refreshToken: string): string {
   return `refreshToken=${encodeURIComponent(refreshToken)}; HttpOnly; Path=/auth; SameSite=Lax; Max-Age=${maxAge}${secure}`;
 }
 
-
 function clearRefreshCookie(): string {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
   return `refreshToken=; HttpOnly; Path=/auth; SameSite=Lax; Max-Age=0${secure}`;
@@ -59,11 +59,15 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(200)
-  login(
+  async login(
     @Body() body: LoginDto,
     @Res({ passthrough: true }) response: Response,
-  ): { accessToken: string; user: SafeUser } {
-    const result = this.authService.login(body.username, body.password, body.portal);
+  ): Promise<{ accessToken: string; user: SafeUser }> {
+    const result = await this.authService.login(
+      body.username, // En un sistema real, el login debería ser asíncrono para validar contra la base de datos.
+      body.password,
+      body.portal,
+    );
     response.setHeader('Set-Cookie', createRefreshCookie(result.refreshToken));
     return {
       accessToken: result.accessToken,
@@ -97,6 +101,25 @@ export class AuthController {
       throw new UnauthorizedException('Usuario no autenticado');
     }
     return { user: req.user };
+  }
+  // aqui puedes agregar otros endpoints relacionados con la autenticación, como cambio de contraseña, logout, etc. Por ejemplo:
+  @Post('change-password')
+  @HttpCode(200)
+  async changePassword(
+    @Req() req: RequestWithUser,
+    @Body() body: ChangePasswordDto,
+  ): Promise<{ success: true }> {
+    if (!req.user) {
+      throw new UnauthorizedException('Usuario no autenticado');
+    }
+
+    await this.authService.changePassword(
+      req.user.id,
+      body.currentPassword,
+      body.newPassword,
+    );
+
+    return { success: true };
   }
 
   @Public()

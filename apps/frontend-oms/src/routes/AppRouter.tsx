@@ -28,6 +28,7 @@ import { DesignPage } from '../../pages/personalize/DesignPage';
 import { TransportPage } from '../../pages/personalize/TransportPage';
 import { PaymentPage } from '../../pages/personalize/PaymentPage';
 import { StoreOrdersPage } from '../../pages/store/StoreOrdersPage';
+import { ProfilesPage } from '../../pages/gestor/ProfilesPage';
 
 
 /**
@@ -66,7 +67,7 @@ export function AppRouter() {
           element={
             <ProtectedRoute
               loginPath="/panel/login"
-              allowedRoles={['ADMIN']}
+              allowedRoles={['ADMIN', 'PANEL_READONLY']}
               requiredPermissions={['orders.read']}
             >
               <AppLayout />
@@ -92,6 +93,18 @@ export function AppRouter() {
           <Route path={ROUTES.PERSONALIZE_DESIGN} element={<DesignPage />} />
           <Route path={ROUTES.PERSONALIZE_TRANSPORT} element={<TransportPage />} />
           <Route path={ROUTES.PERSONALIZE_PAYMENT} element={<PaymentPage />} />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_PROFILES}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['users.manage']}
+              >
+                <ProfilesPage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route path="*" element={<h1>404 - Pagina no encontrada</h1>} />
         </Route>
