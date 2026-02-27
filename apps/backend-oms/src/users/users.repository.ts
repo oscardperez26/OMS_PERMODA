@@ -4,7 +4,7 @@ import { DatabaseService } from '../database/database.service';
 import type { CreateUserInput, UserListItem } from './users.types';
 
 type UsuarioRow = {
-  UsuarioId: number | string;
+  UsuarioId: number;
   EmpresaId: number | null;
   PerfilId: number;
   Nombre: string | null;
@@ -20,6 +20,7 @@ type UsuarioRow = {
 export class UsersRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
+  // Listado base de usuarios para gestion administrativa.
   async list(): Promise<UserListItem[]> {
     const pool = await this.databaseService.getPool();
 
@@ -35,7 +36,7 @@ export class UsersRepository {
         [LastLoginAt],
         [CreatedAt],
         [UpdatedAt]
-      FROM [OMS].[oms].[Usuario]
+      FROM [oms].[Usuario]
       ORDER BY [CreatedAt] DESC
     `);
 
@@ -53,35 +54,70 @@ export class UsersRepository {
     }));
   }
 
+  // Verifica email existente usando longitud real de columna (nvarchar(180)).
   async existsByEmail(email: string): Promise<boolean> {
     const pool = await this.databaseService.getPool();
 
     const result = await pool
       .request()
-      .input('email', sql.NVarChar(255), email)
+      .input('email', sql.NVarChar(180), email)
       .query<{ count: number }>(`
         SELECT COUNT(1) AS [count]
-        FROM [OMS].[oms].[Usuario]
-        WHERE LOWER([Email]) = LOWER(@email)
+        FROM [oms].[Usuario]
+        WHERE [Email] = @email
       `);
 
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
+  // Integracion con catalogo de empresas para validar FK antes del INSERT.
+  async existsEmpresaById(empresaId: number): Promise<boolean> {
+    const pool = await this.databaseService.getPool();
+
+    const result = await pool
+      .request()
+      .input('empresaId', sql.Int, empresaId)
+      .query<{ count: number }>(`
+        SELECT COUNT(1) AS [count]
+        FROM [oms].[Empresa]
+        WHERE [EmpresaId] = @empresaId
+      `);
+
+    return (result.recordset[0]?.count ?? 0) > 0;
+  }
+
+  // Integracion con catalogo de perfiles segun tabla oms.Perfil.
+  async existsPerfilById(perfilId: number): Promise<boolean> {
+    const pool = await this.databaseService.getPool();
+
+    const result = await pool
+      .request()
+      .input('perfilId', sql.Int, perfilId)
+      .query<{ count: number }>(`
+        SELECT COUNT(1) AS [count]
+        FROM [oms].[Perfil]
+        WHERE [PerfilId] = @perfilId
+      `);
+
+    return (result.recordset[0]?.count ?? 0) > 0;
+  }
+
+  // Inserta usuario ajustando tipos/longitudes reales de oms.Usuario.
   async create(input: CreateUserInput): Promise<{ userId: string }> {
     const pool = await this.databaseService.getPool();
+    const estado = input.estado === 1 ? 'ACTIVO' : 'INACTIVO';
 
     const result = await pool
       .request()
       .input('EmpresaId', sql.Int, input.empresaId)
       .input('PerfilId', sql.Int, input.perfilId)
-      .input('Nombre', sql.NVarChar(255), input.nombre)
-      .input('Email', sql.NVarChar(255), input.email)
-      .input('Telefono', sql.NVarChar(100), input.telefono ?? '')
+      .input('Nombre', sql.NVarChar(140), input.nombre)
+      .input('Email', sql.NVarChar(180), input.email)
+      .input('Telefono', sql.NVarChar(50), input.telefono ?? null)
       .input('PasswordHash', sql.NVarChar(255), input.passwordHash)
-      .input('Estado', sql.Int, input.estado)
+      .input('Estado', sql.NVarChar(20), estado)
       .query<{ UsuarioId: number | string }>(`
-        INSERT INTO [OMS].[oms].[Usuario]
+        INSERT INTO [oms].[Usuario]
         (
           [EmpresaId],
           [PerfilId],
@@ -113,21 +149,24 @@ export class UsersRepository {
     return { userId: String(result.recordset[0].UsuarioId) };
   }
 
+  // Mantiene firma actual (string) pero evita CAST sobre la columna indexada.
   async updateStatus(userId: string, estado: 0 | 1): Promise<void> {
     const pool = await this.databaseService.getPool();
+    const estadoTexto = estado === 1 ? 'ACTIVO' : 'INACTIVO';
 
     await pool
       .request()
       .input('userId', sql.NVarChar(50), userId)
-      .input('estado', sql.Int, estado)
+      .input('estado', sql.NVarChar(20), estadoTexto)
       .query(`
-        UPDATE [OMS].[oms].[Usuario]
+        UPDATE [oms].[Usuario]
         SET [Estado] = @estado,
             [UpdatedAt] = GETDATE()
-        WHERE CAST([UsuarioId] AS NVARCHAR(50)) = @userId
+        WHERE [UsuarioId] = TRY_CONVERT(INT, @userId)
       `);
   }
 
+  // Mantiene firma actual (string) pero evita CAST sobre la columna indexada.
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
     const pool = await this.databaseService.getPool();
 
@@ -136,10 +175,10 @@ export class UsersRepository {
       .input('userId', sql.NVarChar(50), userId)
       .input('passwordHash', sql.NVarChar(255), passwordHash)
       .query(`
-        UPDATE [OMS].[oms].[Usuario]
+        UPDATE [oms].[Usuario]
         SET [PasswordHash] = @passwordHash,
             [UpdatedAt] = GETDATE()
-        WHERE CAST([UsuarioId] AS NVARCHAR(50)) = @userId
+        WHERE [UsuarioId] = TRY_CONVERT(INT, @userId)
       `);
   }
 }

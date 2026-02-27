@@ -3,8 +3,8 @@ import * as sql from 'mssql';
 import { DatabaseService } from '../database/database.service';
 
 type UsuarioRow = {
-  UsuarioId: number | string;
-  EmpresaId: number | string | null;
+  UsuarioId: number;
+  EmpresaId: number | null;
   PerfilId: number;
   Nombre: string | null;
   Email: string;
@@ -24,18 +24,15 @@ export type AuthDbUser = {
 
 @Injectable()
 export class UserRepository {
-    // Inyectamos el servicio de base de datos para poder hacer consultas.
-    /* Nota: Asegúrate de que DatabaseService esté correctamente implementado para manejar conexiones y consultas a tu base de datos SQL Server.
-       Este servicio debería tener un método getPool() que devuelva una conexión o pool de conexiones listo para usar. */
-    constructor(private readonly databaseService: DatabaseService) {}
+  constructor(private readonly databaseService: DatabaseService) {}
 
-  // Método para encontrar un usuario por su email, útil para el proceso de login.  
+  // Login lookup by email.
   async findByEmail(email: string): Promise<AuthDbUser | null> {
     const pool = await this.databaseService.getPool();
 
     const result = await pool
       .request()
-      .input('email', sql.NVarChar(255), email)
+      .input('email', sql.NVarChar(180), email)
       .query<UsuarioRow>(`
         SELECT TOP (1)
           [UsuarioId],
@@ -45,7 +42,7 @@ export class UserRepository {
           [Email],
           [PasswordHash],
           [Estado]
-        FROM [OMS].[oms].[Usuario]
+        FROM [oms].[Usuario]
         WHERE [Email] = @email
       `);
 
@@ -56,13 +53,18 @@ export class UserRepository {
 
     return this.mapRow(row);
   }
-  // Este método es útil para validar el token y cargar el usuario en cada petición autenticada.
-  async findById(userId: string): Promise<AuthDbUser | null> {
-    const pool = await this.databaseService.getPool();
 
+  // User lookup by numeric id from token subject.
+  async findById(userId: string): Promise<AuthDbUser | null> {
+    const parsedUserId = this.parseUserId(userId);
+    if (parsedUserId == null) {
+      return null;
+    }
+
+    const pool = await this.databaseService.getPool();
     const result = await pool
       .request()
-      .input('userId', sql.NVarChar(50), userId)
+      .input('userId', sql.Int, parsedUserId)
       .query<UsuarioRow>(`
         SELECT TOP (1)
           [UsuarioId],
@@ -72,8 +74,8 @@ export class UserRepository {
           [Email],
           [PasswordHash],
           [Estado]
-        FROM [OMS].[oms].[Usuario]
-        WHERE CAST([UsuarioId] AS NVARCHAR(50)) = @userId
+        FROM [oms].[Usuario]
+        WHERE [UsuarioId] = @userId
       `);
 
     const row = result.recordset[0];
@@ -85,35 +87,43 @@ export class UserRepository {
   }
 
   async getPasswordHashByUserId(userId: string): Promise<string | null> {
-    const pool = await this.databaseService.getPool();
+    const parsedUserId = this.parseUserId(userId);
+    if (parsedUserId == null) {
+      return null;
+    }
 
+    const pool = await this.databaseService.getPool();
     const result = await pool
       .request()
-      .input('userId', sql.NVarChar(50), userId)
+      .input('userId', sql.Int, parsedUserId)
       .query<{ PasswordHash: string | null }>(`
         SELECT TOP (1) [PasswordHash]
-        FROM [OMS].[oms].[Usuario]
-        WHERE CAST([UsuarioId] AS NVARCHAR(50)) = @userId
+        FROM [oms].[Usuario]
+        WHERE [UsuarioId] = @userId
       `);
 
     return result.recordset[0]?.PasswordHash ?? null;
   }
 
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
-    const pool = await this.databaseService.getPool();
+    const parsedUserId = this.parseUserId(userId);
+    if (parsedUserId == null) {
+      return;
+    }
 
+    const pool = await this.databaseService.getPool();
     await pool
       .request()
-      .input('userId', sql.NVarChar(50), userId)
+      .input('userId', sql.Int, parsedUserId)
       .input('passwordHash', sql.NVarChar(255), passwordHash)
       .query(`
-        UPDATE [OMS].[oms].[Usuario]
+        UPDATE [oms].[Usuario]
         SET [PasswordHash] = @passwordHash,
             [UpdatedAt] = GETDATE()
-        WHERE CAST([UsuarioId] AS NVARCHAR(50)) = @userId
+        WHERE [UsuarioId] = @userId
       `);
   }
-  // Método privado para mapear la fila de la base de datos al formato que usaremos en la aplicación.
+
   private mapRow(row: UsuarioRow): AuthDbUser {
     return {
       id: String(row.UsuarioId),
@@ -126,11 +136,7 @@ export class UserRepository {
     };
   }
 
-  /**
-   * Ajusta esta lógica si en tu tabla Estado usa otro formato.
-   * Soporta varios casos comunes para evitar bloquearte al inicio.
-   */
-  // Puedes personalizar esta función según cómo representes el estado activo/inactivo en tu base de datos.
+  // Supports common active value variants used in legacy rows.
   private isActive(value: unknown): boolean {
     if (typeof value === 'boolean') return value;
     if (typeof value === 'number') return value === 1;
@@ -139,5 +145,13 @@ export class UserRepository {
       return normalized === '1' || normalized === 'ACTIVO' || normalized === 'ACTIVE';
     }
     return false;
+  }
+
+  private parseUserId(raw: string): number | null {
+    const parsed = Number(raw);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      return null;
+    }
+    return parsed;
   }
 }

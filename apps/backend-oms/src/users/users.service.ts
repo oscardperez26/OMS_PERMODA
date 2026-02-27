@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { listProfileCatalog } from '../auth/profile-map';
 import { UsersRepository } from './users.repository';
@@ -28,6 +28,19 @@ export class UsersService {
   }
 
   async createUser(params: CreateUserParams): Promise<{ userId: string }> {
+    const [empresaExists, perfilExists] = await Promise.all([
+      this.usersRepository.existsEmpresaById(params.empresaId),
+      this.usersRepository.existsPerfilById(params.perfilId),
+    ]);
+
+    if (!empresaExists) {
+      throw new BadRequestException('EmpresaId no existe en la base de datos');
+    }
+
+    if (!perfilExists) {
+      throw new BadRequestException('PerfilId no existe en la base de datos');
+    }
+
     const normalizedEmail = params.email.trim().toLowerCase();
     const exists = await this.usersRepository.existsByEmail(normalizedEmail);
 
