@@ -4,7 +4,7 @@ import type { SidebarSection } from "./sidebar.types";
 /**
  * sidebar.menu.ts
  * ---------------
- * Estructura del menú del panel (KOAJ-like).
+ * Estructura del menu del panel (KOAJ-like).
  * Se mantiene como "data" para renderizarlo con map().
  */
 export const SIDEBAR_SECTIONS: SidebarSection[] = [
@@ -18,20 +18,20 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
         items: [
           { label: "Pedidos", path: ROUTES.SELL_ORDERS },
           { label: "Facturas", path: ROUTES.SELL_INVOICES },
-          { label: "Notas Crédito", path: ROUTES.SELL_CREDIT_NOTES },
+          { label: "Notas Credito", path: ROUTES.SELL_CREDIT_NOTES },
           { label: "Remisiones", path: ROUTES.SELL_DELIVERIES },
           { label: "Carritos de Compra", path: ROUTES.SELL_CARTS },
         ],
       },
       {
         key: "sell_catalog",
-        groupLabel: "Catálogo",
+        groupLabel: "Catalogo",
         items: [
           { label: "Productos", path: ROUTES.CATALOG_PRODUCTS },
-          { label: "Categorías", path: ROUTES.CATALOG_CATEGORIES },
+          { label: "Categorias", path: ROUTES.CATALOG_CATEGORIES },
           { label: "Monitoreo", path: ROUTES.CATALOG_MONITORING },
           {
-            label: "Atributos y Características",
+            label: "Atributos y Caracteristicas",
             path: ROUTES.CATALOG_ATTRIBUTES,
           },
           {
@@ -43,10 +43,8 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
           { label: "Inventario", path: ROUTES.CATALOG_INVENTORY },
         ],
       },
-      
     ],
   },
-
   {
     key: "personalize",
     sectionLabel: "PERSONALIZAR",
@@ -55,8 +53,8 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
         key: "personalize_group",
         groupLabel: "Opciones",
         items: [
-          { label: "Módulos", path: ROUTES.PERSONALIZE_MODULES },
-          { label: "Diseño", path: ROUTES.PERSONALIZE_DESIGN },
+          { label: "Modulos", path: ROUTES.PERSONALIZE_MODULES },
+          { label: "Diseno", path: ROUTES.PERSONALIZE_DESIGN },
           { label: "Transporte", path: ROUTES.PERSONALIZE_TRANSPORT },
           { label: "Pago", path: ROUTES.PERSONALIZE_PAYMENT },
           { label: "Internacional", path: ROUTES.PERSONALIZE_INTERNATIONAL },
@@ -64,43 +62,45 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
       },
     ],
   },
-
   {
     key: "configure",
     sectionLabel: "CONFIGURE",
     groups: [
       {
         key: "configure_group",
-        groupLabel: "Parámetros",
+        groupLabel: "Parametros",
         items: [
           {
-            label: "Parámetros de la tienda",
+            label: "Parametros de la tienda",
             path: ROUTES.CONFIGURE_STORE_PARAMS,
           },
           {
-            label: "Parámetros Avanzados",
+            label: "Parametros Avanzados",
             path: ROUTES.CONFIGURE_ADVANCED_PARAMS,
           },
         ],
       },
     ],
   },
-
   {
     key: "order_manager",
     sectionLabel: "GESTOR DE PEDIDOS",
     groups: [
       {
         key: "order_manager_group",
-        groupLabel: "Gestión",
+        groupLabel: "Gestion",
         items: [
-          { label: "Gestión de Perfiles", path: ROUTES.ORDER_MANAGER_PROFILES },
           {
-            label: "Gestión de Empleados",
+            label: "Configuracion General",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG,
+          },
+          { label: "Gestion de Perfiles", path: ROUTES.ORDER_MANAGER_PROFILES },
+          {
+            label: "Gestion de Empleados",
             path: ROUTES.ORDER_MANAGER_EMPLOYEES,
           },
           {
-            label: "Gestión de Permisos",
+            label: "Gestion de Permisos",
             path: ROUTES.ORDER_MANAGER_PERMISSIONS,
           },
           {

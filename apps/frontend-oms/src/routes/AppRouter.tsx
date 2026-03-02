@@ -29,6 +29,9 @@ import { TransportPage } from '../../pages/personalize/TransportPage';
 import { PaymentPage } from '../../pages/personalize/PaymentPage';
 import { StoreOrdersPage } from '../../pages/store/StoreOrdersPage';
 import { ProfilesPage } from '../../pages/gestor/ProfilesPage';
+import { ConfiguracionGeneralPage } from '../../pages/gestor/ConfiguracionGeneralPage';
+import { PaisesPage } from '../../pages/gestor/PaisesPage';
+import { CiudadesPage } from '../../pages/gestor/CiudadesPage';
 
 
 /**
@@ -93,6 +96,42 @@ export function AppRouter() {
           <Route path={ROUTES.PERSONALIZE_DESIGN} element={<DesignPage />} />
           <Route path={ROUTES.PERSONALIZE_TRANSPORT} element={<TransportPage />} />
           <Route path={ROUTES.PERSONALIZE_PAYMENT} element={<PaymentPage />} />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <ConfiguracionGeneralPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PAIS}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <PaisesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_CIUDAD}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <CiudadesPage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path={ROUTES.ORDER_MANAGER_PROFILES}

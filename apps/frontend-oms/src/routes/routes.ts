@@ -40,4 +40,9 @@ export const ROUTES = {
   ORDER_MANAGER_EMPLOYEES: '/panel/order-manager/employees',
   ORDER_MANAGER_PERMISSIONS: '/panel/order-manager/permissions',
   ORDER_MANAGER_EMPLOYEE_ACCESS: '/panel/order-manager/employee-access',
+  ORDER_MANAGER_GENERAL_CONFIG: '/panel/order-manager/configuracion-general',
+  ORDER_MANAGER_GENERAL_CONFIG_PAIS:
+    '/panel/order-manager/configuracion-general/pais',
+  ORDER_MANAGER_GENERAL_CONFIG_CIUDAD:
+    '/panel/order-manager/configuracion-general/ciudad',
 } as const;
