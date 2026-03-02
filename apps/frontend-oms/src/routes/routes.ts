@@ -45,4 +45,8 @@ export const ROUTES = {
     '/panel/order-manager/configuracion-general/pais',
   ORDER_MANAGER_GENERAL_CONFIG_CIUDAD:
     '/panel/order-manager/configuracion-general/ciudad',
+  ORDER_MANAGER_GENERAL_CONFIG_MONEDA:
+    '/panel/order-manager/configuracion-general/moneda',
+  ORDER_MANAGER_GENERAL_CONFIG_EMPRESA:
+    '/panel/order-manager/configuracion-general/empresa',
 } as const;

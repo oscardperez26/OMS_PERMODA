@@ -15,6 +15,22 @@ export class ConfiguracionGeneralService {
         enabled: true,
       },
       {
+        id: 'empresa',
+        label: 'Empresas',
+        description: 'Configuracion de empresas con pais, ciudad y moneda',
+        frontendPath: '/panel/order-manager/configuracion-general/empresa',
+        permission: 'catalog.read',
+        enabled: true,
+      },
+      {
+        id: 'moneda',
+        label: 'Monedas',
+        description: 'Catalogo de monedas para operaciones y configuraciones',
+        frontendPath: '/panel/order-manager/configuracion-general/moneda',
+        permission: 'catalog.read',
+        enabled: true,
+      },
+      {
         id: 'pais',
         label: 'Paises',
         description: 'Catalogo base relacionado por FK con ciudades',

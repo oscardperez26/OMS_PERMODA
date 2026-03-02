@@ -32,6 +32,8 @@ import { ProfilesPage } from '../../pages/gestor/ProfilesPage';
 import { ConfiguracionGeneralPage } from '../../pages/gestor/ConfiguracionGeneralPage';
 import { PaisesPage } from '../../pages/gestor/PaisesPage';
 import { CiudadesPage } from '../../pages/gestor/CiudadesPage';
+import { MonedasPage } from '../../pages/gestor/MonedasPage';
+import { EmpresasPage } from '../../pages/gestor/EmpresasPage';
 
 
 /**
@@ -129,6 +131,30 @@ export function AppRouter() {
                 requiredPermissions={['catalog.read']}
               >
                 <CiudadesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_MONEDA}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <MonedasPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_EMPRESA}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <EmpresasPage />
               </ProtectedRoute>
             }
           />

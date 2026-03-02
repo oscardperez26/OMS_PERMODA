@@ -94,6 +94,14 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
             label: "Configuracion General",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG,
           },
+          {
+            label: "Monedas",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_MONEDA,
+          },
+          {
+            label: "Empresas",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_EMPRESA,
+          },
           { label: "Gestion de Perfiles", path: ROUTES.ORDER_MANAGER_PROFILES },
           {
             label: "Gestion de Empleados",
