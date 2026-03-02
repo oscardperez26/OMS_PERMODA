@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useAuth } from '../../src/auth/AuthContext';
 import {
   createCiudad,
-  listCiudades,
+  getCiudadesBootstrap,
   updateCiudad,
   type CiudadListItem,
 } from '../../src/configuracion-general/ciudad.api';
-import { listPaises, type PaisListItem } from '../../src/configuracion-general/pais.api';
+import type { PaisListItem } from '../../src/configuracion-general/pais.api';
 import './CiudadesPage.css';
 
 type FormState = {
@@ -22,6 +22,24 @@ const INITIAL_FORM: FormState = {
   departamento: '',
   codigo: '',
 };
+
+async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 3): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (attempt === maxAttempts) {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 150 * attempt));
+    }
+  }
+
+  throw lastError;
+}
 
 export function CiudadesPage() {
   const { accessToken, hasPermissions } = useAuth();
@@ -43,14 +61,11 @@ export function CiudadesPage() {
     }
 
     try {
-      const [ciudadesData, paisesData] = await Promise.all([
-        listCiudades(accessToken),
-        listPaises(accessToken),
-      ]);
+      const bootstrap = await withRetry(() => getCiudadesBootstrap(accessToken));
 
-      setCiudades(ciudadesData);
+      setCiudades(bootstrap.ciudades);
       setPaises(
-        [...paisesData].sort((a, b) => {
+        [...bootstrap.paises].sort((a, b) => {
           const byName = a.nombre.localeCompare(b.nombre);
           return byName !== 0 ? byName : a.paisId - b.paisId;
         }),

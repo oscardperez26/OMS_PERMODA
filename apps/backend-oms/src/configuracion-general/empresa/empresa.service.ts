@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EmpresaRepository } from './empresa.repository';
-import type { EmpresaListItem } from './empresa.types';
+import type { EmpresaBootstrapData, EmpresaListItem } from './empresa.types';
 
 type CreateEmpresaParams = {
   codigo: string;
@@ -37,6 +37,10 @@ export class EmpresaService {
 
   async listEmpresas(): Promise<EmpresaListItem[]> {
     return this.empresaRepository.list();
+  }
+
+  async getBootstrapData(): Promise<EmpresaBootstrapData> {
+    return this.empresaRepository.listBootstrapData();
   }
 
   async getEmpresaById(empresaId: number): Promise<EmpresaListItem> {

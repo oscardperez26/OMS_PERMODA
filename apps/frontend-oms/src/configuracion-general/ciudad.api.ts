@@ -1,3 +1,5 @@
+import type { PaisListItem } from './pais.api';
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 export type CiudadListItem = {
@@ -22,6 +24,11 @@ export type UpdateCiudadRequest = {
   nombre?: string;
   departamento?: string;
   codigo?: string;
+};
+
+export type CiudadesBootstrapResponse = {
+  ciudades: CiudadListItem[];
+  paises: PaisListItem[];
 };
 
 async function parseJsonResponse<T>(response: Response): Promise<T> {
@@ -51,6 +58,20 @@ export async function listCiudades(accessToken: string): Promise<CiudadListItem[
 
   const payload = await parseJsonResponse<{ ciudades: CiudadListItem[] }>(response);
   return payload.ciudades;
+}
+
+export async function getCiudadesBootstrap(
+  accessToken: string,
+): Promise<CiudadesBootstrapResponse> {
+  const response = await fetch(`${API_URL}/configuracion-general/ciudad/bootstrap`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return parseJsonResponse<CiudadesBootstrapResponse>(response);
 }
 
 export async function createCiudad(

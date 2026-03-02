@@ -1,3 +1,6 @@
+import type { MonedaListItem } from './moneda.api';
+import type { PaisListItem } from './pais.api';
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 export type EmpresaListItem = {
@@ -40,6 +43,12 @@ export type UpdateEmpresaRequest = {
   monedaId?: number;
 };
 
+export type EmpresasBootstrapResponse = {
+  empresas: EmpresaListItem[];
+  paises: PaisListItem[];
+  monedas: MonedaListItem[];
+};
+
 async function parseJsonResponse<T>(response: Response): Promise<T> {
   const payload = (await response.json().catch(() => null)) as
     | { message?: string | string[] }
@@ -67,6 +76,20 @@ export async function listEmpresas(accessToken: string): Promise<EmpresaListItem
 
   const payload = await parseJsonResponse<{ empresas: EmpresaListItem[] }>(response);
   return payload.empresas;
+}
+
+export async function getEmpresasBootstrap(
+  accessToken: string,
+): Promise<EmpresasBootstrapResponse> {
+  const response = await fetch(`${API_URL}/configuracion-general/empresa/bootstrap`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return parseJsonResponse<EmpresasBootstrapResponse>(response);
 }
 
 export async function createEmpresa(

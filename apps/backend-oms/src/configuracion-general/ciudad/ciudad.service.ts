@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CiudadRepository } from './ciudad.repository';
-import type { CiudadListItem } from './ciudad.types';
+import type { CiudadBootstrapData, CiudadListItem } from './ciudad.types';
 
 type CreateCiudadParams = {
   paisId: number;
@@ -27,6 +27,10 @@ export class CiudadService {
 
   async listCiudades(): Promise<CiudadListItem[]> {
     return this.ciudadRepository.list();
+  }
+
+  async getBootstrapData(): Promise<CiudadBootstrapData> {
+    return this.ciudadRepository.listBootstrapData();
   }
 
   async getCiudadById(ciudadId: number): Promise<CiudadListItem> {

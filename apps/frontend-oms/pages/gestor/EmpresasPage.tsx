@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useAuth } from '../../src/auth/AuthContext';
 import {
   createEmpresa,
-  listEmpresas,
+  getEmpresasBootstrap,
   updateEmpresa,
   type EmpresaListItem,
 } from '../../src/configuracion-general/empresa.api';
 import { listCiudades, type CiudadListItem } from '../../src/configuracion-general/ciudad.api';
-import { listMonedas, type MonedaListItem } from '../../src/configuracion-general/moneda.api';
-import { listPaises, type PaisListItem } from '../../src/configuracion-general/pais.api';
+import type { MonedaListItem } from '../../src/configuracion-general/moneda.api';
+import type { PaisListItem } from '../../src/configuracion-general/pais.api';
 import './EmpresasPage.css';
 
 type FormState = {
@@ -76,20 +76,17 @@ export function EmpresasPage() {
     }
 
     try {
-      // Cargas secuenciales con retry para mitigar cortes transitorios de SQL.
-      const empresasData = await withRetry(() => listEmpresas(accessToken));
-      const paisesData = await withRetry(() => listPaises(accessToken));
-      const monedasData = await withRetry(() => listMonedas(accessToken));
+      const bootstrap = await withRetry(() => getEmpresasBootstrap(accessToken));
 
-      setEmpresas(empresasData);
+      setEmpresas(bootstrap.empresas);
       setPaises(
-        [...paisesData].sort((a, b) => {
+        [...bootstrap.paises].sort((a, b) => {
           const byName = a.nombre.localeCompare(b.nombre);
           return byName !== 0 ? byName : a.paisId - b.paisId;
         }),
       );
       setMonedas(
-        [...monedasData].sort((a, b) => {
+        [...bootstrap.monedas].sort((a, b) => {
           const byName = a.nombre.localeCompare(b.nombre);
           return byName !== 0 ? byName : a.monedaId - b.monedaId;
         }),

@@ -23,6 +23,12 @@ export class CiudadController {
     return { ciudades };
   }
 
+  @Get('bootstrap')
+  @Permissions('catalog.read')
+  async bootstrap() {
+    return this.ciudadService.getBootstrapData();
+  }
+
   @Get(':id')
   @Permissions('catalog.read')
   async getById(@Param('id', ParseIntPipe) id: number) {

@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import * as sql from 'mssql';
 import { DatabaseService } from '../../database/database.service';
 import type {
+  EmpresaBootstrapData,
   CreateEmpresaInput,
+  EmpresaMonedaListItem,
+  EmpresaPaisListItem,
   EmpresaListItem,
   UpdateEmpresaInput,
 } from './empresa.types';
@@ -25,6 +28,25 @@ type EmpresaRow = {
 
 type EmpresaIdentityRow = {
   EmpresaId: number;
+};
+
+type PaisRow = {
+  PaisId: number;
+  CodigoISO2: string;
+  CodigoISO3: string | null;
+  Nombre: string;
+  CreatedAt: Date;
+  UpdatedAt: Date | null;
+};
+
+type MonedaRow = {
+  MonedaId: number;
+  Codigo: string;
+  Simbolo: string | null;
+  Nombre: string;
+  Decimales: number;
+  CreatedAt: Date;
+  UpdatedAt: Date | null;
 };
 
 @Injectable()
@@ -55,21 +77,64 @@ export class EmpresaRepository {
       'empresa.list',
     );
 
-    return result.recordset.map((row) => ({
-      empresaId: row.EmpresaId,
-      codigo: row.Codigo,
-      nombre: row.Nombre,
-      nit: row.Nit ?? undefined,
-      email: row.Email ?? undefined,
-      telefono: row.Telefono ?? undefined,
-      paisId: row.PaisId,
-      ciudadId: row.CiudadId ?? undefined,
-      direccion: row.Direccion ?? undefined,
-      monedaId: row.MonedaId,
-      estado: row.Estado,
-      createdAt: row.CreatedAt.toISOString(),
-      updatedAt: row.UpdatedAt?.toISOString() ?? null,
-    }));
+    return result.recordset.map((row) => this.mapEmpresaRow(row));
+  }
+
+  // Reduce roundtrips SQL para la pantalla de empresas.
+  async listBootstrapData(): Promise<EmpresaBootstrapData> {
+    const result = await this.databaseService.execute<sql.IResult<unknown>>(
+      (pool) =>
+        pool.request().query(`
+          SELECT
+            [EmpresaId],
+            [Codigo],
+            [Nombre],
+            [Nit],
+            [Email],
+            [Telefono],
+            [PaisId],
+            [CiudadId],
+            [Direccion],
+            [MonedaId],
+            [Estado],
+            [CreatedAt],
+            [UpdatedAt]
+          FROM [oms].[Empresa]
+          ORDER BY [Nombre] ASC, [EmpresaId] ASC;
+
+          SELECT
+            [PaisId],
+            [CodigoISO2],
+            [CodigoISO3],
+            [Nombre],
+            [CreatedAt],
+            [UpdatedAt]
+          FROM [oms].[Pais]
+          ORDER BY [Nombre] ASC, [PaisId] ASC;
+
+          SELECT
+            [MonedaId],
+            [Codigo],
+            [Simbolo],
+            [Nombre],
+            [Decimales],
+            [CreatedAt],
+            [UpdatedAt]
+          FROM [oms].[Moneda]
+          ORDER BY [Nombre] ASC, [MonedaId] ASC;
+        `),
+      'empresa.listBootstrapData',
+    );
+
+    const empresasRows = (result.recordsets?.[0] ?? []) as EmpresaRow[];
+    const paisesRows = (result.recordsets?.[1] ?? []) as PaisRow[];
+    const monedasRows = (result.recordsets?.[2] ?? []) as MonedaRow[];
+
+    return {
+      empresas: empresasRows.map((row) => this.mapEmpresaRow(row)),
+      paises: paisesRows.map((row) => this.mapPaisRow(row)),
+      monedas: monedasRows.map((row) => this.mapMonedaRow(row)),
+    };
   }
 
   async findById(empresaId: number): Promise<EmpresaListItem | null> {
@@ -104,21 +169,7 @@ export class EmpresaRepository {
       return null;
     }
 
-    return {
-      empresaId: row.EmpresaId,
-      codigo: row.Codigo,
-      nombre: row.Nombre,
-      nit: row.Nit ?? undefined,
-      email: row.Email ?? undefined,
-      telefono: row.Telefono ?? undefined,
-      paisId: row.PaisId,
-      ciudadId: row.CiudadId ?? undefined,
-      direccion: row.Direccion ?? undefined,
-      monedaId: row.MonedaId,
-      estado: row.Estado,
-      createdAt: row.CreatedAt.toISOString(),
-      updatedAt: row.UpdatedAt?.toISOString() ?? null,
-    };
+    return this.mapEmpresaRow(row);
   }
 
   async existsByCodigo(codigo: string, excludeEmpresaId?: number): Promise<boolean> {
@@ -274,5 +325,46 @@ export class EmpresaRepository {
           `),
       'empresa.update',
     );
+  }
+
+  private mapEmpresaRow(row: EmpresaRow): EmpresaListItem {
+    return {
+      empresaId: row.EmpresaId,
+      codigo: row.Codigo,
+      nombre: row.Nombre,
+      nit: row.Nit ?? undefined,
+      email: row.Email ?? undefined,
+      telefono: row.Telefono ?? undefined,
+      paisId: row.PaisId,
+      ciudadId: row.CiudadId ?? undefined,
+      direccion: row.Direccion ?? undefined,
+      monedaId: row.MonedaId,
+      estado: row.Estado,
+      createdAt: row.CreatedAt.toISOString(),
+      updatedAt: row.UpdatedAt?.toISOString() ?? null,
+    };
+  }
+
+  private mapPaisRow(row: PaisRow): EmpresaPaisListItem {
+    return {
+      paisId: row.PaisId,
+      codigoISO2: row.CodigoISO2,
+      codigoISO3: row.CodigoISO3 ?? undefined,
+      nombre: row.Nombre,
+      createdAt: row.CreatedAt.toISOString(),
+      updatedAt: row.UpdatedAt?.toISOString() ?? null,
+    };
+  }
+
+  private mapMonedaRow(row: MonedaRow): EmpresaMonedaListItem {
+    return {
+      monedaId: row.MonedaId,
+      codigo: row.Codigo,
+      simbolo: row.Simbolo ?? undefined,
+      nombre: row.Nombre,
+      decimales: row.Decimales,
+      createdAt: row.CreatedAt.toISOString(),
+      updatedAt: row.UpdatedAt?.toISOString() ?? null,
+    };
   }
 }

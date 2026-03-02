@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import * as sql from 'mssql';
 import { DatabaseService } from '../../database/database.service';
 import type {
+  CiudadBootstrapData,
   CiudadListItem,
+  CiudadPaisListItem,
   CreateCiudadInput,
   UpdateCiudadInput,
 } from './ciudad.types';
@@ -19,6 +21,15 @@ type CiudadRow = {
 
 type CiudadIdentityRow = {
   CiudadId: number;
+};
+
+type PaisRow = {
+  PaisId: number;
+  CodigoISO2: string;
+  CodigoISO3: string | null;
+  Nombre: string;
+  CreatedAt: Date;
+  UpdatedAt: Date | null;
 };
 
 @Injectable()
@@ -44,15 +55,45 @@ export class CiudadRepository {
       'ciudad.list',
     );
 
-    return result.recordset.map((row) => ({
-      ciudadId: row.CiudadId,
-      paisId: row.PaisId,
-      nombre: row.Nombre,
-      departamento: row.Departamento ?? undefined,
-      codigo: row.Codigo ?? undefined,
-      createdAt: row.CreatedAt.toISOString(),
-      updatedAt: row.UpdatedAt?.toISOString() ?? null,
-    }));
+    return result.recordset.map((row) => this.mapCiudadRow(row));
+  }
+
+  // Un solo roundtrip SQL para pantallas que necesitan ciudades + paises.
+  async listBootstrapData(): Promise<CiudadBootstrapData> {
+    const result = await this.databaseService.execute<sql.IResult<unknown>>(
+      (pool) =>
+        pool.request().query(`
+          SELECT
+            [CiudadId],
+            [PaisId],
+            [Nombre],
+            [Departamento],
+            [Codigo],
+            [CreatedAt],
+            [UpdatedAt]
+          FROM [oms].[Ciudad]
+          ORDER BY [Nombre] ASC, [CiudadId] ASC;
+
+          SELECT
+            [PaisId],
+            [CodigoISO2],
+            [CodigoISO3],
+            [Nombre],
+            [CreatedAt],
+            [UpdatedAt]
+          FROM [oms].[Pais]
+          ORDER BY [Nombre] ASC, [PaisId] ASC;
+        `),
+      'ciudad.listBootstrapData',
+    );
+
+    const ciudadesRows = (result.recordsets?.[0] ?? []) as CiudadRow[];
+    const paisesRows = (result.recordsets?.[1] ?? []) as PaisRow[];
+
+    return {
+      ciudades: ciudadesRows.map((row) => this.mapCiudadRow(row)),
+      paises: paisesRows.map((row) => this.mapPaisRow(row)),
+    };
   }
 
   async findById(ciudadId: number): Promise<CiudadListItem | null> {
@@ -81,15 +122,7 @@ export class CiudadRepository {
       return null;
     }
 
-    return {
-      ciudadId: row.CiudadId,
-      paisId: row.PaisId,
-      nombre: row.Nombre,
-      departamento: row.Departamento ?? undefined,
-      codigo: row.Codigo ?? undefined,
-      createdAt: row.CreatedAt.toISOString(),
-      updatedAt: row.UpdatedAt?.toISOString() ?? null,
-    };
+    return this.mapCiudadRow(row);
   }
 
   // Verifica integridad FK: oms.Ciudad.PaisId -> oms.Pais.PaisId.
@@ -197,5 +230,28 @@ export class CiudadRepository {
           `),
       'ciudad.update',
     );
+  }
+
+  private mapCiudadRow(row: CiudadRow): CiudadListItem {
+    return {
+      ciudadId: row.CiudadId,
+      paisId: row.PaisId,
+      nombre: row.Nombre,
+      departamento: row.Departamento ?? undefined,
+      codigo: row.Codigo ?? undefined,
+      createdAt: row.CreatedAt.toISOString(),
+      updatedAt: row.UpdatedAt?.toISOString() ?? null,
+    };
+  }
+
+  private mapPaisRow(row: PaisRow): CiudadPaisListItem {
+    return {
+      paisId: row.PaisId,
+      codigoISO2: row.CodigoISO2,
+      codigoISO3: row.CodigoISO3 ?? undefined,
+      nombre: row.Nombre,
+      createdAt: row.CreatedAt.toISOString(),
+      updatedAt: row.UpdatedAt?.toISOString() ?? null,
+    };
   }
 }

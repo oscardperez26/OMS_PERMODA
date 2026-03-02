@@ -14,6 +14,31 @@ export type EmpresaListItem = {
   updatedAt?: string | null;
 };
 
+export type EmpresaPaisListItem = {
+  paisId: number;
+  codigoISO2: string;
+  codigoISO3?: string;
+  nombre: string;
+  createdAt: string;
+  updatedAt?: string | null;
+};
+
+export type EmpresaMonedaListItem = {
+  monedaId: number;
+  codigo: string;
+  simbolo?: string;
+  nombre: string;
+  decimales: number;
+  createdAt: string;
+  updatedAt?: string | null;
+};
+
+export type EmpresaBootstrapData = {
+  empresas: EmpresaListItem[];
+  paises: EmpresaPaisListItem[];
+  monedas: EmpresaMonedaListItem[];
+};
+
 export type CreateEmpresaInput = {
   codigo: string;
   nombre: string;

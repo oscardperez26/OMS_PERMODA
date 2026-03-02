@@ -23,6 +23,12 @@ export class EmpresaController {
     return { empresas };
   }
 
+  @Get('bootstrap')
+  @Permissions('catalog.read')
+  async bootstrap() {
+    return this.empresaService.getBootstrapData();
+  }
+
   @Get(':id')
   @Permissions('catalog.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
