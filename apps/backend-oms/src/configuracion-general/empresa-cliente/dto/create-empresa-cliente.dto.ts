@@ -1,0 +1,54 @@
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
+
+export class CreateEmpresaClienteDto {
+  @IsInt()
+  @Min(1)
+  empresaId: number;
+
+  @IsString()
+  @MinLength(1)
+  @MaxLength(180)
+  nombre: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  documento?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(180)
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  telefono?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  paisId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  ciudadId?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  direccion?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  estado?: string;
+}

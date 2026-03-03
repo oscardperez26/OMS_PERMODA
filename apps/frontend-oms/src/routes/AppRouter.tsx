@@ -34,6 +34,13 @@ import { PaisesPage } from '../../pages/gestor/PaisesPage';
 import { CiudadesPage } from '../../pages/gestor/CiudadesPage';
 import { MonedasPage } from '../../pages/gestor/MonedasPage';
 import { EmpresasPage } from '../../pages/gestor/EmpresasPage';
+import { EmpresaClientePage } from '../../pages/gestor/EmpresaClientePage';
+import { PasarelaPagoPage } from '../../pages/gestor/PasarelaPagoPage';
+import { TiendaPage } from '../../pages/gestor/TiendaPage';
+import { TransportadoraPage } from '../../pages/gestor/TransportadoraPage';
+import { ZonaTransportePage } from '../../pages/gestor/ZonaTransportePage';
+import { ZonaCiudadPage } from '../../pages/gestor/ZonaCiudadPage';
+import { CostoTransportePage } from '../../pages/gestor/CostoTransportePage';
 
 
 /**
@@ -155,6 +162,90 @@ export function AppRouter() {
                 requiredPermissions={['catalog.read']}
               >
                 <EmpresasPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_EMPRESA_CLIENTE}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <EmpresaClientePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PASARELA_PAGO}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <PasarelaPagoPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TIENDA}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <TiendaPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <TransportadoraPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_ZONA_TRANSPORTE}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <ZonaTransportePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_ZONA_CIUDAD}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <ZonaCiudadPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_COSTO_TRANSPORTE}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <CostoTransportePage />
               </ProtectedRoute>
             }
           />

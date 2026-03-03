@@ -102,6 +102,34 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
             label: "Empresas",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_EMPRESA,
           },
+          {
+            label: "Empresa Cliente",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_EMPRESA_CLIENTE,
+          },
+          {
+            label: "Pasarelas de Pago",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PASARELA_PAGO,
+          },
+          {
+            label: "Tiendas",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TIENDA,
+          },
+          {
+            label: "Transportadoras",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA,
+          },
+          {
+            label: "Zonas de Transporte",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_ZONA_TRANSPORTE,
+          },
+          {
+            label: "Zona Ciudad",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_ZONA_CIUDAD,
+          },
+          {
+            label: "Costos Transporte",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_COSTO_TRANSPORTE,
+          },
           { label: "Gestion de Perfiles", path: ROUTES.ORDER_MANAGER_PROFILES },
           {
             label: "Gestion de Empleados",

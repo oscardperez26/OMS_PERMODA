@@ -49,4 +49,18 @@ export const ROUTES = {
     '/panel/order-manager/configuracion-general/moneda',
   ORDER_MANAGER_GENERAL_CONFIG_EMPRESA:
     '/panel/order-manager/configuracion-general/empresa',
+  ORDER_MANAGER_GENERAL_CONFIG_EMPRESA_CLIENTE:
+    '/panel/order-manager/configuracion-general/empresa-cliente',
+  ORDER_MANAGER_GENERAL_CONFIG_PASARELA_PAGO:
+    '/panel/order-manager/configuracion-general/pasarela-pago',
+  ORDER_MANAGER_GENERAL_CONFIG_TIENDA:
+    '/panel/order-manager/configuracion-general/tienda',
+  ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA:
+    '/panel/order-manager/configuracion-general/transportadora',
+  ORDER_MANAGER_GENERAL_CONFIG_ZONA_TRANSPORTE:
+    '/panel/order-manager/configuracion-general/zona-transporte',
+  ORDER_MANAGER_GENERAL_CONFIG_ZONA_CIUDAD:
+    '/panel/order-manager/configuracion-general/zona-ciudad',
+  ORDER_MANAGER_GENERAL_CONFIG_COSTO_TRANSPORTE:
+    '/panel/order-manager/configuracion-general/costo-transporte',
 } as const;
