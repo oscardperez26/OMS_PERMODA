@@ -52,7 +52,12 @@ import { CostoTransportePage } from '../../pages/gestor/CostoTransportePage';
  */
 export function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <Routes>
         <Route path="/panel/login" element={<PanelLoginPage />} />
         <Route path="/tienda/login" element={<StoreLoginPage />} />

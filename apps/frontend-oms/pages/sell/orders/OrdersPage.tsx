@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../../src/auth/AuthContext';
-import { listOrders } from '../../../src/orders/orders.api';
+import { listOrders, syncPendingOrders } from '../../../src/orders/orders.api';
 import { OrderDetailModal } from './OrderDetailModal';
 import { OrdersShell } from './OrdersShell';
 import { OrdersTable, type OrderRow, type OrdersFilters } from './OrdersTable';
@@ -13,7 +13,7 @@ import { OrdersTable, type OrderRow, type OrdersFilters } from './OrdersTable';
  * - Filtra en cliente cuando el usuario da click en Buscar
  */
 export function OrdersPage() {
-  const { accessToken, isLoading: isAuthLoading } = useAuth();
+  const { accessToken, isLoading: isAuthLoading, hasPermissions } = useAuth();
 
   const [rowsAll, setRowsAll] = useState<OrderRow[]>([]);
   const [rows, setRows] = useState<OrderRow[]>([]);
@@ -49,8 +49,30 @@ export function OrdersPage() {
       setLoadError('');
 
       try {
+        let syncWarning = '';
+
+        if (hasPermissions(['orders.manage']) && shouldRunSyncPending()) {
+          try {
+            const syncResult = await syncPendingOrders(accessToken);
+            if (syncResult.blockedByDiagnostics) {
+              const blockedReasons = syncResult.diagnostics
+                .filter((item) => !item.ok)
+                .map((item) => item.message)
+                .join(' | ');
+              syncWarning =
+                blockedReasons || 'Sincronizacion bloqueada por diagnostico de catalogos';
+            }
+          } catch (error) {
+            syncWarning =
+              error instanceof Error
+                ? `No se pudo sincronizar pendientes: ${error.message}`
+                : 'No se pudo sincronizar pendientes';
+          }
+        }
+
         const response = await listOrders(accessToken);
         const nextRows: OrderRow[] = response.map((item) => ({
+          pedidoId: item.pedidoId,
           id: item.id,
           reference: item.reference,
           newCustomer: normalizeNewCustomer(item.newCustomer),
@@ -64,6 +86,7 @@ export function OrdersPage() {
 
         setRowsAll(nextRows);
         setRows(nextRows);
+        setLoadError(syncWarning);
       } catch (error) {
         const message =
           error instanceof Error ? error.message : 'No se pudo cargar pedidos';
@@ -76,7 +99,7 @@ export function OrdersPage() {
     }
 
     void loadOrdersFromApi();
-  }, [accessToken, isAuthLoading]);
+  }, [accessToken, hasPermissions, isAuthLoading]);
 
   const total = useMemo(() => rows.length, [rows]);
 
@@ -194,4 +217,18 @@ function normalizeStatus(value: string): OrderRow['status'] {
   }
 
   return 'Asignado';
+}
+
+function shouldRunSyncPending(): boolean {
+  const key = 'orders.syncPending.lastRun';
+  const now = Date.now();
+  const lastRunRaw = window.sessionStorage.getItem(key);
+  const lastRun = lastRunRaw ? Number(lastRunRaw) : 0;
+
+  if (Number.isFinite(lastRun) && now - lastRun < 5000) {
+    return false;
+  }
+
+  window.sessionStorage.setItem(key, String(now));
+  return true;
 }

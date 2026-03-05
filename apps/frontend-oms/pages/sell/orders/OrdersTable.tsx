@@ -6,6 +6,7 @@ import "./orders-table.css";
  * Tipo mínimo para pintar una fila de pedido en la tabla.
  */
 export type OrderRow = {
+  pedidoId: number;
   id: string;
   reference: string;
   newCustomer: "Sí" | "No";
@@ -235,7 +236,7 @@ export function OrdersTable({
 
         <tbody>
           {rows.map((r) => (
-            <tr key={r.id} className="orders-body-row">
+            <tr key={r.pedidoId} className="orders-body-row">
               <td className="center">
                 <input type="checkbox" aria-label={`Seleccionar pedido ${r.id}`} />
               </td>
