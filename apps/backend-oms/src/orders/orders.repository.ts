@@ -30,6 +30,11 @@ type CountRow = {
   count: number;
 };
 
+type ExistingPedidoKeyRow = {
+  NumeroPedido: string | null;
+  NumeroExterno: string | null;
+};
+
 type PedidoIdentityRow = {
   PedidoId: number;
 };
@@ -93,9 +98,33 @@ type TiendaRow = {
   Activo: boolean;
 };
 
+type BodegaRow = {
+  BodegaId: number;
+  TiendaId: number | null;
+  Codigo: string;
+  Nombre: string;
+};
+
+type VarianteLookupRow = {
+  VarianteId: string | number;
+  SKU: string;
+  EAN: string | null;
+};
+
+type InventarioDisponibilidadRow = {
+  BodegaId: number;
+  VarianteId: string | number;
+  StockTotal: number;
+  StockReservado: number;
+};
+
 type CostoTransporteCandidateRow = {
   CostoTransporteId: string | number;
   Costo: string | number;
+  PesoMinKg: string | number | null;
+  PesoMaxKg: string | number | null;
+  ValorMin: string | number | null;
+  ValorMax: string | number | null;
   DiasMin: number | null;
   DiasMax: number | null;
   MonedaId: number;
@@ -224,6 +253,83 @@ export class OrdersRepository {
     );
 
     return (result.recordset[0]?.count ?? 0) > 0;
+  }
+
+  async existsByNumeroExterno(numeroExterno: string): Promise<boolean> {
+    const result = await this.databaseService.execute<sql.IResult<CountRow>>(
+      (pool) =>
+        pool
+          .request()
+          .input('numeroExterno', sql.NVarChar(80), numeroExterno)
+          .query<CountRow>(`
+            SELECT COUNT(1) AS [count]
+            FROM [oms].[Pedido]
+            WHERE [NumeroExterno] = @numeroExterno
+          `),
+      'orders.existsByNumeroExterno',
+    );
+
+    return (result.recordset[0]?.count ?? 0) > 0;
+  }
+
+  async findExistingPedidoKeys(input: {
+    numeroPedidos: string[];
+    numeroExternos: string[];
+  }): Promise<{ numeroPedidos: string[]; numeroExternos: string[] }> {
+    const normalizedNumeroPedidos = [...new Set(input.numeroPedidos.map((item) => item.trim()).filter(Boolean))];
+    const normalizedNumeroExternos = [...new Set(input.numeroExternos.map((item) => item.trim()).filter(Boolean))];
+
+    if (normalizedNumeroPedidos.length === 0 && normalizedNumeroExternos.length === 0) {
+      return { numeroPedidos: [], numeroExternos: [] };
+    }
+
+    const result = await this.databaseService.execute<sql.IResult<ExistingPedidoKeyRow>>(
+      (pool) => {
+        const request = pool.request();
+        const whereParts: string[] = [];
+
+        if (normalizedNumeroPedidos.length > 0) {
+          const numeroPedidoParams: string[] = [];
+          normalizedNumeroPedidos.forEach((value, index) => {
+            const paramName = `numeroPedido${index}`;
+            request.input(paramName, sql.NVarChar(60), value);
+            numeroPedidoParams.push(`@${paramName}`);
+          });
+          whereParts.push(`[NumeroPedido] IN (${numeroPedidoParams.join(', ')})`);
+        }
+
+        if (normalizedNumeroExternos.length > 0) {
+          const numeroExternoParams: string[] = [];
+          normalizedNumeroExternos.forEach((value, index) => {
+            const paramName = `numeroExterno${index}`;
+            request.input(paramName, sql.NVarChar(80), value);
+            numeroExternoParams.push(`@${paramName}`);
+          });
+          whereParts.push(`[NumeroExterno] IN (${numeroExternoParams.join(', ')})`);
+        }
+
+        return request.query<ExistingPedidoKeyRow>(`
+          SELECT
+            [NumeroPedido],
+            [NumeroExterno]
+          FROM [oms].[Pedido]
+          WHERE ${whereParts.join(' OR ')}
+        `);
+      },
+      'orders.findExistingPedidoKeys',
+    );
+
+    const numeroPedidos = result.recordset
+      .map((row) => row.NumeroPedido?.trim() ?? '')
+      .filter(Boolean);
+    const numeroExternos = result.recordset
+      .map((row) => row.NumeroExterno?.trim() ?? '')
+      .filter(Boolean);
+
+    return {
+      numeroPedidos,
+      numeroExternos,
+    };
   }
 
   async createPedido(input: CreatePedidoInput): Promise<{ pedidoId: number }> {
@@ -544,6 +650,194 @@ export class OrdersRepository {
     );
   }
 
+  async listActiveBodegasByTiendaIds(
+    empresaId: number,
+    tiendaIds: number[],
+  ): Promise<Array<{ bodegaId: number; tiendaId: number; codigo: string; nombre: string }>> {
+    const normalizedTiendaIds = [
+      ...new Set(
+        tiendaIds.filter((value): value is number => Number.isInteger(value) && value > 0),
+      ),
+    ];
+    if (normalizedTiendaIds.length === 0) {
+      return [];
+    }
+
+    const result = await this.databaseService.execute<sql.IResult<BodegaRow>>(
+      (pool) => {
+        const request = pool.request().input('empresaId', sql.Int, empresaId);
+        const params: string[] = [];
+
+        normalizedTiendaIds.forEach((id, index) => {
+          const param = `tiendaId${index}`;
+          request.input(param, sql.Int, id);
+          params.push(`@${param}`);
+        });
+
+        return request.query<BodegaRow>(`
+          SELECT
+            [BodegaId],
+            [TiendaId],
+            [Codigo],
+            [Nombre]
+          FROM [oms].[Bodega]
+          WHERE [EmpresaId] = @empresaId
+            AND [Activo] = 1
+            AND [TiendaId] IN (${params.join(', ')})
+          ORDER BY [TiendaId] ASC, [BodegaId] ASC
+        `);
+      },
+      'orders.listActiveBodegasByTiendaIds',
+    );
+
+    return result.recordset
+      .filter((row) => row.TiendaId !== null)
+      .map((row) => ({
+        bodegaId: row.BodegaId,
+        tiendaId: row.TiendaId as number,
+        codigo: row.Codigo,
+        nombre: row.Nombre,
+      }));
+  }
+
+  async findVariantesBySignals(input: {
+    empresaId: number;
+    varianteIds?: number[];
+    skus?: string[];
+    eans?: string[];
+  }): Promise<Array<{ varianteId: number; sku: string; ean: string | null }>> {
+    const varianteIds = [
+      ...new Set(
+        (input.varianteIds ?? []).filter(
+          (value): value is number => Number.isInteger(value) && value > 0,
+        ),
+      ),
+    ];
+    const skus = [...new Set((input.skus ?? []).map((item) => item.trim()).filter(Boolean))];
+    const eans = [...new Set((input.eans ?? []).map((item) => item.trim()).filter(Boolean))];
+
+    if (varianteIds.length === 0 && skus.length === 0 && eans.length === 0) {
+      return [];
+    }
+
+    const result = await this.databaseService.execute<sql.IResult<VarianteLookupRow>>(
+      (pool) => {
+        const request = pool.request().input('empresaId', sql.Int, input.empresaId);
+        const whereParts: string[] = [];
+
+        if (varianteIds.length > 0) {
+          const params: string[] = [];
+          varianteIds.forEach((id, index) => {
+            const param = `varianteId${index}`;
+            request.input(param, sql.BigInt, id);
+            params.push(`@${param}`);
+          });
+          whereParts.push(`[VarianteId] IN (${params.join(', ')})`);
+        }
+
+        if (skus.length > 0) {
+          const params: string[] = [];
+          skus.forEach((sku, index) => {
+            const param = `sku${index}`;
+            request.input(param, sql.NVarChar(120), sku);
+            params.push(`UPPER(@${param})`);
+          });
+          whereParts.push(`UPPER([SKU]) IN (${params.join(', ')})`);
+        }
+
+        if (eans.length > 0) {
+          const params: string[] = [];
+          eans.forEach((ean, index) => {
+            const param = `ean${index}`;
+            request.input(param, sql.NVarChar(120), ean);
+            params.push(`@${param}`);
+          });
+          whereParts.push(`[EAN] IN (${params.join(', ')})`);
+        }
+
+        return request.query<VarianteLookupRow>(`
+          SELECT
+            [VarianteId],
+            [SKU],
+            [EAN]
+          FROM [oms].[ProductoVariante]
+          WHERE [EmpresaId] = @empresaId
+            AND [Activo] = 1
+            AND (${whereParts.join(' OR ')})
+        `);
+      },
+      'orders.findVariantesBySignals',
+    );
+
+    return result.recordset.map((row) => ({
+      varianteId: Number(row.VarianteId),
+      sku: row.SKU,
+      ean: row.EAN,
+    }));
+  }
+
+  async listInventarioDisponibilidad(input: {
+    empresaId: number;
+    bodegaIds: number[];
+    varianteIds: number[];
+  }): Promise<Array<{ bodegaId: number; varianteId: number; stockDisponible: number }>> {
+    const bodegaIds = [
+      ...new Set(
+        input.bodegaIds.filter((value): value is number => Number.isInteger(value) && value > 0),
+      ),
+    ];
+    const varianteIds = [
+      ...new Set(
+        input.varianteIds.filter(
+          (value): value is number => Number.isInteger(value) && value > 0,
+        ),
+      ),
+    ];
+
+    if (bodegaIds.length === 0 || varianteIds.length === 0) {
+      return [];
+    }
+
+    const result = await this.databaseService.execute<sql.IResult<InventarioDisponibilidadRow>>(
+      (pool) => {
+        const request = pool.request().input('empresaId', sql.Int, input.empresaId);
+        const bodegaParams: string[] = [];
+        const varianteParams: string[] = [];
+
+        bodegaIds.forEach((id, index) => {
+          const param = `bodegaId${index}`;
+          request.input(param, sql.Int, id);
+          bodegaParams.push(`@${param}`);
+        });
+
+        varianteIds.forEach((id, index) => {
+          const param = `varianteId${index}`;
+          request.input(param, sql.BigInt, id);
+          varianteParams.push(`@${param}`);
+        });
+
+        return request.query<InventarioDisponibilidadRow>(`
+          SELECT
+            [BodegaId],
+            [VarianteId],
+            [StockTotal],
+            [StockReservado]
+          FROM [oms].[Inventario]
+          WHERE [EmpresaId] = @empresaId
+            AND [BodegaId] IN (${bodegaParams.join(', ')})
+            AND [VarianteId] IN (${varianteParams.join(', ')})
+        `);
+      },
+      'orders.listInventarioDisponibilidad',
+    );
+
+    return result.recordset.map((row) => ({
+      bodegaId: row.BodegaId,
+      varianteId: Number(row.VarianteId),
+      stockDisponible: Math.max(0, Number(row.StockTotal) - Number(row.StockReservado)),
+    }));
+  }
+
   async listActiveTransportCosts(
     empresaId: number,
     zonaTransporteId: number,
@@ -552,6 +846,10 @@ export class OrdersRepository {
     Array<{
       costoTransporteId: string;
       costo: number;
+      pesoMinKg: number | null;
+      pesoMaxKg: number | null;
+      valorMin: number | null;
+      valorMax: number | null;
       diasMin: number | null;
       diasMax: number | null;
       monedaId: number;
@@ -574,6 +872,10 @@ export class OrdersRepository {
             SELECT
               ct.[CostoTransporteId],
               ct.[Costo],
+              ct.[PesoMinKg],
+              ct.[PesoMaxKg],
+              ct.[ValorMin],
+              ct.[ValorMax],
               ct.[DiasMin],
               ct.[DiasMax],
               ct.[MonedaId],
@@ -602,6 +904,10 @@ export class OrdersRepository {
     return result.recordset.map((row) => ({
       costoTransporteId: String(row.CostoTransporteId),
       costo: Number(row.Costo),
+      pesoMinKg: row.PesoMinKg === null ? null : Number(row.PesoMinKg),
+      pesoMaxKg: row.PesoMaxKg === null ? null : Number(row.PesoMaxKg),
+      valorMin: row.ValorMin === null ? null : Number(row.ValorMin),
+      valorMax: row.ValorMax === null ? null : Number(row.ValorMax),
       diasMin: row.DiasMin ?? null,
       diasMax: row.DiasMax ?? null,
       monedaId: row.MonedaId,

@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 export type OrdersListItem = {
   pedidoId: number;
@@ -17,31 +17,35 @@ export type OrdersListItem = {
 };
 
 async function parseJsonResponse<T>(response: Response): Promise<T> {
-  const payload = (await response.json().catch(() => null)) as
-    | { message?: string | string[] }
-    | null;
+  const payload = (await response.json().catch(() => null)) as {
+    message?: string | string[];
+  } | null;
 
   if (!response.ok) {
-    const fallback = 'No se pudo completar la operacion';
+    const fallback = "No se pudo completar la operacion";
     const message = Array.isArray(payload?.message)
-      ? payload.message.join(', ')
-      : payload?.message ?? fallback;
+      ? payload.message.join(", ")
+      : (payload?.message ?? fallback);
     throw new Error(message);
   }
 
   return payload as T;
 }
-
-export async function listOrders(accessToken: string): Promise<OrdersListItem[]> {
+// TODO: agregar paginacion, filtros, etc a esta funcion cuando sea necesario
+export async function listOrders(
+  accessToken: string,
+): Promise<OrdersListItem[]> {
   const response = await fetch(`${API_URL}/orders`, {
-    method: 'GET',
-    credentials: 'include',
+    method: "GET",
+    credentials: "include",
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
 
-  const payload = await parseJsonResponse<{ orders: OrdersListItem[] }>(response);
+  const payload = await parseJsonResponse<{ orders: OrdersListItem[] }>(
+    response,
+  );
   return payload.orders;
 }
 
@@ -63,13 +67,13 @@ export type SyncPendingOrdersResponse = {
   items: Array<{
     koajOrderId: number;
     numeroPedido: string;
-    status: 'inserted' | 'skipped_existing' | 'skipped_validation' | 'failed';
+    status: "inserted" | "skipped_existing" | "skipped_validation" | "failed";
     pedidoId: number | null;
     reason: string | null;
   }>;
 };
 
-export type AssignmentStrategy = 'FALLBACK_FIXED' | 'COST_MIN';
+export type AssignmentStrategy = "FALLBACK_FIXED" | "COST_MIN";
 
 export type OrderDetail = {
   pedidoId: number;
@@ -191,11 +195,11 @@ export async function syncPendingOrders(
   accessToken: string,
   limit?: number,
 ): Promise<SyncPendingOrdersResponse> {
-  const response = await fetch(`${API_URL}/orders/sync/pending`, {
-    method: 'POST',
-    credentials: 'include',
+  const response = await fetch(`${API_URL}/orders/sync/full`, {
+    method: "POST",
+    credentials: "include",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify(limit ? { limit } : {}),
@@ -209,8 +213,8 @@ export async function getOrderDetail(
   pedidoId: number,
 ): Promise<OrderDetail> {
   const response = await fetch(`${API_URL}/orders/${pedidoId}`, {
-    method: 'GET',
-    credentials: 'include',
+    method: "GET",
+    credentials: "include",
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -225,15 +229,18 @@ export async function previewOrderAssignment(
   pedidoId: number,
   request?: AssignmentPreviewRequest,
 ): Promise<AssignmentPreviewResponse> {
-  const response = await fetch(`${API_URL}/orders/${pedidoId}/assignment/preview`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
+  const response = await fetch(
+    `${API_URL}/orders/${pedidoId}/assignment/preview`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(request ?? {}),
     },
-    body: JSON.stringify(request ?? {}),
-  });
+  );
 
   return parseJsonResponse<AssignmentPreviewResponse>(response);
 }
@@ -243,15 +250,18 @@ export async function confirmOrderAssignment(
   pedidoId: number,
   request?: AssignmentConfirmRequest,
 ): Promise<AssignmentConfirmResponse> {
-  const response = await fetch(`${API_URL}/orders/${pedidoId}/assignment/confirm`, {
-    method: 'PATCH',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
+  const response = await fetch(
+    `${API_URL}/orders/${pedidoId}/assignment/confirm`,
+    {
+      method: "PATCH",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(request ?? {}),
     },
-    body: JSON.stringify(request ?? {}),
-  });
+  );
 
   return parseJsonResponse<AssignmentConfirmResponse>(response);
 }

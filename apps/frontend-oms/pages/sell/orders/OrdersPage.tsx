@@ -18,6 +18,7 @@ export function OrdersPage() {
   const [rowsAll, setRowsAll] = useState<OrderRow[]>([]);
   const [rows, setRows] = useState<OrderRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [loadError, setLoadError] = useState('');
 
   const [filters, setFilters] = useState<OrdersFilters>({
@@ -49,44 +50,12 @@ export function OrdersPage() {
       setLoadError('');
 
       try {
-        let syncWarning = '';
-
-        if (hasPermissions(['orders.manage']) && shouldRunSyncPending()) {
-          try {
-            const syncResult = await syncPendingOrders(accessToken);
-            if (syncResult.blockedByDiagnostics) {
-              const blockedReasons = syncResult.diagnostics
-                .filter((item) => !item.ok)
-                .map((item) => item.message)
-                .join(' | ');
-              syncWarning =
-                blockedReasons || 'Sincronizacion bloqueada por diagnostico de catalogos';
-            }
-          } catch (error) {
-            syncWarning =
-              error instanceof Error
-                ? `No se pudo sincronizar pendientes: ${error.message}`
-                : 'No se pudo sincronizar pendientes';
-          }
-        }
-
         const response = await listOrders(accessToken);
-        const nextRows: OrderRow[] = response.map((item) => ({
-          pedidoId: item.pedidoId,
-          id: item.id,
-          reference: item.reference,
-          newCustomer: normalizeNewCustomer(item.newCustomer),
-          delivery: item.delivery,
-          customer: item.customer,
-          total: item.total,
-          payment: item.payment,
-          status: normalizeStatus(item.status),
-          date: item.date,
-        }));
+        const nextRows = mapApiOrdersToRows(response);
 
         setRowsAll(nextRows);
         setRows(nextRows);
-        setLoadError(syncWarning);
+        setLoadError('');
       } catch (error) {
         const message =
           error instanceof Error ? error.message : 'No se pudo cargar pedidos';
@@ -99,7 +68,43 @@ export function OrdersPage() {
     }
 
     void loadOrdersFromApi();
-  }, [accessToken, hasPermissions, isAuthLoading]);
+  }, [accessToken, isAuthLoading]);
+
+  async function handleManualSync() {
+    if (!accessToken) {
+      setLoadError('Sesion no disponible');
+      return;
+    }
+
+    setIsSyncing(true);
+    setLoadError('');
+
+    try {
+      const syncResult = await syncPendingOrders(accessToken);
+      let syncWarning = '';
+
+      if (syncResult.blockedByDiagnostics) {
+        const blockedReasons = syncResult.diagnostics
+          .filter((item) => !item.ok)
+          .map((item) => item.message)
+          .join(' | ');
+        syncWarning =
+          blockedReasons || 'Sincronizacion KOAJ full bloqueada por diagnostico de catalogos';
+      }
+
+      const response = await listOrders(accessToken);
+      const nextRows = mapApiOrdersToRows(response);
+      setRowsAll(nextRows);
+      setRows(nextRows);
+      setLoadError(syncWarning);
+    } catch (error) {
+      const message =
+        error instanceof Error ? `No se pudo sincronizar KOAJ full: ${error.message}` : 'No se pudo sincronizar KOAJ full';
+      setLoadError(message);
+    } finally {
+      setIsSyncing(false);
+    }
+  }
 
   const total = useMemo(() => rows.length, [rows]);
 
@@ -175,6 +180,13 @@ export function OrdersPage() {
     >
       {isLoading && <p>Cargando pedidos desde API...</p>}
       {loadError && <p style={{ color: '#b00020' }}>{loadError}</p>}
+      {hasPermissions(['orders.manage']) && (
+        <div style={{ marginBottom: 10 }}>
+          <button type="button" onClick={() => void handleManualSync()} disabled={isSyncing}>
+            {isSyncing ? 'Sincronizando KOAJ full...' : 'Sincronizar KOAJ full'}
+          </button>
+        </div>
+      )}
 
       <OrdersTable
         rows={rows}
@@ -219,16 +231,17 @@ function normalizeStatus(value: string): OrderRow['status'] {
   return 'Asignado';
 }
 
-function shouldRunSyncPending(): boolean {
-  const key = 'orders.syncPending.lastRun';
-  const now = Date.now();
-  const lastRunRaw = window.sessionStorage.getItem(key);
-  const lastRun = lastRunRaw ? Number(lastRunRaw) : 0;
-
-  if (Number.isFinite(lastRun) && now - lastRun < 5000) {
-    return false;
-  }
-
-  window.sessionStorage.setItem(key, String(now));
-  return true;
+function mapApiOrdersToRows(items: Awaited<ReturnType<typeof listOrders>>): OrderRow[] {
+  return items.map((item) => ({
+    pedidoId: item.pedidoId,
+    id: item.id,
+    reference: item.reference,
+    newCustomer: normalizeNewCustomer(item.newCustomer),
+    delivery: item.delivery,
+    customer: item.customer,
+    total: item.total,
+    payment: item.payment,
+    status: normalizeStatus(item.status),
+    date: item.date,
+  }));
 }

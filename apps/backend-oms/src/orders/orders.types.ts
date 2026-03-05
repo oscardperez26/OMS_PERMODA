@@ -1,23 +1,53 @@
-export type KoajPendingOrderClient = {
-  NOMBRE?: string;
-  APELLIDO?: string;
-  CIUDAD?: string;
-  DEPARTAMENTO?: string;
-  PAIS?: string;
+export type KoajPsOrder = {
+  id?: number | string;
+  reference?: string;
+  id_shop?: number | string;
+  id_address_delivery?: number | string;
+  id_customer?: number | string;
+  date_add?: string;
+  total_discounts?: number | string;
+  total_discounts_tax_incl?: number | string;
+  total_paid?: number | string;
+  total_paid_tax_incl?: number | string;
+  total_paid_tax_excl?: number | string;
+  total_products?: number | string;
+  total_products_wt?: number | string;
+  total_shipping?: number | string;
+  total_shipping_tax_incl?: number | string;
 };
 
-export type KoajPendingOrder = {
-  ID_PEDIDO: number;
-  ALIAS: string;
-  ORIGEN: number;
-  REFERENCIA?: string;
-  REF_ORIGINAL?: string;
-  FECHA?: string;
-  CLIENTE?: KoajPendingOrderClient;
+export type KoajPsOrdersResponse = {
+  orders?: KoajPsOrder[];
 };
 
-export type KoajPendingResponse = {
-  Pedidos?: KoajPendingOrder[];
+export type KoajPsAddress = {
+  id?: number | string;
+  firstname?: string;
+  lastname?: string;
+  city?: string;
+  address1?: string;
+  address2?: string;
+  postcode?: string;
+  phone?: string;
+  phone_mobile?: string;
+};
+
+export type KoajPsAddressResponse = {
+  address?: KoajPsAddress;
+  addresses?: KoajPsAddress[];
+};
+
+export type KoajPsCustomer = {
+  id?: number | string;
+  firstname?: string;
+  lastname?: string;
+  email?: string;
+  dni?: string;
+};
+
+export type KoajPsCustomerResponse = {
+  customer?: KoajPsCustomer;
+  customers?: KoajPsCustomer[];
 };
 
 export type OrderListItem = {

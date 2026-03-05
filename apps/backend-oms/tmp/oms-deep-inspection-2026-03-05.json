@@ -1,0 +1,4899 @@
+{
+  "generatedAt": "2026-03-05T18:59:20.729Z",
+  "startedAt": "2026-03-05T18:59:15.806Z",
+  "database": {
+    "host": "127.0.0.1",
+    "port": 53604,
+    "name": "OMS",
+    "schema": "oms"
+  },
+  "targetTables": [
+    "Empresa",
+    "CanalVenta",
+    "Moneda",
+    "Estado",
+    "Pais",
+    "Ciudad",
+    "Tienda",
+    "Bodega",
+    "Transportadora",
+    "ZonaTransporte",
+    "ZonaCiudad",
+    "CostoTransporte",
+    "Producto",
+    "ProductoVariante",
+    "Inventario",
+    "Categoria",
+    "Color",
+    "Talla",
+    "Atributo",
+    "AtributoValor",
+    "VarianteAtributo",
+    "Pedido",
+    "PedidoEstadoHistorial",
+    "Log"
+  ],
+  "existingTables": [
+    "Atributo",
+    "AtributoValor",
+    "Bodega",
+    "CanalVenta",
+    "Categoria",
+    "Ciudad",
+    "Color",
+    "CostoTransporte",
+    "Empresa",
+    "Estado",
+    "Inventario",
+    "Log",
+    "Moneda",
+    "Pais",
+    "Pedido",
+    "PedidoEstadoHistorial",
+    "Producto",
+    "ProductoVariante",
+    "Talla",
+    "Tienda",
+    "Transportadora",
+    "VarianteAtributo",
+    "ZonaCiudad",
+    "ZonaTransporte"
+  ],
+  "missingTables": [],
+  "rowCounts": [
+    {
+      "TableName": "Atributo",
+      "RowCount": "0"
+    },
+    {
+      "TableName": "AtributoValor",
+      "RowCount": "0"
+    },
+    {
+      "TableName": "Bodega",
+      "RowCount": "2"
+    },
+    {
+      "TableName": "CanalVenta",
+      "RowCount": "25"
+    },
+    {
+      "TableName": "Categoria",
+      "RowCount": "1"
+    },
+    {
+      "TableName": "Ciudad",
+      "RowCount": "3"
+    },
+    {
+      "TableName": "Color",
+      "RowCount": "1"
+    },
+    {
+      "TableName": "CostoTransporte",
+      "RowCount": "2"
+    },
+    {
+      "TableName": "Empresa",
+      "RowCount": "5"
+    },
+    {
+      "TableName": "Estado",
+      "RowCount": "14"
+    },
+    {
+      "TableName": "Inventario",
+      "RowCount": "16"
+    },
+    {
+      "TableName": "Log",
+      "RowCount": "26"
+    },
+    {
+      "TableName": "Moneda",
+      "RowCount": "3"
+    },
+    {
+      "TableName": "Pais",
+      "RowCount": "5"
+    },
+    {
+      "TableName": "Pedido",
+      "RowCount": "105"
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "RowCount": "28"
+    },
+    {
+      "TableName": "Producto",
+      "RowCount": "6"
+    },
+    {
+      "TableName": "ProductoVariante",
+      "RowCount": "8"
+    },
+    {
+      "TableName": "Talla",
+      "RowCount": "0"
+    },
+    {
+      "TableName": "Tienda",
+      "RowCount": "2"
+    },
+    {
+      "TableName": "Transportadora",
+      "RowCount": "1"
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "RowCount": "0"
+    },
+    {
+      "TableName": "ZonaCiudad",
+      "RowCount": "3"
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "RowCount": "2"
+    }
+  ],
+  "columns": [
+    {
+      "TableName": "Atributo",
+      "OrdinalPosition": 1,
+      "ColumnName": "AtributoId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Atributo",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Atributo",
+      "OrdinalPosition": 3,
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Atributo",
+      "OrdinalPosition": 4,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Atributo",
+      "OrdinalPosition": 5,
+      "ColumnName": "Tipo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 20,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "('LISTA')"
+    },
+    {
+      "TableName": "Atributo",
+      "OrdinalPosition": 6,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Atributo",
+      "OrdinalPosition": 7,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "AtributoValor",
+      "OrdinalPosition": 1,
+      "ColumnName": "AtributoValorId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "AtributoValor",
+      "OrdinalPosition": 2,
+      "ColumnName": "AtributoId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "AtributoValor",
+      "OrdinalPosition": 3,
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 80,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "AtributoValor",
+      "OrdinalPosition": 4,
+      "ColumnName": "Valor",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 160,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "AtributoValor",
+      "OrdinalPosition": 5,
+      "ColumnName": "Orden",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((0))"
+    },
+    {
+      "TableName": "AtributoValor",
+      "OrdinalPosition": 6,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "AtributoValor",
+      "OrdinalPosition": 7,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 1,
+      "ColumnName": "BodegaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 3,
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 4,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 5,
+      "ColumnName": "Tipo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 20,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 6,
+      "ColumnName": "TiendaId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 7,
+      "ColumnName": "PaisId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 8,
+      "ColumnName": "CiudadId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 9,
+      "ColumnName": "Direccion",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 255,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 10,
+      "ColumnName": "Activo",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 11,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Bodega",
+      "OrdinalPosition": 12,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CanalVenta",
+      "OrdinalPosition": 1,
+      "ColumnName": "CanalVentaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CanalVenta",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CanalVenta",
+      "OrdinalPosition": 3,
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 50,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CanalVenta",
+      "OrdinalPosition": 4,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CanalVenta",
+      "OrdinalPosition": 5,
+      "ColumnName": "Tipo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 30,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CanalVenta",
+      "OrdinalPosition": 6,
+      "ColumnName": "Estado",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 20,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "('ACTIVO')"
+    },
+    {
+      "TableName": "CanalVenta",
+      "OrdinalPosition": 7,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "CanalVenta",
+      "OrdinalPosition": 8,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 1,
+      "ColumnName": "CategoriaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 3,
+      "ColumnName": "ParentId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 4,
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 80,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 5,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 6,
+      "ColumnName": "Activo",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 7,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 8,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 9,
+      "ColumnName": "ExternalCategoryId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 10,
+      "ColumnName": "ExternalParentId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 11,
+      "ColumnName": "Level",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 20,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 12,
+      "ColumnName": "SourceTs",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 13,
+      "ColumnName": "IsActiveExternal",
+      "DataType": "bit",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 14,
+      "ColumnName": "ApiSuccess",
+      "DataType": "bit",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Categoria",
+      "OrdinalPosition": 15,
+      "ColumnName": "ApiStatusCode",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Ciudad",
+      "OrdinalPosition": 1,
+      "ColumnName": "CiudadId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Ciudad",
+      "OrdinalPosition": 2,
+      "ColumnName": "PaisId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Ciudad",
+      "OrdinalPosition": 3,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 160,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Ciudad",
+      "OrdinalPosition": 4,
+      "ColumnName": "Departamento",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 160,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Ciudad",
+      "OrdinalPosition": 5,
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 50,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Ciudad",
+      "OrdinalPosition": 6,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Ciudad",
+      "OrdinalPosition": 7,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 1,
+      "ColumnName": "ColorId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 3,
+      "ColumnName": "ExternalColorId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 4,
+      "ColumnName": "CompanyID",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 5,
+      "ColumnName": "SourceCode",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 6,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 200,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 7,
+      "ColumnName": "IsActive",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 8,
+      "ColumnName": "IsMaterial",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((0))"
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 9,
+      "ColumnName": "SourceTs",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 10,
+      "ColumnName": "ApiSuccess",
+      "DataType": "bit",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 11,
+      "ColumnName": "ApiStatusCode",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 12,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Color",
+      "OrdinalPosition": 13,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 1,
+      "ColumnName": "CostoTransporteId",
+      "DataType": "bigint",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 3,
+      "ColumnName": "ZonaTransporteId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 4,
+      "ColumnName": "TransportadoraId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 5,
+      "ColumnName": "MonedaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 6,
+      "ColumnName": "PesoMinKg",
+      "DataType": "decimal",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 3,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 7,
+      "ColumnName": "PesoMaxKg",
+      "DataType": "decimal",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 3,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 8,
+      "ColumnName": "ValorMin",
+      "DataType": "decimal",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 18,
+      "NumericScale": 2,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 9,
+      "ColumnName": "ValorMax",
+      "DataType": "decimal",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 18,
+      "NumericScale": 2,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 10,
+      "ColumnName": "Costo",
+      "DataType": "decimal",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 18,
+      "NumericScale": 2,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 11,
+      "ColumnName": "DiasMin",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 12,
+      "ColumnName": "DiasMax",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 13,
+      "ColumnName": "Activo",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 14,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "CostoTransporte",
+      "OrdinalPosition": 15,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 1,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 2,
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 30,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 3,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 4,
+      "ColumnName": "Nit",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 40,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 5,
+      "ColumnName": "Email",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 6,
+      "ColumnName": "Telefono",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 50,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 7,
+      "ColumnName": "PaisId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 8,
+      "ColumnName": "CiudadId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 9,
+      "ColumnName": "Direccion",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 255,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 10,
+      "ColumnName": "MonedaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 11,
+      "ColumnName": "Estado",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 20,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "('ACTIVA')"
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 12,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Empresa",
+      "OrdinalPosition": 13,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Estado",
+      "OrdinalPosition": 1,
+      "ColumnName": "EstadoId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Estado",
+      "OrdinalPosition": 2,
+      "ColumnName": "Entidad",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 30,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Estado",
+      "OrdinalPosition": 3,
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Estado",
+      "OrdinalPosition": 4,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Estado",
+      "OrdinalPosition": 5,
+      "ColumnName": "Orden",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((0))"
+    },
+    {
+      "TableName": "Estado",
+      "OrdinalPosition": 6,
+      "ColumnName": "EsFinal",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((0))"
+    },
+    {
+      "TableName": "Estado",
+      "OrdinalPosition": 7,
+      "ColumnName": "Activo",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "Estado",
+      "OrdinalPosition": 8,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Estado",
+      "OrdinalPosition": 9,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Inventario",
+      "OrdinalPosition": 1,
+      "ColumnName": "InventarioId",
+      "DataType": "bigint",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Inventario",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Inventario",
+      "OrdinalPosition": 3,
+      "ColumnName": "BodegaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Inventario",
+      "OrdinalPosition": 4,
+      "ColumnName": "VarianteId",
+      "DataType": "bigint",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Inventario",
+      "OrdinalPosition": 5,
+      "ColumnName": "StockTotal",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((0))"
+    },
+    {
+      "TableName": "Inventario",
+      "OrdinalPosition": 6,
+      "ColumnName": "StockReservado",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((0))"
+    },
+    {
+      "TableName": "Inventario",
+      "OrdinalPosition": 7,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 1,
+      "ColumnName": "LogId",
+      "DataType": "bigint",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 3,
+      "ColumnName": "UsuarioId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 4,
+      "ColumnName": "Nivel",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 10,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 5,
+      "ColumnName": "Modulo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 80,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 6,
+      "ColumnName": "Accion",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 7,
+      "ColumnName": "Entidad",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 80,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 8,
+      "ColumnName": "EntidadId",
+      "DataType": "bigint",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 9,
+      "ColumnName": "Mensaje",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 255,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 10,
+      "ColumnName": "DataJson",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": -1,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 11,
+      "ColumnName": "Ip",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 45,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 12,
+      "ColumnName": "UserAgent",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 255,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Log",
+      "OrdinalPosition": 13,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Moneda",
+      "OrdinalPosition": 1,
+      "ColumnName": "MonedaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Moneda",
+      "OrdinalPosition": 2,
+      "ColumnName": "Codigo",
+      "DataType": "char",
+      "IsNullable": "NO",
+      "CharMaxLength": 3,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Moneda",
+      "OrdinalPosition": 3,
+      "ColumnName": "Simbolo",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 10,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Moneda",
+      "OrdinalPosition": 4,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Moneda",
+      "OrdinalPosition": 5,
+      "ColumnName": "Decimales",
+      "DataType": "tinyint",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 3,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((2))"
+    },
+    {
+      "TableName": "Moneda",
+      "OrdinalPosition": 6,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Moneda",
+      "OrdinalPosition": 7,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pais",
+      "OrdinalPosition": 1,
+      "ColumnName": "PaisId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pais",
+      "OrdinalPosition": 2,
+      "ColumnName": "CodigoISO2",
+      "DataType": "char",
+      "IsNullable": "NO",
+      "CharMaxLength": 2,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pais",
+      "OrdinalPosition": 3,
+      "ColumnName": "CodigoISO3",
+      "DataType": "char",
+      "IsNullable": "YES",
+      "CharMaxLength": 3,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pais",
+      "OrdinalPosition": 4,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pais",
+      "OrdinalPosition": 5,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Pais",
+      "OrdinalPosition": 6,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 1,
+      "ColumnName": "PedidoId",
+      "DataType": "bigint",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 3,
+      "ColumnName": "EmpresaClienteId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 4,
+      "ColumnName": "CanalVentaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 5,
+      "ColumnName": "TiendaOrigenId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 6,
+      "ColumnName": "MonedaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 7,
+      "ColumnName": "NumeroPedido",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 8,
+      "ColumnName": "NumeroExterno",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 80,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 9,
+      "ColumnName": "EstadoId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 10,
+      "ColumnName": "ClienteNombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 11,
+      "ColumnName": "ClienteDocumento",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 12,
+      "ColumnName": "ClienteEmail",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 13,
+      "ColumnName": "ClienteTelefono",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 50,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 14,
+      "ColumnName": "ShippingPaisId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 15,
+      "ColumnName": "ShippingCiudadId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 16,
+      "ColumnName": "ShippingDireccion",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 255,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 17,
+      "ColumnName": "ShippingBarrio",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 18,
+      "ColumnName": "ShippingZip",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 20,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 19,
+      "ColumnName": "Subtotal",
+      "DataType": "decimal",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 18,
+      "NumericScale": 2,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((0))"
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 20,
+      "ColumnName": "Descuento",
+      "DataType": "decimal",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 18,
+      "NumericScale": 2,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((0))"
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 21,
+      "ColumnName": "Impuestos",
+      "DataType": "decimal",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 18,
+      "NumericScale": 2,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((0))"
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 22,
+      "ColumnName": "CostoEnvio",
+      "DataType": "decimal",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 18,
+      "NumericScale": 2,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((0))"
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 23,
+      "ColumnName": "Total",
+      "DataType": "decimal",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 18,
+      "NumericScale": 2,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((0))"
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 24,
+      "ColumnName": "PasarelaPagoId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 25,
+      "ColumnName": "PagoReferencia",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 26,
+      "ColumnName": "PagoEstadoId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 27,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Pedido",
+      "OrdinalPosition": 28,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "OrdinalPosition": 1,
+      "ColumnName": "PedidoEstadoHistorialId",
+      "DataType": "bigint",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "OrdinalPosition": 2,
+      "ColumnName": "PedidoId",
+      "DataType": "bigint",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "OrdinalPosition": 3,
+      "ColumnName": "EstadoId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "OrdinalPosition": 4,
+      "ColumnName": "UsuarioId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "OrdinalPosition": 5,
+      "ColumnName": "Nota",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 255,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "OrdinalPosition": 6,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Producto",
+      "OrdinalPosition": 1,
+      "ColumnName": "ProductoId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Producto",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Producto",
+      "OrdinalPosition": 3,
+      "ColumnName": "CategoriaId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Producto",
+      "OrdinalPosition": 4,
+      "ColumnName": "SKUBase",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 80,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Producto",
+      "OrdinalPosition": 5,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 220,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Producto",
+      "OrdinalPosition": 6,
+      "ColumnName": "Descripcion",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": -1,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Producto",
+      "OrdinalPosition": 7,
+      "ColumnName": "Marca",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Producto",
+      "OrdinalPosition": 8,
+      "ColumnName": "Activo",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "Producto",
+      "OrdinalPosition": 9,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Producto",
+      "OrdinalPosition": 10,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 1,
+      "ColumnName": "VarianteId",
+      "DataType": "bigint",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 3,
+      "ColumnName": "ProductoId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 4,
+      "ColumnName": "SKU",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 100,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 5,
+      "ColumnName": "EAN",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 6,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 220,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 7,
+      "ColumnName": "PesoKg",
+      "DataType": "decimal",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 3,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 8,
+      "ColumnName": "LargoCm",
+      "DataType": "decimal",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 2,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 9,
+      "ColumnName": "AnchoCm",
+      "DataType": "decimal",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 2,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 10,
+      "ColumnName": "AltoCm",
+      "DataType": "decimal",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 2,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 11,
+      "ColumnName": "Activo",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 12,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "ProductoVariante",
+      "OrdinalPosition": 13,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Talla",
+      "OrdinalPosition": 1,
+      "ColumnName": "TallaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Talla",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Talla",
+      "OrdinalPosition": 3,
+      "ColumnName": "ExternalTallaId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Talla",
+      "OrdinalPosition": 4,
+      "ColumnName": "SourceCode",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Talla",
+      "OrdinalPosition": 5,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 200,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Talla",
+      "OrdinalPosition": 6,
+      "ColumnName": "IsActive",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "Talla",
+      "OrdinalPosition": 7,
+      "ColumnName": "SourceTs",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Talla",
+      "OrdinalPosition": 8,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Talla",
+      "OrdinalPosition": 9,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 1,
+      "ColumnName": "TiendaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 3,
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 4,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 5,
+      "ColumnName": "PaisId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 6,
+      "ColumnName": "CiudadId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 7,
+      "ColumnName": "Direccion",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 255,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 8,
+      "ColumnName": "Telefono",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 50,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 9,
+      "ColumnName": "FulfillmentHabilitado",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 10,
+      "ColumnName": "Activo",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 11,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Tienda",
+      "OrdinalPosition": 12,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Transportadora",
+      "OrdinalPosition": 1,
+      "ColumnName": "TransportadoraId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Transportadora",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Transportadora",
+      "OrdinalPosition": 3,
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Transportadora",
+      "OrdinalPosition": 4,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Transportadora",
+      "OrdinalPosition": 5,
+      "ColumnName": "TrackingUrlTemplate",
+      "DataType": "nvarchar",
+      "IsNullable": "YES",
+      "CharMaxLength": 255,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "Transportadora",
+      "OrdinalPosition": 6,
+      "ColumnName": "Activo",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "Transportadora",
+      "OrdinalPosition": 7,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "Transportadora",
+      "OrdinalPosition": 8,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "OrdinalPosition": 1,
+      "ColumnName": "VarianteId",
+      "DataType": "bigint",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "OrdinalPosition": 2,
+      "ColumnName": "AtributoId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "OrdinalPosition": 3,
+      "ColumnName": "AtributoValorId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "OrdinalPosition": 4,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "ZonaCiudad",
+      "OrdinalPosition": 1,
+      "ColumnName": "ZonaTransporteId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ZonaCiudad",
+      "OrdinalPosition": 2,
+      "ColumnName": "CiudadId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "OrdinalPosition": 1,
+      "ColumnName": "ZonaTransporteId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 1,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "OrdinalPosition": 2,
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "OrdinalPosition": 3,
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "OrdinalPosition": 4,
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "IsNullable": "NO",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "OrdinalPosition": 5,
+      "ColumnName": "PaisId",
+      "DataType": "int",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "OrdinalPosition": 6,
+      "ColumnName": "Activo",
+      "DataType": "bit",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "((1))"
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "OrdinalPosition": 7,
+      "ColumnName": "CreatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "NO",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": "(sysutcdatetime())"
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "OrdinalPosition": 8,
+      "ColumnName": "UpdatedAt",
+      "DataType": "datetime2",
+      "IsNullable": "YES",
+      "CharMaxLength": null,
+      "NumericPrecision": null,
+      "NumericScale": null,
+      "IsIdentity": 0,
+      "DefaultDefinition": null
+    }
+  ],
+  "primaryKeys": [
+    {
+      "TableName": "Atributo",
+      "ColumnName": "AtributoId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Atributo__8AB1659A00B1E3C5"
+    },
+    {
+      "TableName": "AtributoValor",
+      "ColumnName": "AtributoValorId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Atributo__F91EB8A3DDB4C49E"
+    },
+    {
+      "TableName": "Bodega",
+      "ColumnName": "BodegaId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Bodega__37A29A95A79EEEA2"
+    },
+    {
+      "TableName": "CanalVenta",
+      "ColumnName": "CanalVentaId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__CanalVen__5DF055E7F67DE824"
+    },
+    {
+      "TableName": "Categoria",
+      "ColumnName": "CategoriaId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Categori__F353C1E549540E11"
+    },
+    {
+      "TableName": "Ciudad",
+      "ColumnName": "CiudadId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Ciudad__E826E7700D26A05B"
+    },
+    {
+      "TableName": "Color",
+      "ColumnName": "ColorId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Color__8DA7674D83B5D39C"
+    },
+    {
+      "TableName": "CostoTransporte",
+      "ColumnName": "CostoTransporteId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__CostoTra__5B833EFF52F879AC"
+    },
+    {
+      "TableName": "Empresa",
+      "ColumnName": "EmpresaId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Empresa__7B9F21164D516FA0"
+    },
+    {
+      "TableName": "Estado",
+      "ColumnName": "EstadoId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Estado__FEF86B0047F30247"
+    },
+    {
+      "TableName": "Inventario",
+      "ColumnName": "InventarioId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Inventar__FB8A24D742882112"
+    },
+    {
+      "TableName": "Log",
+      "ColumnName": "LogId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Log__5E548648EECBEC78"
+    },
+    {
+      "TableName": "Moneda",
+      "ColumnName": "MonedaId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Moneda__CEEBACBE0DF0515C"
+    },
+    {
+      "TableName": "Pais",
+      "ColumnName": "PaisId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Pais__B501E185361CFCBD"
+    },
+    {
+      "TableName": "Pedido",
+      "ColumnName": "PedidoId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Pedido__09BA1430DC479137"
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "ColumnName": "PedidoEstadoHistorialId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__PedidoEs__8B6F2BDE3C75FB8A"
+    },
+    {
+      "TableName": "Producto",
+      "ColumnName": "ProductoId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Producto__A430AEA31F9C8620"
+    },
+    {
+      "TableName": "ProductoVariante",
+      "ColumnName": "VarianteId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Producto__FE18F98BE70FD33B"
+    },
+    {
+      "TableName": "Talla",
+      "ColumnName": "TallaId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Talla__9BF1376D6FF86DC0"
+    },
+    {
+      "TableName": "Tienda",
+      "ColumnName": "TiendaId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Tienda__FC84C5CC27E94979"
+    },
+    {
+      "TableName": "Transportadora",
+      "ColumnName": "TransportadoraId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__Transpor__5A95DE876E9E449A"
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "ColumnName": "VarianteId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK_VarianteAtributo"
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "ColumnName": "AtributoId",
+      "OrdinalPosition": 2,
+      "ConstraintName": "PK_VarianteAtributo"
+    },
+    {
+      "TableName": "ZonaCiudad",
+      "ColumnName": "ZonaTransporteId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK_ZonaCiudad"
+    },
+    {
+      "TableName": "ZonaCiudad",
+      "ColumnName": "CiudadId",
+      "OrdinalPosition": 2,
+      "ConstraintName": "PK_ZonaCiudad"
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "ColumnName": "ZonaTransporteId",
+      "OrdinalPosition": 1,
+      "ConstraintName": "PK__ZonaTran__6E3753FF5AB67B49"
+    }
+  ],
+  "foreignKeys": [
+    {
+      "ParentTable": "Atributo",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Atr_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "AtributoValor",
+      "ParentColumn": "AtributoId",
+      "ReferencedTable": "Atributo",
+      "ReferencedColumn": "AtributoId",
+      "ForeignKeyName": "FK_AtrVal_Atr",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Bodega",
+      "ParentColumn": "CiudadId",
+      "ReferencedTable": "Ciudad",
+      "ReferencedColumn": "CiudadId",
+      "ForeignKeyName": "FK_Bod_Ciudad",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Bodega",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Bod_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Bodega",
+      "ParentColumn": "PaisId",
+      "ReferencedTable": "Pais",
+      "ReferencedColumn": "PaisId",
+      "ForeignKeyName": "FK_Bod_Pais",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Bodega",
+      "ParentColumn": "TiendaId",
+      "ReferencedTable": "Tienda",
+      "ReferencedColumn": "TiendaId",
+      "ForeignKeyName": "FK_Bod_Tienda",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "CanalVenta",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Canal_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Categoria",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Cat_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Categoria",
+      "ParentColumn": "ParentId",
+      "ReferencedTable": "Categoria",
+      "ReferencedColumn": "CategoriaId",
+      "ForeignKeyName": "FK_Cat_Parent",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Ciudad",
+      "ParentColumn": "PaisId",
+      "ReferencedTable": "Pais",
+      "ReferencedColumn": "PaisId",
+      "ForeignKeyName": "FK_Ciudad_Pais",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Color",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Color_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "CostoTransporte",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_CT_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "CostoTransporte",
+      "ParentColumn": "MonedaId",
+      "ReferencedTable": "Moneda",
+      "ReferencedColumn": "MonedaId",
+      "ForeignKeyName": "FK_CT_Moneda",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "CostoTransporte",
+      "ParentColumn": "TransportadoraId",
+      "ReferencedTable": "Transportadora",
+      "ReferencedColumn": "TransportadoraId",
+      "ForeignKeyName": "FK_CT_Transp",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "CostoTransporte",
+      "ParentColumn": "ZonaTransporteId",
+      "ReferencedTable": "ZonaTransporte",
+      "ReferencedColumn": "ZonaTransporteId",
+      "ForeignKeyName": "FK_CT_Zona",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "DetallePedido",
+      "ParentColumn": "BodegaFulfillmentId",
+      "ReferencedTable": "Bodega",
+      "ReferencedColumn": "BodegaId",
+      "ForeignKeyName": "FK_DP_Bodega",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "DetallePedido",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_DP_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "DetallePedido",
+      "ParentColumn": "EstadoId",
+      "ReferencedTable": "Estado",
+      "ReferencedColumn": "EstadoId",
+      "ForeignKeyName": "FK_DP_Estado",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "DetallePedido",
+      "ParentColumn": "PedidoId",
+      "ReferencedTable": "Pedido",
+      "ReferencedColumn": "PedidoId",
+      "ForeignKeyName": "FK_DP_Pedido",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "DetallePedido",
+      "ParentColumn": "TransportadoraId",
+      "ReferencedTable": "Transportadora",
+      "ReferencedColumn": "TransportadoraId",
+      "ForeignKeyName": "FK_DP_Transp",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "DetallePedido",
+      "ParentColumn": "VarianteId",
+      "ReferencedTable": "ProductoVariante",
+      "ReferencedColumn": "VarianteId",
+      "ForeignKeyName": "FK_DP_Var",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Empresa",
+      "ParentColumn": "CiudadId",
+      "ReferencedTable": "Ciudad",
+      "ReferencedColumn": "CiudadId",
+      "ForeignKeyName": "FK_Empresa_Ciudad",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Empresa",
+      "ParentColumn": "MonedaId",
+      "ReferencedTable": "Moneda",
+      "ReferencedColumn": "MonedaId",
+      "ForeignKeyName": "FK_Empresa_Moneda",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Empresa",
+      "ParentColumn": "PaisId",
+      "ReferencedTable": "Pais",
+      "ReferencedColumn": "PaisId",
+      "ForeignKeyName": "FK_Empresa_Pais",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "EmpresaCliente",
+      "ParentColumn": "CiudadId",
+      "ReferencedTable": "Ciudad",
+      "ReferencedColumn": "CiudadId",
+      "ForeignKeyName": "FK_EmpCli_Ciudad",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "EmpresaCliente",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_EmpCli_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "EmpresaCliente",
+      "ParentColumn": "PaisId",
+      "ReferencedTable": "Pais",
+      "ReferencedColumn": "PaisId",
+      "ForeignKeyName": "FK_EmpCli_Pais",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Integracion",
+      "ParentColumn": "CanalVentaId",
+      "ReferencedTable": "CanalVenta",
+      "ReferencedColumn": "CanalVentaId",
+      "ForeignKeyName": "FK_Int_Canal",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Integracion",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Int_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Inventario",
+      "ParentColumn": "BodegaId",
+      "ReferencedTable": "Bodega",
+      "ReferencedColumn": "BodegaId",
+      "ForeignKeyName": "FK_Inv_Bodega",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Inventario",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Inv_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Inventario",
+      "ParentColumn": "VarianteId",
+      "ReferencedTable": "ProductoVariante",
+      "ReferencedColumn": "VarianteId",
+      "ForeignKeyName": "FK_Inv_Variante",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "InventarioReserva",
+      "ParentColumn": "BodegaId",
+      "ReferencedTable": "Bodega",
+      "ReferencedColumn": "BodegaId",
+      "ForeignKeyName": "FK_Res_Bodega",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "InventarioReserva",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Res_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "InventarioReserva",
+      "ParentColumn": "VarianteId",
+      "ReferencedTable": "ProductoVariante",
+      "ReferencedColumn": "VarianteId",
+      "ForeignKeyName": "FK_Res_Variante",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "ListaPrecio",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_LP_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "ListaPrecio",
+      "ParentColumn": "MonedaId",
+      "ReferencedTable": "Moneda",
+      "ReferencedColumn": "MonedaId",
+      "ForeignKeyName": "FK_LP_Moneda",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Log",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Log_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Log",
+      "ParentColumn": "UsuarioId",
+      "ReferencedTable": "Usuario",
+      "ReferencedColumn": "UsuarioId",
+      "ForeignKeyName": "FK_Log_Usuario",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "OfertaPrecioDetalle",
+      "ParentColumn": "VarianteId",
+      "ReferencedTable": "ProductoVariante",
+      "ReferencedColumn": "VarianteId",
+      "ForeignKeyName": "FK_OPD_Variante",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "PasarelaPago",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Pasarela_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Pedido",
+      "ParentColumn": "CanalVentaId",
+      "ReferencedTable": "CanalVenta",
+      "ReferencedColumn": "CanalVentaId",
+      "ForeignKeyName": "FK_Ped_Canal",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Pedido",
+      "ParentColumn": "EmpresaClienteId",
+      "ReferencedTable": "EmpresaCliente",
+      "ReferencedColumn": "EmpresaClienteId",
+      "ForeignKeyName": "FK_Ped_EmpCli",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Pedido",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Ped_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Pedido",
+      "ParentColumn": "EstadoId",
+      "ReferencedTable": "Estado",
+      "ReferencedColumn": "EstadoId",
+      "ForeignKeyName": "FK_Ped_Estado",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Pedido",
+      "ParentColumn": "MonedaId",
+      "ReferencedTable": "Moneda",
+      "ReferencedColumn": "MonedaId",
+      "ForeignKeyName": "FK_Ped_Moneda",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Pedido",
+      "ParentColumn": "PagoEstadoId",
+      "ReferencedTable": "Estado",
+      "ReferencedColumn": "EstadoId",
+      "ForeignKeyName": "FK_Ped_PagoEstado",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Pedido",
+      "ParentColumn": "PasarelaPagoId",
+      "ReferencedTable": "PasarelaPago",
+      "ReferencedColumn": "PasarelaPagoId",
+      "ForeignKeyName": "FK_Ped_Pasarela",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Pedido",
+      "ParentColumn": "ShippingCiudadId",
+      "ReferencedTable": "Ciudad",
+      "ReferencedColumn": "CiudadId",
+      "ForeignKeyName": "FK_Ped_ShipCiudad",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Pedido",
+      "ParentColumn": "ShippingPaisId",
+      "ReferencedTable": "Pais",
+      "ReferencedColumn": "PaisId",
+      "ForeignKeyName": "FK_Ped_ShipPais",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Pedido",
+      "ParentColumn": "TiendaOrigenId",
+      "ReferencedTable": "Tienda",
+      "ReferencedColumn": "TiendaId",
+      "ForeignKeyName": "FK_Ped_TiendaOrigen",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "PedidoEstadoHistorial",
+      "ParentColumn": "EstadoId",
+      "ReferencedTable": "Estado",
+      "ReferencedColumn": "EstadoId",
+      "ForeignKeyName": "FK_PEH_Estado",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "PedidoEstadoHistorial",
+      "ParentColumn": "PedidoId",
+      "ReferencedTable": "Pedido",
+      "ReferencedColumn": "PedidoId",
+      "ForeignKeyName": "FK_PEH_Pedido",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "PedidoEstadoHistorial",
+      "ParentColumn": "UsuarioId",
+      "ReferencedTable": "Usuario",
+      "ReferencedColumn": "UsuarioId",
+      "ForeignKeyName": "FK_PEH_Usuario",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "PrecioVariante",
+      "ParentColumn": "VarianteId",
+      "ReferencedTable": "ProductoVariante",
+      "ReferencedColumn": "VarianteId",
+      "ForeignKeyName": "FK_PV_Var",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Producto",
+      "ParentColumn": "CategoriaId",
+      "ReferencedTable": "Categoria",
+      "ReferencedColumn": "CategoriaId",
+      "ForeignKeyName": "FK_Prod_Cat",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Producto",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Prod_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "ProductoTexto",
+      "ParentColumn": "ProductoId",
+      "ReferencedTable": "Producto",
+      "ReferencedColumn": "ProductoId",
+      "ForeignKeyName": "FK_ProductoTexto_Producto",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "ProductoVariante",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Var_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "ProductoVariante",
+      "ParentColumn": "ProductoId",
+      "ReferencedTable": "Producto",
+      "ReferencedColumn": "ProductoId",
+      "ForeignKeyName": "FK_Var_Producto",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Talla",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Talla_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "TarifaPrecio",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Tarifa_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "TarifaPrecioDetalle",
+      "ParentColumn": "VarianteId",
+      "ReferencedTable": "ProductoVariante",
+      "ReferencedColumn": "VarianteId",
+      "ForeignKeyName": "FK_TPD_Variante",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Tienda",
+      "ParentColumn": "CiudadId",
+      "ReferencedTable": "Ciudad",
+      "ReferencedColumn": "CiudadId",
+      "ForeignKeyName": "FK_Tienda_Ciudad",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Tienda",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Tienda_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Tienda",
+      "ParentColumn": "PaisId",
+      "ReferencedTable": "Pais",
+      "ReferencedColumn": "PaisId",
+      "ForeignKeyName": "FK_Tienda_Pais",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Transportadora",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Transp_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "Usuario",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Usuario_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "VarianteAtributo",
+      "ParentColumn": "AtributoId",
+      "ReferencedTable": "Atributo",
+      "ReferencedColumn": "AtributoId",
+      "ForeignKeyName": "FK_VA_Atr",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "VarianteAtributo",
+      "ParentColumn": "AtributoValorId",
+      "ReferencedTable": "AtributoValor",
+      "ReferencedColumn": "AtributoValorId",
+      "ForeignKeyName": "FK_VA_Val",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "VarianteAtributo",
+      "ParentColumn": "VarianteId",
+      "ReferencedTable": "ProductoVariante",
+      "ReferencedColumn": "VarianteId",
+      "ForeignKeyName": "FK_VA_Var",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "ZonaCiudad",
+      "ParentColumn": "CiudadId",
+      "ReferencedTable": "Ciudad",
+      "ReferencedColumn": "CiudadId",
+      "ForeignKeyName": "FK_ZC_Ciudad",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "ZonaCiudad",
+      "ParentColumn": "ZonaTransporteId",
+      "ReferencedTable": "ZonaTransporte",
+      "ReferencedColumn": "ZonaTransporteId",
+      "ForeignKeyName": "FK_ZC_Zona",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "ZonaTransporte",
+      "ParentColumn": "EmpresaId",
+      "ReferencedTable": "Empresa",
+      "ReferencedColumn": "EmpresaId",
+      "ForeignKeyName": "FK_Zona_Empresa",
+      "OrdinalPosition": 1
+    },
+    {
+      "ParentTable": "ZonaTransporte",
+      "ParentColumn": "PaisId",
+      "ReferencedTable": "Pais",
+      "ReferencedColumn": "PaisId",
+      "ForeignKeyName": "FK_Zona_Pais",
+      "OrdinalPosition": 1
+    }
+  ],
+  "indexes": [
+    {
+      "TableName": "Atributo",
+      "IndexName": "PK__Atributo__8AB1659A00B1E3C5",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "AtributoId"
+    },
+    {
+      "TableName": "Atributo",
+      "IndexName": "UX_Atr_EmpresaCodigo",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,Codigo"
+    },
+    {
+      "TableName": "AtributoValor",
+      "IndexName": "PK__Atributo__F91EB8A3DDB4C49E",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "AtributoValorId"
+    },
+    {
+      "TableName": "AtributoValor",
+      "IndexName": "UX_AtrVal_Unico",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "AtributoId,Valor"
+    },
+    {
+      "TableName": "Bodega",
+      "IndexName": "PK__Bodega__37A29A95A79EEEA2",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "BodegaId"
+    },
+    {
+      "TableName": "Bodega",
+      "IndexName": "UX_Bodega_EmpresaCodigo",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,Codigo"
+    },
+    {
+      "TableName": "Bodega",
+      "IndexName": "IX_Bodega_Tienda",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "TiendaId"
+    },
+    {
+      "TableName": "Bodega",
+      "IndexName": "IX_Bodega_Tipo",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "Tipo"
+    },
+    {
+      "TableName": "CanalVenta",
+      "IndexName": "PK__CanalVen__5DF055E7F67DE824",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "CanalVentaId"
+    },
+    {
+      "TableName": "CanalVenta",
+      "IndexName": "UX_Canal_EmpresaCodigo",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,Codigo"
+    },
+    {
+      "TableName": "CanalVenta",
+      "IndexName": "IX_Canal_Tipo",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "Tipo"
+    },
+    {
+      "TableName": "Categoria",
+      "IndexName": "PK__Categori__F353C1E549540E11",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "CategoriaId"
+    },
+    {
+      "TableName": "Categoria",
+      "IndexName": "UX_Categoria_Empresa_ExternalId",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,ExternalCategoryId"
+    },
+    {
+      "TableName": "Categoria",
+      "IndexName": "IX_Cat_Empresa",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId"
+    },
+    {
+      "TableName": "Categoria",
+      "IndexName": "IX_Categoria_Empresa_ExternalParent",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,ExternalParentId"
+    },
+    {
+      "TableName": "Ciudad",
+      "IndexName": "PK__Ciudad__E826E7700D26A05B",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "CiudadId"
+    },
+    {
+      "TableName": "Ciudad",
+      "IndexName": "IX_Ciudad_Nombre",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "Nombre"
+    },
+    {
+      "TableName": "Color",
+      "IndexName": "PK__Color__8DA7674D83B5D39C",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "ColorId"
+    },
+    {
+      "TableName": "Color",
+      "IndexName": "UX_Color_Empresa_ExternalId",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,ExternalColorId"
+    },
+    {
+      "TableName": "Color",
+      "IndexName": "UX_Color_Empresa_SourceCode",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,SourceCode"
+    },
+    {
+      "TableName": "Color",
+      "IndexName": "IX_Color_Activo",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,IsActive"
+    },
+    {
+      "TableName": "Color",
+      "IndexName": "IX_Color_Nombre",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "Nombre"
+    },
+    {
+      "TableName": "CostoTransporte",
+      "IndexName": "PK__CostoTra__5B833EFF52F879AC",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "CostoTransporteId"
+    },
+    {
+      "TableName": "CostoTransporte",
+      "IndexName": "IX_CT_Lookup",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "ZonaTransporteId,TransportadoraId,Activo"
+    },
+    {
+      "TableName": "Empresa",
+      "IndexName": "PK__Empresa__7B9F21164D516FA0",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId"
+    },
+    {
+      "TableName": "Empresa",
+      "IndexName": "UX_Empresa_Codigo",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "Codigo"
+    },
+    {
+      "TableName": "Empresa",
+      "IndexName": "IX_Empresa_Pais",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "PaisId"
+    },
+    {
+      "TableName": "Estado",
+      "IndexName": "PK__Estado__FEF86B0047F30247",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EstadoId"
+    },
+    {
+      "TableName": "Estado",
+      "IndexName": "UX_Estado_EntidadCodigo",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "Entidad,Codigo"
+    },
+    {
+      "TableName": "Estado",
+      "IndexName": "IX_Estado_EntidadOrden",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "Entidad,Orden"
+    },
+    {
+      "TableName": "Inventario",
+      "IndexName": "PK__Inventar__FB8A24D742882112",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "InventarioId"
+    },
+    {
+      "TableName": "Inventario",
+      "IndexName": "UX_Inv_BodegaVar",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "BodegaId,VarianteId"
+    },
+    {
+      "TableName": "Inventario",
+      "IndexName": "IX_Inv_Variante",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "VarianteId"
+    },
+    {
+      "TableName": "Log",
+      "IndexName": "PK__Log__5E548648EECBEC78",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "LogId"
+    },
+    {
+      "TableName": "Log",
+      "IndexName": "IX_Log_Entidad",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "Entidad,EntidadId"
+    },
+    {
+      "TableName": "Log",
+      "IndexName": "IX_Log_Fecha",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "CreatedAt"
+    },
+    {
+      "TableName": "Log",
+      "IndexName": "IX_Log_Modulo",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "Modulo"
+    },
+    {
+      "TableName": "Moneda",
+      "IndexName": "PK__Moneda__CEEBACBE0DF0515C",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "MonedaId"
+    },
+    {
+      "TableName": "Moneda",
+      "IndexName": "UX_Moneda_Codigo",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "Codigo"
+    },
+    {
+      "TableName": "Pais",
+      "IndexName": "PK__Pais__B501E185361CFCBD",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "PaisId"
+    },
+    {
+      "TableName": "Pais",
+      "IndexName": "UX_Pais_CodigoISO2",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "CodigoISO2"
+    },
+    {
+      "TableName": "Pedido",
+      "IndexName": "PK__Pedido__09BA1430DC479137",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "PedidoId"
+    },
+    {
+      "TableName": "Pedido",
+      "IndexName": "UX_Pedido_Numero",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "NumeroPedido"
+    },
+    {
+      "TableName": "Pedido",
+      "IndexName": "IX_Pedido_CanalFecha",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "CanalVentaId,CreatedAt"
+    },
+    {
+      "TableName": "Pedido",
+      "IndexName": "IX_Pedido_Email",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "ClienteEmail"
+    },
+    {
+      "TableName": "Pedido",
+      "IndexName": "IX_Pedido_EmpresaFecha",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,CreatedAt"
+    },
+    {
+      "TableName": "Pedido",
+      "IndexName": "IX_Pedido_EstadoFecha",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EstadoId,CreatedAt"
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "IndexName": "PK__PedidoEs__8B6F2BDE3C75FB8A",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "PedidoEstadoHistorialId"
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "IndexName": "IX_PEH_PedidoFecha",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "PedidoId,CreatedAt"
+    },
+    {
+      "TableName": "Producto",
+      "IndexName": "PK__Producto__A430AEA31F9C8620",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "ProductoId"
+    },
+    {
+      "TableName": "Producto",
+      "IndexName": "IX_Prod_Categoria",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "CategoriaId"
+    },
+    {
+      "TableName": "Producto",
+      "IndexName": "IX_Prod_Empresa",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId"
+    },
+    {
+      "TableName": "ProductoVariante",
+      "IndexName": "PK__Producto__FE18F98BE70FD33B",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "VarianteId"
+    },
+    {
+      "TableName": "ProductoVariante",
+      "IndexName": "UX_Var_EmpresaSKU",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,SKU"
+    },
+    {
+      "TableName": "ProductoVariante",
+      "IndexName": "IX_Var_Producto",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "ProductoId"
+    },
+    {
+      "TableName": "Talla",
+      "IndexName": "PK__Talla__9BF1376D6FF86DC0",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "TallaId"
+    },
+    {
+      "TableName": "Talla",
+      "IndexName": "UX_Talla_Empresa_ExternalId",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,ExternalTallaId"
+    },
+    {
+      "TableName": "Talla",
+      "IndexName": "UX_Talla_Empresa_SourceCode",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,SourceCode"
+    },
+    {
+      "TableName": "Talla",
+      "IndexName": "IX_Talla_Activo",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,IsActive"
+    },
+    {
+      "TableName": "Tienda",
+      "IndexName": "PK__Tienda__FC84C5CC27E94979",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "TiendaId"
+    },
+    {
+      "TableName": "Tienda",
+      "IndexName": "UX_Tienda_EmpresaCodigo",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,Codigo"
+    },
+    {
+      "TableName": "Transportadora",
+      "IndexName": "PK__Transpor__5A95DE876E9E449A",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "TransportadoraId"
+    },
+    {
+      "TableName": "Transportadora",
+      "IndexName": "UX_Transp_EmpresaCodigo",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,Codigo"
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "IndexName": "PK_VarianteAtributo",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "VarianteId,AtributoId"
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "IndexName": "IX_VA_Valor",
+      "IsUnique": false,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "AtributoValorId"
+    },
+    {
+      "TableName": "ZonaCiudad",
+      "IndexName": "PK_ZonaCiudad",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "ZonaTransporteId,CiudadId"
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "IndexName": "PK__ZonaTran__6E3753FF5AB67B49",
+      "IsUnique": true,
+      "IsPrimaryKey": true,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "ZonaTransporteId"
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "IndexName": "UX_Zona_EmpresaCodigo",
+      "IsUnique": true,
+      "IsPrimaryKey": false,
+      "IsUniqueConstraint": false,
+      "KeyColumns": "EmpresaId,Codigo"
+    }
+  ],
+  "requiredNoDefault": [
+    {
+      "TableName": "Atributo",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Atributo",
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Atributo",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "AtributoValor",
+      "ColumnName": "AtributoId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "AtributoValor",
+      "ColumnName": "Valor",
+      "DataType": "nvarchar",
+      "CharMaxLength": 160,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Bodega",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Bodega",
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Bodega",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Bodega",
+      "ColumnName": "Tipo",
+      "DataType": "nvarchar",
+      "CharMaxLength": 20,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "CanalVenta",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "CanalVenta",
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "CharMaxLength": 50,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "CanalVenta",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "CanalVenta",
+      "ColumnName": "Tipo",
+      "DataType": "nvarchar",
+      "CharMaxLength": 30,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Categoria",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Categoria",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Ciudad",
+      "ColumnName": "PaisId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Ciudad",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 160,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Color",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Color",
+      "ColumnName": "SourceCode",
+      "DataType": "nvarchar",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Color",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 200,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "CostoTransporte",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "CostoTransporte",
+      "ColumnName": "ZonaTransporteId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "CostoTransporte",
+      "ColumnName": "TransportadoraId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "CostoTransporte",
+      "ColumnName": "MonedaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "CostoTransporte",
+      "ColumnName": "Costo",
+      "DataType": "decimal",
+      "CharMaxLength": null,
+      "NumericPrecision": 18,
+      "NumericScale": 2
+    },
+    {
+      "TableName": "Empresa",
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "CharMaxLength": 30,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Empresa",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Empresa",
+      "ColumnName": "MonedaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Estado",
+      "ColumnName": "Entidad",
+      "DataType": "nvarchar",
+      "CharMaxLength": 30,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Estado",
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Estado",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Inventario",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Inventario",
+      "ColumnName": "BodegaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Inventario",
+      "ColumnName": "VarianteId",
+      "DataType": "bigint",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Log",
+      "ColumnName": "Nivel",
+      "DataType": "nvarchar",
+      "CharMaxLength": 10,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Log",
+      "ColumnName": "Modulo",
+      "DataType": "nvarchar",
+      "CharMaxLength": 80,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Log",
+      "ColumnName": "Accion",
+      "DataType": "nvarchar",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Moneda",
+      "ColumnName": "Codigo",
+      "DataType": "char",
+      "CharMaxLength": 3,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Moneda",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Pais",
+      "ColumnName": "CodigoISO2",
+      "DataType": "char",
+      "CharMaxLength": 2,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Pais",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 120,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Pedido",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Pedido",
+      "ColumnName": "CanalVentaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Pedido",
+      "ColumnName": "MonedaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Pedido",
+      "ColumnName": "NumeroPedido",
+      "DataType": "nvarchar",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Pedido",
+      "ColumnName": "EstadoId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Pedido",
+      "ColumnName": "ClienteNombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "ColumnName": "PedidoId",
+      "DataType": "bigint",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "PedidoEstadoHistorial",
+      "ColumnName": "EstadoId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Producto",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Producto",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 220,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "ProductoVariante",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "ProductoVariante",
+      "ColumnName": "ProductoId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "ProductoVariante",
+      "ColumnName": "SKU",
+      "DataType": "nvarchar",
+      "CharMaxLength": 100,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Talla",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Talla",
+      "ColumnName": "SourceCode",
+      "DataType": "nvarchar",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Tienda",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Tienda",
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Tienda",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Transportadora",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "Transportadora",
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "Transportadora",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "ColumnName": "VarianteId",
+      "DataType": "bigint",
+      "CharMaxLength": null,
+      "NumericPrecision": 19,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "ColumnName": "AtributoId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "VarianteAtributo",
+      "ColumnName": "AtributoValorId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "ZonaCiudad",
+      "ColumnName": "ZonaTransporteId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "ZonaCiudad",
+      "ColumnName": "CiudadId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "ColumnName": "EmpresaId",
+      "DataType": "int",
+      "CharMaxLength": null,
+      "NumericPrecision": 10,
+      "NumericScale": 0
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "ColumnName": "Codigo",
+      "DataType": "nvarchar",
+      "CharMaxLength": 60,
+      "NumericPrecision": null,
+      "NumericScale": null
+    },
+    {
+      "TableName": "ZonaTransporte",
+      "ColumnName": "Nombre",
+      "DataType": "nvarchar",
+      "CharMaxLength": 180,
+      "NumericPrecision": null,
+      "NumericScale": null
+    }
+  ]
+}

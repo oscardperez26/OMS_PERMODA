@@ -23,6 +23,12 @@ export class OrdersController {
     return this.ordersService.syncPendingOrders(body.limit);
   }
 
+  @Post('sync/full')
+  @Permissions('orders.manage')
+  async syncFullOrders(@Body() body: SyncPendingOrdersDto) {
+    return this.ordersService.syncPendingOrders(body.limit);
+  }
+
   @Get(':pedidoId')
   @Permissions('orders.read')
   async getOrderDetail(@Param('pedidoId', ParseIntPipe) pedidoId: number) {

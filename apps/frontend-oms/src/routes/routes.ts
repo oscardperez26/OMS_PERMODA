@@ -55,6 +55,14 @@ export const ROUTES = {
     '/panel/order-manager/configuracion-general/pasarela-pago',
   ORDER_MANAGER_GENERAL_CONFIG_TIENDA:
     '/panel/order-manager/configuracion-general/tienda',
+  ORDER_MANAGER_GENERAL_CONFIG_BODEGA:
+    '/panel/order-manager/configuracion-general/bodega',
+  ORDER_MANAGER_GENERAL_CONFIG_PRODUCTO:
+    '/panel/order-manager/configuracion-general/producto',
+  ORDER_MANAGER_GENERAL_CONFIG_PRODUCTO_VARIANTE:
+    '/panel/order-manager/configuracion-general/producto-variante',
+  ORDER_MANAGER_GENERAL_CONFIG_INVENTARIO:
+    '/panel/order-manager/configuracion-general/inventario',
   ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA:
     '/panel/order-manager/configuracion-general/transportadora',
   ORDER_MANAGER_GENERAL_CONFIG_ZONA_TRANSPORTE:

@@ -115,6 +115,22 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TIENDA,
           },
           {
+            label: "Bodegas",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_BODEGA,
+          },
+          {
+            label: "Productos",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PRODUCTO,
+          },
+          {
+            label: "Producto Variante",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PRODUCTO_VARIANTE,
+          },
+          {
+            label: "Inventario",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_INVENTARIO,
+          },
+          {
             label: "Transportadoras",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA,
           },

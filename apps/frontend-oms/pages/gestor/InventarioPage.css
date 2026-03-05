@@ -1,0 +1,131 @@
+.inventario-page {
+  display: grid;
+  gap: 16px;
+  padding: 8px;
+}
+
+.inventario-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #21303f;
+}
+
+.inventario-header p {
+  margin: 6px 0 0;
+  color: #556476;
+}
+
+.inventario-error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #f3c3c7;
+  border-radius: 10px;
+  background: #fef0f1;
+  color: #8f1824;
+}
+
+.inventario-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #d7dee6;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+}
+
+.inventario-card h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #253444;
+}
+
+.inventario-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.inventario-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #3f4d5d;
+}
+
+.inventario-form input,
+.inventario-form select {
+  border: 1px solid #cfd8e3;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.inventario-form-actions {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+
+.inventario-form-actions button {
+  border: 1px solid #1d5fd4;
+  border-radius: 8px;
+  background: #1d5fd4;
+  color: #fff;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.inventario-form-actions .btn-secondary {
+  border-color: #c8d2de;
+  background: #fff;
+  color: #2f3f50;
+}
+
+.inventario-loading {
+  margin: 0;
+  color: #516173;
+}
+
+.inventario-table-wrap {
+  overflow-x: auto;
+}
+
+.inventario-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventario-table th,
+.inventario-table td {
+  border-bottom: 1px solid #e4eaf1;
+  padding: 10px;
+  text-align: left;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.inventario-table th {
+  background: #f3f7fb;
+  color: #344658;
+}
+
+.inventario-table td button {
+  border: 1px solid #2c6bdd;
+  border-radius: 7px;
+  background: #2c6bdd;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.inventario-empty-cell {
+  text-align: center;
+  color: #667688;
+}
+
+@media (max-width: 1100px) {
+  .inventario-form {
+    grid-template-columns: 1fr;
+  }
+}

@@ -7,6 +7,14 @@ export class ConfiguracionGeneralService {
   listOptions(): DashboardOption[] {
     return [
       {
+        id: 'bodega',
+        label: 'Bodegas',
+        description: 'Bodegas operativas asociadas a empresa y tienda',
+        frontendPath: '/panel/order-manager/configuracion-general/bodega',
+        permission: 'catalog.read',
+        enabled: true,
+      },
+      {
         id: 'ciudad',
         label: 'Ciudades',
         description: 'Gestion de ciudades y su relacion con pais',
@@ -47,10 +55,34 @@ export class ConfiguracionGeneralService {
         enabled: true,
       },
       {
+        id: 'producto',
+        label: 'Productos',
+        description: 'Catalogo de productos base para variantes e inventario',
+        frontendPath: '/panel/order-manager/configuracion-general/producto',
+        permission: 'catalog.read',
+        enabled: true,
+      },
+      {
+        id: 'producto-variante',
+        label: 'Producto Variante',
+        description: 'Variantes de producto con SKU/EAN y atributos logisticos',
+        frontendPath: '/panel/order-manager/configuracion-general/producto-variante',
+        permission: 'catalog.read',
+        enabled: true,
+      },
+      {
         id: 'pais',
         label: 'Paises',
         description: 'Catalogo base relacionado por FK con ciudades',
         frontendPath: '/panel/order-manager/configuracion-general/pais',
+        permission: 'catalog.read',
+        enabled: true,
+      },
+      {
+        id: 'inventario',
+        label: 'Inventario',
+        description: 'Stock total, reservado y disponible por bodega y variante',
+        frontendPath: '/panel/order-manager/configuracion-general/inventario',
         permission: 'catalog.read',
         enabled: true,
       },

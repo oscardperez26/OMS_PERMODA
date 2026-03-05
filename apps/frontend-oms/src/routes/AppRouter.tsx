@@ -37,6 +37,10 @@ import { EmpresasPage } from '../../pages/gestor/EmpresasPage';
 import { EmpresaClientePage } from '../../pages/gestor/EmpresaClientePage';
 import { PasarelaPagoPage } from '../../pages/gestor/PasarelaPagoPage';
 import { TiendaPage } from '../../pages/gestor/TiendaPage';
+import { BodegaPage } from '../../pages/gestor/BodegaPage';
+import { ProductoPage } from '../../pages/gestor/ProductoPage';
+import { ProductoVariantePage } from '../../pages/gestor/ProductoVariantePage';
+import { InventarioPage } from '../../pages/gestor/InventarioPage';
 import { TransportadoraPage } from '../../pages/gestor/TransportadoraPage';
 import { ZonaTransportePage } from '../../pages/gestor/ZonaTransportePage';
 import { ZonaCiudadPage } from '../../pages/gestor/ZonaCiudadPage';
@@ -203,6 +207,54 @@ export function AppRouter() {
                 requiredPermissions={['catalog.read']}
               >
                 <TiendaPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_BODEGA}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <BodegaPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PRODUCTO}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <ProductoPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PRODUCTO_VARIANTE}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <ProductoVariantePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_INVENTARIO}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <InventarioPage />
               </ProtectedRoute>
             }
           />
