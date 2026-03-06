@@ -21,5 +21,6 @@ export type SidebarGroup = {
 export type SidebarSection = {
   key: string;            // id único sección
   sectionLabel: string;   // título: VENDER / PERSONALIZAR
+  icon?: string;          // Icono opcional para el menu colapsado (bootstrap icon)
   groups: SidebarGroup[]; // grupos internos
 };

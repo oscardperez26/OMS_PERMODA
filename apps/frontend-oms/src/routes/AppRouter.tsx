@@ -28,6 +28,9 @@ import { DesignPage } from '../../pages/personalize/DesignPage';
 import { TransportPage } from '../../pages/personalize/TransportPage';
 import { PaymentPage } from '../../pages/personalize/PaymentPage';
 import { StoreOrdersPage } from '../../pages/store/StoreOrdersPage';
+import { StoreOrderDetailPage } from '../../pages/store/StoreOrderDetailPage';
+import { StoreOrderTicketPage } from '../../pages/store/StoreOrderTicketPage';
+
 
 
 /**
@@ -58,7 +61,23 @@ export function AppRouter() {
           }
         >
           <Route index element={<Navigate to="/tienda/orders" replace />} />
+
+          {/* Lista: /tienda/orders */}
           <Route path="orders" element={<StoreOrdersPage />} />
+
+          {/*
+           * Detalle: /tienda/orders/:orderId
+           * Usa el orderId de negocio (ej: 629) como parámetro de URL.
+           * StoreOrderDetailPage lo lee con useParams({ orderId }).
+           */}
+          <Route path="orders/:orderId" element={<StoreOrderDetailPage />} />
+
+          {/*
+           * Ticket imprimible: /tienda/orders/:orderId/ticket
+           * Renderiza un recibo en estilo monoespaciado y lanza
+           * window.print() automáticamente cuando el componente monta.
+           */}
+          <Route path="orders/:orderId/ticket" element={<StoreOrderTicketPage />} />
         </Route>
 
         <Route

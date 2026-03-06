@@ -11,6 +11,7 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
   {
     key: "sell",
     sectionLabel: "VENDER",
+    icon: "bi-shop",
     groups: [
       {
         key: "sell_orders",
@@ -43,13 +44,14 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
           { label: "Inventario", path: ROUTES.CATALOG_INVENTORY },
         ],
       },
-      
+
     ],
   },
 
   {
     key: "personalize",
     sectionLabel: "PERSONALIZAR",
+    icon: "bi-sliders",
     groups: [
       {
         key: "personalize_group",
@@ -68,6 +70,7 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
   {
     key: "configure",
     sectionLabel: "CONFIGURE",
+    icon: "bi-gear",
     groups: [
       {
         key: "configure_group",
@@ -89,6 +92,7 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
   {
     key: "order_manager",
     sectionLabel: "GESTOR DE PEDIDOS",
+    icon: "bi-box-seam",
     groups: [
       {
         key: "order_manager_group",

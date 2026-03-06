@@ -40,4 +40,10 @@ export const ROUTES = {
   ORDER_MANAGER_EMPLOYEES: '/panel/order-manager/employees',
   ORDER_MANAGER_PERMISSIONS: '/panel/order-manager/permissions',
   ORDER_MANAGER_EMPLOYEE_ACCESS: '/panel/order-manager/employee-access',
+
+  // TIENDA (módulo de tienda física)
+  // STORE_ORDERS      → lista de pedidos de tienda
+  // STORE_ORDER_DETAIL → detalle de un pedido; el `:id` se reemplaza en runtime
+  STORE_ORDERS: '/tienda/orders',
+  STORE_ORDER_DETAIL: '/tienda/orders/:id',
 } as const;
