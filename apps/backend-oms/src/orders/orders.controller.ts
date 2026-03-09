@@ -1,10 +1,25 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Req,
+  UnauthorizedException,
+} from '@nestjs/common';
+import type { Request } from 'express';
 import { Permissions } from '../auth/auth.decorators';
+import type { SafeUser } from '../auth/auth.types';
 import { AssignmentConfirmDto } from './dto/assignment-confirm.dto';
 import { AssignmentPreviewDto } from './dto/assignment-preview.dto';
 import { SyncPendingOrdersDto } from './dto/sync-pending-orders.dto';
 import { OrdersService } from './orders.service';
 
+type RequestWithUser = Request & {
+  user?: SafeUser;
+};
 
 @Controller('orders')
 export class OrdersController {
@@ -12,8 +27,12 @@ export class OrdersController {
 
   @Get()
   @Permissions('orders.read')
-  async listOrders() {
-    const orders = await this.ordersService.listOrders();
+  async listOrders(@Req() req: RequestWithUser) {
+    if (!req.user) {
+      throw new UnauthorizedException('Usuario no autenticado');
+    }
+
+    const orders = await this.ordersService.listOrders(req.user);
     return { orders };
   }
 
@@ -31,8 +50,15 @@ export class OrdersController {
 
   @Get(':pedidoId')
   @Permissions('orders.read')
-  async getOrderDetail(@Param('pedidoId', ParseIntPipe) pedidoId: number) {
-    const order = await this.ordersService.getOrderDetail(pedidoId);
+  async getOrderDetail(
+    @Param('pedidoId', ParseIntPipe) pedidoId: number,
+    @Req() req: RequestWithUser,
+  ) {
+    if (!req.user) {
+      throw new UnauthorizedException('Usuario no autenticado');
+    }
+
+    const order = await this.ordersService.getOrderDetail(pedidoId, req.user);
     return { order };
   }
 

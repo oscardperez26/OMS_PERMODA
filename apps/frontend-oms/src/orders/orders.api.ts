@@ -14,6 +14,9 @@ export type OrdersListItem = {
   alias: string;
   koajOrderId: number;
   origen: number;
+  tiendaOrigenId: number | null;
+  tiendaOrigenCodigo: string | null;
+  tiendaOrigenNombre: string | null;
 };
 
 async function parseJsonResponse<T>(response: Response): Promise<T> {

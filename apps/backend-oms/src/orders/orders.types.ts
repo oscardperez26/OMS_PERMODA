@@ -64,6 +64,9 @@ export type OrderListItem = {
   alias: string;
   koajOrderId: number;
   origen: number;
+  tiendaOrigenId: number | null;
+  tiendaOrigenCodigo: string | null;
+  tiendaOrigenNombre: string | null;
 };
 
 export type OrdersSyncContext = {
@@ -118,8 +121,12 @@ export type PedidoListRow = {
   clienteNombre: string;
   total: number;
   createdAt: string;
+  estadoCodigo: string | null;
   estadoNombre: string | null;
   paisNombre: string | null;
+  tiendaOrigenId: number | null;
+  tiendaOrigenCodigo: string | null;
+  tiendaOrigenNombre: string | null;
 };
 
 export type PedidoDetail = {

@@ -46,8 +46,12 @@ type PedidoRow = {
   ClienteNombre: string;
   Total: number;
   CreatedAt: Date;
+  EstadoCodigo: string | null;
   EstadoNombre: string | null;
   PaisNombre: string | null;
+  TiendaOrigenId: number | null;
+  TiendaOrigenCodigo: string | null;
+  TiendaOrigenNombre: string | null;
 };
 
 type PedidoDetailRow = {
@@ -96,6 +100,12 @@ type TiendaRow = {
   Codigo: string;
   Nombre: string;
   Activo: boolean;
+};
+
+type TiendaScopeRow = {
+  TiendaId: number;
+  Codigo: string;
+  Nombre: string;
 };
 
 type BodegaRow = {
@@ -432,10 +442,23 @@ export class OrdersRepository {
     return { pedidoId: result.recordset[0].PedidoId };
   }
 
-  async listPedidos(): Promise<PedidoListRow[]> {
+  async listPedidos(filters?: {
+    tiendaOrigenId?: number;
+  }): Promise<PedidoListRow[]> {
     const result = await this.databaseService.execute<sql.IResult<PedidoRow>>(
-      (pool) =>
-        pool.request().query<PedidoRow>(`
+      (pool) => {
+        const request = pool.request();
+        const whereParts: string[] = [];
+
+        if (filters?.tiendaOrigenId) {
+          request.input('tiendaOrigenId', sql.Int, filters.tiendaOrigenId);
+          whereParts.push('p.[TiendaOrigenId] = @tiendaOrigenId');
+        }
+
+        const whereClause =
+          whereParts.length > 0 ? `WHERE ${whereParts.join(' AND ')}` : '';
+
+        return request.query<PedidoRow>(`
           SELECT
             p.[PedidoId],
             p.[NumeroPedido],
@@ -443,15 +466,23 @@ export class OrdersRepository {
             p.[ClienteNombre],
             p.[Total],
             p.[CreatedAt],
+            e.[Codigo] AS [EstadoCodigo],
             e.[Nombre] AS [EstadoNombre],
-            pa.[Nombre] AS [PaisNombre]
+            pa.[Nombre] AS [PaisNombre],
+            p.[TiendaOrigenId],
+            ti.[Codigo] AS [TiendaOrigenCodigo],
+            ti.[Nombre] AS [TiendaOrigenNombre]
           FROM [oms].[Pedido] p
           LEFT JOIN [oms].[Estado] e
             ON e.[EstadoId] = p.[EstadoId]
           LEFT JOIN [oms].[Pais] pa
             ON pa.[PaisId] = p.[ShippingPaisId]
+          LEFT JOIN [oms].[Tienda] ti
+            ON ti.[TiendaId] = p.[TiendaOrigenId]
+          ${whereClause}
           ORDER BY p.[CreatedAt] DESC, p.[PedidoId] DESC
-        `),
+        `);
+      },
       'orders.listPedidos',
     );
 
@@ -462,8 +493,12 @@ export class OrdersRepository {
       clienteNombre: row.ClienteNombre,
       total: row.Total,
       createdAt: row.CreatedAt.toISOString(),
+      estadoCodigo: row.EstadoCodigo,
       estadoNombre: row.EstadoNombre,
       paisNombre: row.PaisNombre,
+      tiendaOrigenId: row.TiendaOrigenId,
+      tiendaOrigenCodigo: row.TiendaOrigenCodigo,
+      tiendaOrigenNombre: row.TiendaOrigenNombre,
     }));
   }
 
@@ -571,6 +606,56 @@ export class OrdersRepository {
       empresaId: row.EmpresaId,
       createdAt: row.CreatedAt.toISOString(),
       updatedAt: row.UpdatedAt?.toISOString() ?? null,
+    };
+  }
+
+  async findStoreScopeByUserStoreId(
+    storeReference: string,
+  ): Promise<{ tiendaId: number; codigo: string; nombre: string } | null> {
+    const normalizedReference = storeReference.trim();
+    if (!normalizedReference) {
+      return null;
+    }
+
+    const result = await this.databaseService.execute<sql.IResult<TiendaScopeRow>>(
+      (pool) =>
+        pool
+          .request()
+          .input('storeReference', sql.NVarChar(60), normalizedReference)
+          .query<TiendaScopeRow>(`
+            DECLARE @storeIdInt INT = TRY_CONVERT(INT, @storeReference);
+
+            SELECT TOP 1
+              [TiendaId],
+              [Codigo],
+              [Nombre]
+            FROM [oms].[Tienda]
+            WHERE [Activo] = 1
+              AND (
+                UPPER([Codigo]) = UPPER(@storeReference)
+                OR (@storeIdInt IS NOT NULL AND [TiendaId] = @storeIdInt)
+                OR (@storeIdInt IS NOT NULL AND TRY_CONVERT(INT, [Codigo]) = @storeIdInt)
+              )
+            ORDER BY
+              CASE
+                WHEN UPPER([Codigo]) = UPPER(@storeReference) THEN 0
+                WHEN (@storeIdInt IS NOT NULL AND [TiendaId] = @storeIdInt) THEN 1
+                ELSE 2
+              END,
+              [TiendaId] ASC
+          `),
+      'orders.findStoreScopeByUserStoreId',
+    );
+
+    const row = result.recordset[0];
+    if (!row) {
+      return null;
+    }
+
+    return {
+      tiendaId: row.TiendaId,
+      codigo: row.Codigo,
+      nombre: row.Nombre,
     };
   }
 

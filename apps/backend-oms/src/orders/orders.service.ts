@@ -1,10 +1,12 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { SafeUser } from '../auth/auth.types';
 import { OrdersRepository } from './orders.repository';
 import type {
   AssignmentConfirmResult,
@@ -45,6 +47,14 @@ type KoajFullOrderPreview = {
   orderRows: KoajFullOrderRow[];
 };
 
+type OrdersActorContext = Pick<SafeUser, 'role' | 'storeId'>;
+
+type StoreScope = {
+  tiendaId: number;
+  codigo: string;
+  nombre: string;
+};
+
 @Injectable()
 export class OrdersService {
   private syncInProgress = false;
@@ -58,10 +68,14 @@ export class OrdersService {
     return this.syncInProgress;
   }
 
-  async listOrders(): Promise<OrderListItem[]> {
-    const rows = await this.ordersRepository.listPedidos();
+  async listOrders(actor?: OrdersActorContext): Promise<OrderListItem[]> {
+    const storeScope = await this.resolveActorStoreScope(actor);
+    const rows = await this.ordersRepository.listPedidos(
+      storeScope ? { tiendaOrigenId: storeScope.tiendaId } : undefined,
+    );
+    const storeRows = this.filterAndPrioritizeStoreRows(rows, Boolean(storeScope));
 
-    return rows.map((row) => ({
+    return storeRows.map((row) => ({
       pedidoId: row.pedidoId,
       id: row.numeroExterno?.trim() || String(row.pedidoId),
       reference: row.numeroPedido,
@@ -75,14 +89,28 @@ export class OrdersService {
       alias: row.numeroPedido,
       koajOrderId: Number(row.numeroExterno ?? 0) || 0,
       origen: 0,
+      tiendaOrigenId: row.tiendaOrigenId,
+      tiendaOrigenCodigo: row.tiendaOrigenCodigo,
+      tiendaOrigenNombre: row.tiendaOrigenNombre,
     }));
   }
 
-  async getOrderDetail(pedidoId: number): Promise<PedidoDetail> {
+  async getOrderDetail(
+    pedidoId: number,
+    actor?: OrdersActorContext,
+  ): Promise<PedidoDetail> {
     const detail = await this.ordersRepository.findPedidoDetailById(pedidoId);
     if (!detail) {
       throw new NotFoundException(`Pedido ${pedidoId} no existe`);
     }
+
+    const storeScope = await this.resolveActorStoreScope(actor);
+    if (storeScope && detail.tiendaOrigen.tiendaId !== storeScope.tiendaId) {
+      throw new ForbiddenException(
+        `No tienes acceso al pedido ${pedidoId}; pertenece a otra tienda`,
+      );
+    }
+
     return detail;
   }
 
@@ -1139,6 +1167,86 @@ export class OrdersService {
     }
 
     return parsed;
+  }
+
+  private async resolveActorStoreScope(
+    actor?: OrdersActorContext,
+  ): Promise<StoreScope | null> {
+    if (!actor || !this.isStoreRole(actor.role)) {
+      return null;
+    }
+
+    const storeReference = actor.storeId?.trim();
+    if (!storeReference) {
+      throw new ForbiddenException('Usuario tienda sin tienda asignada');
+    }
+
+    const scope = await this.ordersRepository.findStoreScopeByUserStoreId(
+      storeReference,
+    );
+    if (!scope) {
+      throw new ForbiddenException(
+        `No se pudo resolver una tienda activa para el usuario (${storeReference})`,
+      );
+    }
+
+    return scope;
+  }
+
+  private isStoreRole(role: OrdersActorContext['role']): boolean {
+    return role === 'STORE_ADMIN' || role === 'STORE_READONLY';
+  }
+
+  private filterAndPrioritizeStoreRows<
+    T extends { estadoCodigo: string | null; estadoNombre: string | null; createdAt: string },
+  >(rows: T[], isStoreUser: boolean): T[] {
+    if (!isStoreUser) {
+      return rows;
+    }
+
+    const operationalRows = rows.filter((row) =>
+      this.isStoreOperationalStatus(row.estadoCodigo, row.estadoNombre),
+    );
+    const selectedRows = operationalRows.length > 0 ? operationalRows : rows;
+
+    return [...selectedRows].sort((left, right) => {
+      const priorityDiff =
+        this.getStoreStatusPriority(left.estadoCodigo, left.estadoNombre) -
+        this.getStoreStatusPriority(right.estadoCodigo, right.estadoNombre);
+      if (priorityDiff !== 0) {
+        return priorityDiff;
+      }
+
+      return right.createdAt.localeCompare(left.createdAt);
+    });
+  }
+
+  private isStoreOperationalStatus(
+    estadoCodigo: string | null,
+    estadoNombre: string | null,
+  ): boolean {
+    const source = `${this.normalizeText(estadoCodigo ?? '')} ${this.normalizeText(estadoNombre ?? '')}`;
+
+    return (
+      source.includes('PREPARA') ||
+      source.includes('ALISTA') ||
+      source.includes('ASIGNA')
+    );
+  }
+
+  private getStoreStatusPriority(
+    estadoCodigo: string | null,
+    estadoNombre: string | null,
+  ): number {
+    const source = `${this.normalizeText(estadoCodigo ?? '')} ${this.normalizeText(estadoNombre ?? '')}`;
+
+    if (source.includes('PREPARA') || source.includes('ALISTA')) {
+      return 0;
+    }
+    if (source.includes('ASIGNA')) {
+      return 1;
+    }
+    return 2;
   }
 
   private mapEstadoToUiStatus(estadoNombre: string | null): string {
