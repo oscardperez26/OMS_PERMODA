@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../src/auth/useAuth';
 import {
   createTransportadora,
   getTransportadorasBootstrap,
-  updateTransportadora,
   type TransportadoraListItem,
 } from '../../src/configuracion-general/transportadora.api';
+import { buildTransportadoraConfiguracionRoute } from '../../src/routes/routes';
 import './TransportadoraPage.css';
 
 type EmpresaOption = {
@@ -49,15 +50,13 @@ async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 3): Promi
 }
 
 export function TransportadoraPage() {
+  const navigate = useNavigate();
   const { accessToken, hasPermissions } = useAuth();
   const canManage = hasPermissions(['catalog.manage']);
 
   const [transportadoras, setTransportadoras] = useState<TransportadoraListItem[]>([]);
   const [empresas, setEmpresas] = useState<EmpresaOption[]>([]);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
-  const [editingTransportadoraId, setEditingTransportadoraId] = useState<number | null>(
-    null,
-  );
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -149,29 +148,18 @@ export function TransportadoraPage() {
     setError('');
 
     try {
-      if (editingTransportadoraId) {
-        await updateTransportadora(accessToken, editingTransportadoraId, {
-          empresaId,
-          codigo,
-          nombre,
-          trackingUrlTemplate: trackingUrlTemplate || null,
-          activo: form.activo,
-        });
-      } else {
-        await createTransportadora(accessToken, {
-          empresaId,
-          codigo,
-          nombre,
-          trackingUrlTemplate: trackingUrlTemplate || undefined,
-          activo: form.activo,
-        });
-      }
+      await createTransportadora(accessToken, {
+        empresaId,
+        codigo,
+        nombre,
+        trackingUrlTemplate: trackingUrlTemplate || undefined,
+        activo: form.activo,
+      });
 
       setForm((previous) => ({
         ...INITIAL_FORM,
         empresaId: previous.empresaId,
       }));
-      setEditingTransportadoraId(null);
       await loadData();
     } catch (requestError) {
       const message =
@@ -182,27 +170,6 @@ export function TransportadoraPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  function startEdit(transportadora: TransportadoraListItem) {
-    setEditingTransportadoraId(transportadora.transportadoraId);
-    setForm({
-      empresaId: String(transportadora.empresaId),
-      codigo: transportadora.codigo,
-      nombre: transportadora.nombre,
-      trackingUrlTemplate: transportadora.trackingUrlTemplate ?? '',
-      activo: transportadora.activo,
-    });
-    setError('');
-  }
-
-  function cancelEdit() {
-    setEditingTransportadoraId(null);
-    setForm((previous) => ({
-      ...INITIAL_FORM,
-      empresaId: previous.empresaId || String(empresas[0]?.empresaId ?? ''),
-    }));
-    setError('');
   }
 
   function formatDate(value?: string | null): string {
@@ -224,7 +191,7 @@ export function TransportadoraPage() {
 
       {canManage && (
         <article className="transportadora-card">
-          <h2>{editingTransportadoraId ? 'Editar transportadora' : 'Crear transportadora'}</h2>
+          <h2>Crear transportadora</h2>
           <form className="transportadora-form" onSubmit={handleSubmit}>
             <label>
               Empresa
@@ -297,18 +264,8 @@ export function TransportadoraPage() {
 
             <div className="transportadora-form-actions">
               <button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? 'Guardando...'
-                  : editingTransportadoraId
-                    ? 'Actualizar'
-                    : 'Crear'}
+                {isSubmitting ? 'Guardando...' : 'Crear'}
               </button>
-
-              {editingTransportadoraId && (
-                <button type="button" className="btn-secondary" onClick={cancelEdit}>
-                  Cancelar
-                </button>
-              )}
             </div>
           </form>
         </article>
@@ -360,7 +317,16 @@ export function TransportadoraPage() {
                         <td>{formatDate(transportadora.updatedAt)}</td>
                         {canManage && (
                           <td>
-                            <button type="button" onClick={() => startEdit(transportadora)}>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigate(
+                                  buildTransportadoraConfiguracionRoute(
+                                    transportadora.transportadoraId,
+                                  ),
+                                )
+                              }
+                            >
                               Editar
                             </button>
                           </td>

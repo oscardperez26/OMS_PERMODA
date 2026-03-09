@@ -65,6 +65,8 @@ export const ROUTES = {
     '/panel/order-manager/configuracion-general/inventario',
   ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA:
     '/panel/order-manager/configuracion-general/transportadora',
+  ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA_CONFIG:
+    '/panel/order-manager/configuracion-general/transportadora/:id/configuracion',
   ORDER_MANAGER_GENERAL_CONFIG_ZONA_TRANSPORTE:
     '/panel/order-manager/configuracion-general/zona-transporte',
   ORDER_MANAGER_GENERAL_CONFIG_ZONA_CIUDAD:
@@ -72,3 +74,7 @@ export const ROUTES = {
   ORDER_MANAGER_GENERAL_CONFIG_COSTO_TRANSPORTE:
     '/panel/order-manager/configuracion-general/costo-transporte',
 } as const;
+
+export function buildTransportadoraConfiguracionRoute(transportadoraId: number): string {
+  return `/panel/order-manager/configuracion-general/transportadora/${transportadoraId}/configuracion`;
+}

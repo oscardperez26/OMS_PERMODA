@@ -34,6 +34,47 @@ export type UpdateTransportadoraRequest = {
   activo?: boolean;
 };
 
+export type TransportadoraConfiguracionStoreItem = {
+  tiendaId: number;
+  empresaId: number;
+  codigo: string;
+  nombre: string;
+  activa: boolean;
+};
+
+export type TransportadoraConfiguracionData = {
+  servicio?: string;
+  permiteExpress: boolean;
+  moduloCode?: string;
+  costeFijo?: number;
+  distanciaFijaKm?: number;
+  costeIncrementalKm?: number;
+  createdAt?: string;
+  updatedAt?: string | null;
+};
+
+export type TransportadoraConfiguracionDetail = {
+  transportadora: TransportadoraListItem;
+  config: TransportadoraConfiguracionData;
+  tiendasSeleccionadas: TransportadoraConfiguracionStoreItem[];
+  tiendasDisponibles: TransportadoraConfiguracionStoreItem[];
+};
+
+export type UpdateTransportadoraConfiguracionRequest = {
+  empresaId: number;
+  codigo: string;
+  nombre: string;
+  trackingUrlTemplate?: string | null;
+  activo: boolean;
+  servicio?: string | null;
+  permiteExpress: boolean;
+  moduloCode?: string | null;
+  costeFijo?: number | null;
+  distanciaFijaKm?: number | null;
+  costeIncrementalKm?: number | null;
+  tiendaIds: number[];
+};
+
 async function parseJsonResponse<T>(response: Response): Promise<T> {
   const payload = (await response.json().catch(() => null)) as
     | { message?: string | string[] }
@@ -108,6 +149,45 @@ export async function updateTransportadora(
 ): Promise<{ success: boolean }> {
   const response = await fetch(
     `${API_URL}/configuracion-general/transportadora/${transportadoraId}`,
+    {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(request),
+    },
+  );
+
+  return parseJsonResponse<{ success: boolean }>(response);
+}
+
+export async function getTransportadoraConfiguracion(
+  accessToken: string,
+  transportadoraId: number,
+): Promise<TransportadoraConfiguracionDetail> {
+  const response = await fetch(
+    `${API_URL}/configuracion-general/transportadora/${transportadoraId}/configuracion`,
+    {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  return parseJsonResponse<TransportadoraConfiguracionDetail>(response);
+}
+
+export async function updateTransportadoraConfiguracion(
+  accessToken: string,
+  transportadoraId: number,
+  request: UpdateTransportadoraConfiguracionRequest,
+): Promise<{ success: boolean }> {
+  const response = await fetch(
+    `${API_URL}/configuracion-general/transportadora/${transportadoraId}/configuracion`,
     {
       method: 'PATCH',
       credentials: 'include',

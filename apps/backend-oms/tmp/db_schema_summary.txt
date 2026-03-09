@@ -1,0 +1,472 @@
+generatedAt=2026-03-09T18:52:20.886Z
+database=OMS
+tables=40
+columns=387
+foreignKeys=81
+
+dbo.api_tokens rows=0 cols=5
+  - id int NOT NULL IDENTITY
+  - provider varchar NOT NULL
+  - access_token nvarchar NOT NULL
+  - expires_at datetime2 NOT NULL
+  - created_at datetime2 NOT NULL
+
+dbo.sync_log rows=0 cols=7
+  - id bigint NOT NULL IDENTITY
+  - proceso varchar NOT NULL
+  - ok bit NOT NULL
+  - http_status int NULL
+  - registros int NULL
+  - mensaje nvarchar NULL
+  - created_at datetime2 NOT NULL
+
+oms.Atributo rows=2 cols=7
+  - AtributoId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - Codigo nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - Tipo nvarchar NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.AtributoValor rows=22 cols=7
+  - AtributoValorId int NOT NULL IDENTITY
+  - AtributoId int NOT NULL
+  - Codigo nvarchar NULL
+  - Valor nvarchar NOT NULL
+  - Orden int NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Bodega rows=2 cols=12
+  - BodegaId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - Codigo nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - Tipo nvarchar NOT NULL
+  - TiendaId int NULL
+  - PaisId int NULL
+  - CiudadId int NULL
+  - Direccion nvarchar NULL
+  - Activo bit NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.CanalVenta rows=25 cols=8
+  - CanalVentaId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - Codigo nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - Tipo nvarchar NOT NULL
+  - Estado nvarchar NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Categoria rows=10 cols=15
+  - CategoriaId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - ParentId int NULL
+  - Codigo nvarchar NULL
+  - Nombre nvarchar NOT NULL
+  - Activo bit NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+  - ExternalCategoryId int NULL
+  - ExternalParentId int NULL
+  - Level nvarchar NULL
+  - SourceTs datetime2 NULL
+  - IsActiveExternal bit NULL
+  - ApiSuccess bit NULL
+  - ApiStatusCode int NULL
+
+oms.Ciudad rows=3 cols=7
+  - CiudadId int NOT NULL IDENTITY
+  - PaisId int NOT NULL
+  - Nombre nvarchar NOT NULL
+  - Departamento nvarchar NULL
+  - Codigo nvarchar NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Color rows=10 cols=13
+  - ColorId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - ExternalColorId int NULL
+  - CompanyID int NULL
+  - SourceCode nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - IsActive bit NOT NULL
+  - IsMaterial bit NOT NULL
+  - SourceTs datetime2 NULL
+  - ApiSuccess bit NULL
+  - ApiStatusCode int NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.CostoTransporte rows=2 cols=15
+  - CostoTransporteId bigint NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - ZonaTransporteId int NOT NULL
+  - TransportadoraId int NOT NULL
+  - MonedaId int NOT NULL
+  - PesoMinKg decimal NULL
+  - PesoMaxKg decimal NULL
+  - ValorMin decimal NULL
+  - ValorMax decimal NULL
+  - Costo decimal NOT NULL
+  - DiasMin int NULL
+  - DiasMax int NULL
+  - Activo bit NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.DetallePedido rows=0 cols=18
+  - DetallePedidoId bigint NOT NULL IDENTITY
+  - PedidoId bigint NOT NULL
+  - EmpresaId int NOT NULL
+  - VarianteId bigint NOT NULL
+  - SKU nvarchar NOT NULL
+  - NombreItem nvarchar NOT NULL
+  - Cantidad int NOT NULL
+  - PrecioUnitario decimal NOT NULL
+  - DescuentoUnitario decimal NOT NULL
+  - ImpuestoUnitario decimal NOT NULL
+  - TotalLinea decimal NOT NULL
+  - BodegaFulfillmentId int NULL
+  - FulfillmentEstado nvarchar NOT NULL
+  - Guia nvarchar NULL
+  - TransportadoraId int NULL
+  - EstadoId int NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Empresa rows=5 cols=13
+  - EmpresaId int NOT NULL IDENTITY
+  - Codigo nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - Nit nvarchar NULL
+  - Email nvarchar NULL
+  - Telefono nvarchar NULL
+  - PaisId int NULL
+  - CiudadId int NULL
+  - Direccion nvarchar NULL
+  - MonedaId int NOT NULL
+  - Estado nvarchar NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.EmpresaCliente rows=0 cols=12
+  - EmpresaClienteId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - Nombre nvarchar NOT NULL
+  - Documento nvarchar NULL
+  - Email nvarchar NULL
+  - Telefono nvarchar NULL
+  - PaisId int NULL
+  - CiudadId int NULL
+  - Direccion nvarchar NULL
+  - Estado nvarchar NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Estado rows=14 cols=9
+  - EstadoId int NOT NULL IDENTITY
+  - Entidad nvarchar NOT NULL
+  - Codigo nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - Orden int NOT NULL
+  - EsFinal bit NOT NULL
+  - Activo bit NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Integracion rows=0 cols=9
+  - IntegracionId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - CanalVentaId int NOT NULL
+  - Codigo nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - ConfigJson nvarchar NULL
+  - Estado nvarchar NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Inventario rows=32 cols=7
+  - InventarioId bigint NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - BodegaId int NOT NULL
+  - VarianteId bigint NOT NULL
+  - StockTotal int NOT NULL
+  - StockReservado int NOT NULL
+  - UpdatedAt datetime2 NOT NULL
+
+oms.InventarioReserva rows=0 cols=9
+  - InventarioReservaId bigint NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - BodegaId int NOT NULL
+  - VarianteId bigint NOT NULL
+  - DetallePedidoId bigint NOT NULL
+  - Cantidad int NOT NULL
+  - Estado nvarchar NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.ListaPrecio rows=0 cols=9
+  - ListaPrecioId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - Codigo nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - MonedaId int NOT NULL
+  - IncluyeImpuestos bit NOT NULL
+  - Activo bit NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Log rows=35 cols=13
+  - LogId bigint NOT NULL IDENTITY
+  - EmpresaId int NULL
+  - UsuarioId int NULL
+  - Nivel nvarchar NOT NULL
+  - Modulo nvarchar NOT NULL
+  - Accion nvarchar NOT NULL
+  - Entidad nvarchar NULL
+  - EntidadId bigint NULL
+  - Mensaje nvarchar NULL
+  - DataJson nvarchar NULL
+  - Ip nvarchar NULL
+  - UserAgent nvarchar NULL
+  - CreatedAt datetime2 NOT NULL
+
+oms.Moneda rows=3 cols=7
+  - MonedaId int NOT NULL IDENTITY
+  - Codigo char NOT NULL
+  - Simbolo nvarchar NULL
+  - Nombre nvarchar NOT NULL
+  - Decimales tinyint NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.OfertaPrecio rows=0 cols=9
+  - OfertaPrecioId bigint NOT NULL IDENTITY
+  - TarifaPrecioId bigint NOT NULL
+  - ExternalOfertaId nvarchar NOT NULL
+  - FechaInicio date NOT NULL
+  - FechaFin date NOT NULL
+  - PrecioBase decimal NULL
+  - Activo bit NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.OfertaPrecioDetalle rows=0 cols=8
+  - OfertaPrecioDetalleId bigint NOT NULL IDENTITY
+  - OfertaPrecioId bigint NOT NULL
+  - VarianteId bigint NULL
+  - ExternalTallaId nvarchar NOT NULL
+  - ExternalColorId nvarchar NOT NULL
+  - Precio decimal NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Pais rows=5 cols=6
+  - PaisId int NOT NULL IDENTITY
+  - CodigoISO2 char NOT NULL
+  - CodigoISO3 char NULL
+  - Nombre nvarchar NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.PasarelaPago rows=0 cols=8
+  - PasarelaPagoId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - Codigo nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - Activo bit NOT NULL
+  - ConfigJson nvarchar NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Pedido rows=105 cols=28
+  - PedidoId bigint NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - EmpresaClienteId int NULL
+  - CanalVentaId int NOT NULL
+  - TiendaOrigenId int NULL
+  - MonedaId int NOT NULL
+  - NumeroPedido nvarchar NOT NULL
+  - NumeroExterno nvarchar NULL
+  - EstadoId int NOT NULL
+  - ClienteNombre nvarchar NOT NULL
+  - ClienteDocumento nvarchar NULL
+  - ClienteEmail nvarchar NULL
+  - ClienteTelefono nvarchar NULL
+  - ShippingPaisId int NULL
+  - ShippingCiudadId int NULL
+  - ShippingDireccion nvarchar NULL
+  - ShippingBarrio nvarchar NULL
+  - ShippingZip nvarchar NULL
+  - Subtotal decimal NOT NULL
+  - Descuento decimal NOT NULL
+  - Impuestos decimal NOT NULL
+  - CostoEnvio decimal NOT NULL
+  - Total decimal NOT NULL
+  - PasarelaPagoId int NULL
+  - PagoReferencia nvarchar NULL
+  - PagoEstadoId int NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.PedidoEstadoHistorial rows=37 cols=6
+  - PedidoEstadoHistorialId bigint NOT NULL IDENTITY
+  - PedidoId bigint NOT NULL
+  - EstadoId int NOT NULL
+  - UsuarioId int NULL
+  - Nota nvarchar NULL
+  - CreatedAt datetime2 NOT NULL
+
+oms.Perfil rows=4 cols=5
+  - PerfilId int NOT NULL IDENTITY
+  - Nombre nvarchar NOT NULL
+  - Descripcion nvarchar NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.PrecioVariante rows=0 cols=9
+  - PrecioVarianteId bigint NOT NULL IDENTITY
+  - ListaPrecioId int NOT NULL
+  - VarianteId bigint NOT NULL
+  - Precio decimal NOT NULL
+  - PrecioPromo decimal NULL
+  - VigenciaDesde datetime2 NULL
+  - VigenciaHasta datetime2 NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Producto rows=10 cols=10
+  - ProductoId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - CategoriaId int NULL
+  - SKUBase nvarchar NULL
+  - Nombre nvarchar NOT NULL
+  - Descripcion nvarchar NULL
+  - Marca nvarchar NULL
+  - Activo bit NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.ProductoTexto rows=0 cols=11
+  - ProductoTextoId bigint NOT NULL IDENTITY
+  - ProductoId int NOT NULL
+  - Idioma nvarchar NOT NULL
+  - Nombre nvarchar NULL
+  - Descripcion nvarchar NULL
+  - DescripcionCorta nvarchar NULL
+  - MetaTitulo nvarchar NULL
+  - MetaDescripcion nvarchar NULL
+  - Url nvarchar NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.ProductoVariante rows=16 cols=13
+  - VarianteId bigint NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - ProductoId int NOT NULL
+  - SKU nvarchar NOT NULL
+  - EAN nvarchar NULL
+  - Nombre nvarchar NULL
+  - PesoKg decimal NULL
+  - LargoCm decimal NULL
+  - AnchoCm decimal NULL
+  - AltoCm decimal NULL
+  - Activo bit NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Talla rows=12 cols=9
+  - TallaId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - ExternalTallaId int NULL
+  - SourceCode nvarchar NOT NULL
+  - Nombre nvarchar NULL
+  - IsActive bit NOT NULL
+  - SourceTs datetime2 NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.TarifaPrecio rows=0 cols=10
+  - TarifaPrecioId bigint NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - ComercialChannel nvarchar NOT NULL
+  - ExternalTarifaId nvarchar NOT NULL
+  - MonedaCodigo char NOT NULL
+  - ImpuestoPct decimal NULL
+  - Activo bit NOT NULL
+  - SourceTs datetime2 NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.TarifaPrecioDetalle rows=0 cols=8
+  - TarifaPrecioDetalleId bigint NOT NULL IDENTITY
+  - TarifaPrecioId bigint NOT NULL
+  - VarianteId bigint NULL
+  - ExternalTallaId nvarchar NOT NULL
+  - ExternalColorId nvarchar NOT NULL
+  - Precio decimal NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Tienda rows=2 cols=12
+  - TiendaId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - Codigo nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - PaisId int NULL
+  - CiudadId int NULL
+  - Direccion nvarchar NULL
+  - Telefono nvarchar NULL
+  - FulfillmentHabilitado bit NOT NULL
+  - Activo bit NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Transportadora rows=1 cols=8
+  - TransportadoraId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - Codigo nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - TrackingUrlTemplate nvarchar NULL
+  - Activo bit NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.Usuario rows=5 cols=11
+  - UsuarioId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - PerfilId int NOT NULL
+  - Nombre nvarchar NOT NULL
+  - Email nvarchar NOT NULL
+  - Telefono nvarchar NULL
+  - PasswordHash nvarchar NOT NULL
+  - Estado nvarchar NOT NULL
+  - LastLoginAt datetime2 NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL
+
+oms.VarianteAtributo rows=32 cols=4
+  - VarianteId bigint NOT NULL
+  - AtributoId int NOT NULL
+  - AtributoValorId int NOT NULL
+  - CreatedAt datetime2 NOT NULL
+
+oms.ZonaCiudad rows=3 cols=2
+  - ZonaTransporteId int NOT NULL
+  - CiudadId int NOT NULL
+
+oms.ZonaTransporte rows=2 cols=8
+  - ZonaTransporteId int NOT NULL IDENTITY
+  - EmpresaId int NOT NULL
+  - Codigo nvarchar NOT NULL
+  - Nombre nvarchar NOT NULL
+  - PaisId int NULL
+  - Activo bit NOT NULL
+  - CreatedAt datetime2 NOT NULL
+  - UpdatedAt datetime2 NULL

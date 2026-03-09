@@ -1,0 +1,207 @@
+.transportadora-config-page {
+  display: grid;
+  gap: 16px;
+  padding: 8px;
+}
+
+.transportadora-config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.transportadora-config-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #21303f;
+}
+
+.transportadora-config-header p {
+  margin: 6px 0 0;
+  color: #556476;
+}
+
+.transportadora-config-warning {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #f2dfaa;
+  border-radius: 10px;
+  background: #fff8e2;
+  color: #665218;
+}
+
+.transportadora-config-error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #f3c3c7;
+  border-radius: 10px;
+  background: #fef0f1;
+  color: #8f1824;
+}
+
+.transportadora-config-form {
+  display: grid;
+  gap: 12px;
+}
+
+.transportadora-config-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #d7dee6;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+}
+
+.transportadora-config-card h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #253444;
+}
+
+.transportadora-config-hint {
+  margin: 0;
+  color: #516173;
+  font-size: 14px;
+}
+
+.transportadora-config-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.transportadora-config-grid label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #3f4d5d;
+}
+
+.transportadora-config-grid input,
+.transportadora-store-column input {
+  border: 1px solid #cfd8e3;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.transportadora-config-checkbox {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.transportadora-config-checkbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.transportadora-store-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.transportadora-store-column {
+  display: grid;
+  gap: 8px;
+}
+
+.transportadora-store-column h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #324355;
+}
+
+.transportadora-store-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  max-height: 360px;
+  overflow: auto;
+}
+
+.transportadora-store-list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e7edf5;
+}
+
+.transportadora-store-list li:last-child {
+  border-bottom: 0;
+}
+
+.transportadora-store-list span {
+  font-size: 13px;
+  color: #2e3e4f;
+}
+
+.transportadora-store-list button {
+  border: 1px solid #2c6bdd;
+  border-radius: 7px;
+  background: #2c6bdd;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.transportadora-store-list .btn-danger {
+  border-color: #b1232f;
+  background: #b1232f;
+}
+
+.transportadora-store-empty {
+  display: block;
+  color: #667688;
+  font-size: 13px;
+}
+
+.transportadora-config-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.transportadora-config-actions button,
+.transportadora-config-header .btn-secondary {
+  border: 1px solid #1d5fd4;
+  border-radius: 8px;
+  background: #1d5fd4;
+  color: #fff;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.transportadora-config-actions .btn-secondary,
+.transportadora-config-header .btn-secondary {
+  border-color: #c8d2de;
+  background: #fff;
+  color: #2f3f50;
+}
+
+.transportadora-config-loading {
+  margin: 0;
+  color: #516173;
+}
+
+@media (max-width: 1040px) {
+  .transportadora-config-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .transportadora-config-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .transportadora-store-layout {
+    grid-template-columns: 1fr;
+  }
+}

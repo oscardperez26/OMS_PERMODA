@@ -44,6 +44,7 @@ import { ProductoPage } from '../../pages/gestor/ProductoPage';
 import { ProductoVariantePage } from '../../pages/gestor/ProductoVariantePage';
 import { InventarioPage } from '../../pages/gestor/InventarioPage';
 import { TransportadoraPage } from '../../pages/gestor/TransportadoraPage';
+import { TransportadoraConfiguracionPage } from '../../pages/gestor/TransportadoraConfiguracionPage';
 import { ZonaTransportePage } from '../../pages/gestor/ZonaTransportePage';
 import { ZonaCiudadPage } from '../../pages/gestor/ZonaCiudadPage';
 import { CostoTransportePage } from '../../pages/gestor/CostoTransportePage';
@@ -285,6 +286,18 @@ export function AppRouter() {
                 requiredPermissions={['catalog.read']}
               >
                 <TransportadoraPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA_CONFIG}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <TransportadoraConfiguracionPage />
               </ProtectedRoute>
             }
           />
