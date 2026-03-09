@@ -5,7 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ZonaCiudadRepository } from './zona-ciudad.repository';
-import type { ZonaCiudadBootstrapData, ZonaCiudadListItem } from './zona-ciudad.types';
+import type {
+  ZonaCiudadBootstrapData,
+  ZonaCiudadListItem,
+} from './zona-ciudad.types';
 
 type CreateZonaCiudadParams = {
   zonaTransporteId: number;
@@ -33,7 +36,10 @@ export class ZonaCiudadService {
     zonaTransporteId: number,
     ciudadId: number,
   ): Promise<ZonaCiudadListItem> {
-    const zonaCiudad = await this.zonaCiudadRepository.findById(zonaTransporteId, ciudadId);
+    const zonaCiudad = await this.zonaCiudadRepository.findById(
+      zonaTransporteId,
+      ciudadId,
+    );
     if (!zonaCiudad) {
       throw new NotFoundException('Zona ciudad no existe');
     }
@@ -49,7 +55,10 @@ export class ZonaCiudadService {
 
     await this.validateForeignKeys(zonaTransporteId, ciudadId);
 
-    const duplicated = await this.zonaCiudadRepository.existsByPk(zonaTransporteId, ciudadId);
+    const duplicated = await this.zonaCiudadRepository.existsByPk(
+      zonaTransporteId,
+      ciudadId,
+    );
     if (duplicated) {
       throw new ConflictException('La relacion zona-ciudad ya existe');
     }
@@ -75,7 +84,9 @@ export class ZonaCiudadService {
     const hasAnyField =
       params.zonaTransporteId !== undefined || params.ciudadId !== undefined;
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.zonaCiudadRepository.findById(
@@ -110,10 +121,14 @@ export class ZonaCiudadService {
     await this.validateForeignKeys(nextZonaTransporteId, nextCiudadId);
 
     try {
-      await this.zonaCiudadRepository.update(currentZonaTransporteId, currentCiudadId, {
-        zonaTransporteId: nextZonaTransporteId,
-        ciudadId: nextCiudadId,
-      });
+      await this.zonaCiudadRepository.update(
+        currentZonaTransporteId,
+        currentCiudadId,
+        {
+          zonaTransporteId: nextZonaTransporteId,
+          ciudadId: nextCiudadId,
+        },
+      );
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
         throw new ConflictException('La relacion zona-ciudad ya existe');
@@ -132,7 +147,9 @@ export class ZonaCiudadService {
     ]);
 
     if (!zonaExists) {
-      throw new BadRequestException('ZonaTransporteId no existe en la base de datos');
+      throw new BadRequestException(
+        'ZonaTransporteId no existe en la base de datos',
+      );
     }
     if (!ciudadExists) {
       throw new BadRequestException('CiudadId no existe en la base de datos');
@@ -141,7 +158,9 @@ export class ZonaCiudadService {
 
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
