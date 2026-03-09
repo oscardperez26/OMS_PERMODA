@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useAuth } from '../../../src/auth/AuthContext';
+import { useAuth } from '../../../src/auth/useAuth';
 import {
   confirmOrderAssignment,
   getOrderDetail,

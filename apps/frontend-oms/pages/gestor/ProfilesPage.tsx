@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useAuth } from '../../src/auth/AuthContext';
+import { useAuth } from '../../src/auth/useAuth';
 import {
   createUser,
   listProfiles,

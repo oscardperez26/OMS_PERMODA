@@ -1,12 +1,11 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
+import { AuthContext, type AuthContextValue, type LoginParams } from './auth-context';
 import * as authApi from './auth.api';
 import {
   clearAuthStorage,
@@ -14,25 +13,7 @@ import {
   loadUser,
   saveAuth,
 } from './auth.storage';
-import type { AuthUser, Permission, Portal, Role } from './auth.types';
-
-type LoginParams = {
-  username: string;
-  password: string;
-  portal: Portal;
-};
-
-type AuthContextValue = {
-  user: AuthUser | null;
-  accessToken: string | null;
-  isLoading: boolean;
-  login: (params: LoginParams) => Promise<AuthUser>;
-  logout: () => Promise<void>;
-  hasRole: (roles: Role[]) => boolean;
-  hasPermissions: (permissions: Permission[]) => boolean;
-};
-
-const AuthContext = createContext<AuthContextValue | null>(null);
+import type { AuthUser, Permission, Role } from './auth.types';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => loadUser<AuthUser>());
@@ -117,13 +98,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth debe usarse dentro de AuthProvider');
-  }
-  return context;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../src/auth/AuthContext';
+import { useAuth } from '../../../src/auth/useAuth';
 import { getOrderDetail, type OrderDetail as ApiOrderDetail } from '../../../src/orders/orders.api';
 import { ROUTES } from '../../../src/routes/routes';
 import type { OrderRow } from './OrdersTable';
@@ -44,6 +44,7 @@ export function OrderDetailModal({
   const [loadErrorByOrderId, setLoadErrorByOrderId] = useState<Record<number, string>>({});
 
   const currentOrderId = order?.pedidoId ?? null;
+  const hasInlineDetail = Boolean(order?.detail);
   const apiDetail = currentOrderId ? apiDetailByOrderId[currentOrderId] ?? null : null;
   const loadError = useMemo(() => {
     if (!open || !order) {
@@ -55,23 +56,22 @@ export function OrderDetailModal({
     if (!currentOrderId) {
       return 'Pedido no disponible';
     }
+    if (apiDetailByOrderId[currentOrderId]) {
+      return '';
+    }
     return loadErrorByOrderId[currentOrderId] ?? '';
-  }, [accessToken, currentOrderId, loadErrorByOrderId, open, order]);
+  }, [accessToken, apiDetailByOrderId, currentOrderId, loadErrorByOrderId, open, order]);
 
   const isLoading =
-    Boolean(open && order && accessToken && !order.detail) && !apiDetail && !loadError;
+    Boolean(open && order && accessToken && !hasInlineDetail) && !apiDetail && !loadError;
 
   useEffect(() => {
-    if (!open || !order || !accessToken || order.detail) {
-      return;
-    }
-
-    if (apiDetailByOrderId[order.pedidoId] || loadErrorByOrderId[order.pedidoId]) {
+    if (!open || !currentOrderId || !accessToken || hasInlineDetail || apiDetail) {
       return;
     }
 
     let cancelled = false;
-    const requestedOrderId = order.pedidoId;
+    const requestedOrderId = currentOrderId;
 
     void getOrderDetail(accessToken, requestedOrderId)
       .then((detail) => {
@@ -79,6 +79,14 @@ export function OrderDetailModal({
           return;
         }
         setApiDetailByOrderId((previous) => ({ ...previous, [requestedOrderId]: detail }));
+        setLoadErrorByOrderId((previous) => {
+          if (!(requestedOrderId in previous)) {
+            return previous;
+          }
+          const next = { ...previous };
+          delete next[requestedOrderId];
+          return next;
+        });
       })
       .catch((error: unknown) => {
         if (cancelled) {
@@ -91,7 +99,7 @@ export function OrderDetailModal({
     return () => {
       cancelled = true;
     };
-  }, [accessToken, apiDetailByOrderId, loadErrorByOrderId, open, order]);
+  }, [accessToken, apiDetail, currentOrderId, hasInlineDetail, open]);
 
   const detail = useMemo(() => {
     if (order?.detail) {

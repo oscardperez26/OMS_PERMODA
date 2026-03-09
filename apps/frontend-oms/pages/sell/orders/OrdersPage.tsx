@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../../../src/auth/AuthContext';
+import { useAuth } from '../../../src/auth/useAuth';
 import { listOrders, syncPendingOrders } from '../../../src/orders/orders.api';
 import { OrderDetailModal } from './OrderDetailModal';
 import { OrdersShell } from './OrdersShell';
@@ -212,7 +212,7 @@ function normalizeNewCustomer(value: string): OrderRow['newCustomer'] {
     return 'No';
   }
 
-  return 'Sí';
+  return 'S\u00ED';
 }
 
 function normalizeStatus(value: string): OrderRow['status'] {
@@ -224,8 +224,8 @@ function normalizeStatus(value: string): OrderRow['status'] {
   if (normalized === 'con novedad') {
     return 'Con novedad';
   }
-  if (normalized === 'preparacion en curso' || normalized === 'preparación en curso') {
-    return 'Preparación en curso';
+  if (normalized === 'preparacion en curso' || normalized === 'preparaci\u00F3n en curso') {
+    return 'Preparaci\u00F3n en curso';
   }
 
   return 'Asignado';

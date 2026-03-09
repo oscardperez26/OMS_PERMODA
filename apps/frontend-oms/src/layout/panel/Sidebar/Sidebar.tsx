@@ -22,10 +22,13 @@ export function Sidebar() {
   }, [location.pathname]);
 
   const isGroupOpen = (groupKey: string) =>
-    openGroups[groupKey] ?? autoOpenGroups[groupKey] ?? false;
+    Boolean(autoOpenGroups[groupKey] || openGroups[groupKey]);
 
   const toggleGroup = (groupKey: string) => {
-    setOpenGroups((previous) => ({ ...previous, [groupKey]: !isGroupOpen(groupKey) }));
+    setOpenGroups((previous) => {
+      const currentlyOpen = Boolean(autoOpenGroups[groupKey] || previous[groupKey]);
+      return { ...previous, [groupKey]: !currentlyOpen };
+    });
   };
 
   if (!isExpanded) {
