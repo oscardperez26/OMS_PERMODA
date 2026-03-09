@@ -1,0 +1,533 @@
+/*GLOBAL STYLES*/
+
+:root {
+    /* Colors - Based on Mockup */
+    --koaj-primary: #0b315e;
+    /* Navy blue used in headers, table headers, primary buttons */
+    --koaj-primary-hover: #082444;
+    --koaj-action-blue: #1c6ed1;
+    /* Brighter blue for edit actions and active states */
+    --koaj-action-red: #da3131;
+    /* Red for delete actions */
+
+    --koaj-bg-body: #1c1c1c;
+    /* If you want the dark background outside the app like the mockup presentation, otherwise use white/light gray */
+    --koaj-bg-app: #f5f6f8;
+    /* Light gray for sidebar/backgrounds */
+    --koaj-bg-white: #ffffff;
+    /* Main container background */
+
+    --koaj-text-main: #333333;
+    --koaj-text-muted: #6c757d;
+    --koaj-text-light: #a0aab5;
+
+    --koaj-border-color: #dce1e6;
+    --koaj-border-light: #eff1f3;
+
+    /* Shapes & Sizes */
+    --koaj-radius-sm: 4px;
+    --koaj-radius-md: 6px;
+    --koaj-radius-lg: 12px;
+
+    --koaj-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/*1. BASICS & TYPOGRAPHY*/
+body {
+    font-family: var(--koaj-font-family);
+    background-color: var(--koaj-bg-app);
+    /* You can change this to var(--koaj-bg-body) if you want the black outer background */
+    color: var(--koaj-text-main);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+.page-title {
+    color: var(--koaj-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--koaj-border-light);
+}
+
+.koaj-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--koaj-text-main);
+    margin-bottom: 6px;
+}
+
+/* 
+   2. CONTAINERS
+    */
+.koaj-container {
+    background-color: var(--koaj-bg-white);
+    border-radius: var(--koaj-radius-lg);
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    margin: 24px auto;
+    max-width: 1400px;
+    min-height: 80vh;
+}
+
+/* Header Elements */
+.koaj-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 64px;
+    background-color: var(--koaj-bg-white);
+    border-bottom: 1px solid var(--koaj-border-color);
+}
+
+.koaj-logo-text {
+    font-size: 1.75rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+    color: var(--koaj-text-main);
+    margin: 0;
+}
+
+/* 
+   3. BUTTONS & ICONS
+    */
+
+/* Main Primary Button */
+.btn-koaj-primary {
+    background-color: var(--koaj-primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--koaj-radius-sm);
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-koaj-primary:hover {
+    background-color: var(--koaj-primary-hover);
+    color: #fff;
+}
+
+/* Outline Button (e.g., Cancelar) */
+.btn-koaj-outline {
+    background-color: #fff;
+    color: var(--koaj-primary);
+    border: 1px solid var(--koaj-border-color);
+    border-radius: var(--koaj-radius-sm);
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-koaj-outline:hover {
+    background-color: var(--koaj-bg-app);
+    border-color: var(--koaj-primary);
+}
+
+/* Action Icon Buttons for Tables */
+.btn-koaj-action-blue,
+.btn-koaj-action-red {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: var(--koaj-radius-sm);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-right: 6px;
+    transition: opacity 0.2s ease;
+}
+
+.btn-koaj-action-blue {
+    background-color: var(--koaj-action-blue);
+}
+
+.btn-koaj-action-red {
+    background-color: var(--koaj-action-red);
+}
+
+.btn-koaj-action-blue:hover,
+.btn-koaj-action-red:hover {
+    opacity: 0.85;
+}
+
+/* Circular Icons (Header) */
+.koaj-icon-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--koaj-border-color);
+    background: white;
+    color: var(--koaj-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.koaj-icon-circle:hover {
+    background-color: var(--koaj-bg-app);
+}
+
+/* Search Input wrapper */
+.koaj-search-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--koaj-border-color);
+    border-radius: var(--koaj-radius-sm);
+    background-color: #fff;
+    padding: 4px 12px;
+    width: 250px;
+}
+
+.koaj-search-wrapper i {
+    color: var(--koaj-text-light);
+    margin-right: 8px;
+}
+
+.koaj-search-wrapper input {
+    border: none;
+    outline: none;
+    font-size: 0.875rem;
+    width: 100%;
+    background: transparent;
+}
+
+
+/* 
+   4. FORMS & INPUTS
+    */
+.koaj-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    color: var(--koaj-text-main);
+    background-color: #fbfcfd;
+    border: 1px solid var(--koaj-border-color);
+    border-radius: var(--koaj-radius-sm);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.koaj-input:focus {
+    border-color: var(--koaj-primary);
+    background-color: #fff;
+}
+
+.koaj-input::placeholder {
+    color: var(--koaj-text-light);
+}
+
+/* 
+   5. DROPDOWNS (SELECTS)
+    */
+/* Default Select */
+.koaj-select {
+    width: 100%;
+    padding: 8px 32px 8px 12px;
+    font-size: 0.875rem;
+    color: var(--koaj-text-main);
+    background-color: #fbfcfd;
+    border: 1px solid var(--koaj-border-color);
+    border-radius: var(--koaj-radius-sm);
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    /* Icon arrow right/down */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D'http://www.w3.org/2000/svg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'%236c757d'%20stroke-width%3D'2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpolyline%20points%3D'6%209%2012%2015%2018%209'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+}
+
+.koaj-select:focus {
+    border-color: var(--koaj-primary);
+}
+
+/* Custom Dropdown Component Styles (if you build a div-based dropdown) */
+.koaj-dropdown-container {
+    position: relative;
+    width: 100%;
+}
+
+.koaj-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid var(--koaj-border-color);
+    border-radius: var(--koaj-radius-sm);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    margin-top: 4px;
+    padding: 4px 0;
+    list-style: none;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.koaj-dropdown-item {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    color: var(--koaj-text-main);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.koaj-dropdown-item:hover {
+    background-color: var(--koaj-bg-app);
+}
+
+.koaj-dropdown-item.active {
+    background-color: var(--koaj-action-blue);
+    color: white;
+}
+
+/* 
+   6. KOAJ TABLE
+    */
+.koaj-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--koaj-border-color);
+    border-radius: var(--koaj-radius-md);
+    margin-top: 24px;
+}
+
+.koaj-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--koaj-bg-white);
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+.koaj-table th {
+    background-color: var(--koaj-primary);
+    color: var(--koaj-bg-white);
+    padding: 14px 16px;
+    font-weight: 500;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    white-space: nowrap;
+}
+
+.koaj-table th:last-child {
+    border-right: none;
+}
+
+.koaj-table td {
+    padding: 12px 16px;
+    color: var(--koaj-text-muted);
+    border-bottom: 1px solid var(--koaj-border-light);
+    border-right: 1px solid var(--koaj-border-light);
+    vertical-align: middle;
+}
+
+.koaj-table td:last-child {
+    border-right: none;
+}
+
+.koaj-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Table images */
+.koaj-table-img {
+    width: 48px;
+    height: auto;
+    border: 1px solid var(--koaj-border-color);
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+/* 
+   7. MAIN LAYOUT (Mockup Shell)
+    */
+.koaj-app-shell {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--koaj-bg-white);
+}
+
+.koaj-sidebar {
+    width: 80px;
+    background-color: var(--koaj-bg-app);
+    /* The light gray sidebar */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 0;
+    gap: 16px;
+    border-right: 1px solid var(--koaj-border-light);
+    flex-shrink: 0;
+}
+
+/* Sidebar for Panel (Expandable Text) */
+.koaj-sidebar-panel {
+    width: 250px;
+    background-color: var(--koaj-bg-app);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+    border-right: 1px solid var(--koaj-border-light);
+    flex-shrink: 0;
+}
+
+.koaj-sidebar-item {
+    width: 48px;
+    height: 48px;
+    background-color: white;
+    border-radius: var(--koaj-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--koaj-text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--koaj-border-light);
+    text-decoration: none;
+    font-size: 1.25rem;
+}
+
+.koaj-sidebar-item:hover {
+    background-color: var(--koaj-border-light);
+    color: var(--koaj-primary);
+}
+
+.koaj-sidebar-item.active {
+    background-color: var(--koaj-primary);
+    color: white;
+    border-color: var(--koaj-primary);
+}
+
+.koaj-main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--koaj-bg-white);
+    overflow-x: hidden;
+}
+
+.koaj-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    background-color: var(--koaj-bg-white);
+    border-bottom: 2px solid var(--koaj-border-light);
+}
+
+.koaj-topbar-logo {
+    font-size: 2.25rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+    color: var(--koaj-text-main);
+    margin: 0;
+    line-height: 1;
+}
+
+.koaj-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.koaj-content-area {
+    padding: 32px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Panel sidebar specific classes */
+.koaj-panel-link {
+    display: block;
+    padding: 8px 12px;
+    color: var(--koaj-text-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    border-radius: var(--koaj-radius-sm);
+    margin-bottom: 4px;
+}
+
+.koaj-panel-link:hover {
+    background-color: rgba(11, 49, 94, 0.05);
+    color: var(--koaj-primary);
+}
+
+.koaj-panel-link.active {
+    background-color: var(--koaj-primary);
+    color: white;
+    font-weight: 500;
+}
+
+.koaj-panel-group-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--koaj-text-light);
+    margin-top: 16px;
+    margin-bottom: 8px;
+    padding: 0 12px;
+}
+
+/* 
+   8. UTILITY CLASSES
+    */
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.gap-3 {
+    gap: 1rem;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.flex-column {
+    flex-direction: column;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.justify-content-end {
+    justify-content: flex-end;
+}
+
+.mt-4 {
+    margin-top: 1.5rem;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+.w-100 {
+    width: 100%;
+}

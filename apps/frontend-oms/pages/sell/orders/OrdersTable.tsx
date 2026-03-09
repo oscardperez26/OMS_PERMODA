@@ -1,4 +1,4 @@
-import "./orders-table.css";
+
 
 /**
  * OrderRow
@@ -16,7 +16,7 @@ export type OrderRow = {
   payment: string;
   status: "Asignado" | "Preparación en curso" | "Con novedad" | "Entregado";
   date: string; // "YYYY-MM-DD HH:mm:ss"
-    detail?: OrderDetail; // detalle del pedido (para el modal)
+  detail?: OrderDetail; // detalle del pedido (para el modal)
 };
 
 /** OrderItem
@@ -74,7 +74,6 @@ export function OrdersTable({
   filters,
   onChangeFilters,
   onSearch,
-  onClear,
   onView,
 }: {
   rows: OrderRow[];
@@ -100,22 +99,27 @@ export function OrdersTable({
   };
 
   return (
-    <div className="orders-table-container">
-      <table className="orders-table">
-        <thead>
-          <tr className="orders-head-row">
-            <th className="col-check"></th>
-            <th className="col-id">ID</th>
-            <th className="col-ref">Referencia</th>
-            <th className="col-new">Nuevo cliente</th>
-            <th className="col-delivery">Entrega</th>
-            <th className="col-customer">Cliente</th>
-            <th className="col-total">Total</th>
-            <th className="col-pay">Pago</th>
-            <th className="col-status">Estado</th>
-            <th className="col-date">Fecha</th>
-            <th className="col-actions">Acciones</th>
-          </tr>
+    <div>
+      <div className="w-100 koaj-table-wrapper">
+        <table className="koaj-table">
+          <thead>
+            <tr className="orders-head-row">
+              <th className="col-check text-center">
+                <input type="checkbox" aria-label="Seleccionar todos" />
+              </th>
+              <th className="col-id">ID</th>
+              <th className="col-ref">Referencia</th>
+              <th className="col-new">Nuevo cliente</th>
+              <th className="col-delivery">Entrega</th>
+              <th className="col-customer">Cliente</th>
+              <th className="col-total">
+                Total <i className="bi bi-chevron-down ms-1" style={{ fontSize: '0.7rem' }}></i>
+              </th>
+              <th className="col-pay">Pago</th>
+              <th className="col-status">Estado</th>
+              <th className="col-date">Fecha</th>
+              <th className="col-actions">Acciones</th>
+            </tr>
 
           {/* FILTROS CONTROLADOS */}
           <tr className="orders-filter-row">
@@ -240,44 +244,159 @@ export function OrdersTable({
               <td className="center">
                 <input type="checkbox" aria-label={`Seleccionar pedido ${r.id}`} />
               </td>
-              <td>{r.id}</td>
-              <td>{r.reference}</td>
-              <td>{r.newCustomer}</td>
-              <td>{r.delivery}</td>
               <td>
-                <a className="orders-link" href="#" onClick={(e) => e.preventDefault()}>
-                  {r.customer}
-                </a>
+                <input
+                  className="koaj-input py-1 px-2"
+                  style={{ fontSize: '0.8rem', height: '32px' }}
+                  placeholder="ID"
+                  value={filters.id}
+                  onChange={(e) => set("id", e.target.value)}
+                />
               </td>
-              <td>{r.total}</td>
-              <td>{r.payment}</td>
               <td>
-                <span className={`orders-badge ${badgeColor(r.status)}`}>{r.status}</span>
+                <input
+                  className="koaj-input py-1 px-2"
+                  style={{ fontSize: '0.8rem', height: '32px' }}
+                  placeholder="Buscar re"
+                  value={filters.reference}
+                  onChange={(e) => set("reference", e.target.value)}
+                />
               </td>
-              <td>{r.date}</td>
-              <td className="center">
-                <button
-                  className="orders-icon-btn"
-                  type="button"
-                  title="Ver"
-                  aria-label={`Ver pedido ${r.id}`}
-                  onClick={() => onView(r)}
+              <td>
+                <select
+                  className="koaj-select py-1 px-2"
+                  style={{ fontSize: '0.8rem', height: '32px' }}
+                  value={filters.newCustomer}
+                  onChange={(e) => set("newCustomer", e.target.value as any)}
                 >
-                  🔍
+                  <option value="">Todos</option>
+                  <option value="Sí">Sí</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td>
+                <select
+                  className="koaj-select py-1 px-2"
+                  style={{ fontSize: '0.8rem', height: '32px' }}
+                  value={filters.delivery}
+                  onChange={(e) => set("delivery", e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  <option value="Colombia">Colombia</option>
+                </select>
+              </td>
+              <td>
+                <input
+                  className="koaj-input py-1 px-2"
+                  style={{ fontSize: '0.8rem', height: '32px' }}
+                  placeholder="Buscar cliente"
+                  value={filters.customer}
+                  onChange={(e) => set("customer", e.target.value)}
+                />
+              </td>
+              <td>
+                <input
+                  className="koaj-input py-1 px-2"
+                  style={{ fontSize: '0.8rem', height: '32px' }}
+                  placeholder="Buscar todos"
+                  value={filters.total}
+                  onChange={(e) => set("total", e.target.value)}
+                />
+              </td>
+              <td>
+                <input
+                  className="koaj-input py-1 px-2"
+                  style={{ fontSize: '0.8rem', height: '32px' }}
+                  placeholder="Bus"
+                  value={filters.payment}
+                  onChange={(e) => set("payment", e.target.value)}
+                />
+              </td>
+              <td>
+                <select
+                  className="koaj-select py-1 px-2"
+                  style={{ fontSize: '0.8rem', height: '32px' }}
+                  value={filters.status}
+                  onChange={(e) => set("status", e.target.value as any)}
+                >
+                  <option value="">Todos</option>
+                  <option value="Asignado">Asignado</option>
+                  <option value="Preparación en curso">Preparación en curso</option>
+                  <option value="Con novedad">Con novedad</option>
+                  <option value="Entregado">Entregado</option>
+                </select>
+              </td>
+              <td>
+                <div className="d-flex flex-column gap-1">
+                  <div className="d-flex align-items-center bg-white border rounded px-1" style={{ height: '30px' }}>
+                    <span className="text-muted small me-1">Y</span>
+                    <i className="bi bi-calendar-event me-1 text-muted" style={{ fontSize: '0.75rem' }}></i>
+                  </div>
+                  <div className="d-flex align-items-center bg-white border rounded px-1" style={{ height: '30px' }}>
+                    <span className="text-muted small me-1">Y</span>
+                    <i className="bi bi-calendar-event me-1 text-muted" style={{ fontSize: '0.75rem' }}></i>
+                  </div>
+                </div>
+              </td>
+              <td className="text-center align-middle">
+                <button
+                  className="btn-koaj-outline py-1 px-2 d-flex align-items-center gap-1 mx-auto"
+                  style={{ fontSize: '0.85rem', color: '#94a3b8', borderColor: '#e2e8f0', backgroundColor: '#f1f5f9' }}
+                  onClick={onSearch}
+                >
+                  <i className="bi bi-search"></i> Buscar
                 </button>
               </td>
             </tr>
-          ))}
+          </thead>
 
-          {!rows.length && (
-            <tr>
-              <td colSpan={11} className="orders-empty">
-                No hay pedidos para mostrar.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="orders-body-row">
+                <td className="center">
+                  <input type="checkbox" aria-label={`Seleccionar pedido ${r.id}`} />
+                </td>
+                <td>{r.id}</td>
+                <td>{r.reference}</td>
+                <td>{r.newCustomer}</td>
+                <td>{r.delivery}</td>
+                <td>
+                  <a className="orders-link" href="#" onClick={(e) => e.preventDefault()}>
+                    {r.customer}
+                  </a>
+                </td>
+                <td>{r.total}</td>
+                <td>{r.payment}</td>
+                <td>
+                  <span className={`orders-badge ${badgeColor(r.status)}`}>{r.status}</span>
+                </td>
+                <td>{r.date}</td>
+                <td className="center">
+                  <div className="d-flex justify-content-center align-items-center">
+                    <button
+                      className="btn-koaj-action-blue"
+                      type="button"
+                      title="Ver Detalles"
+                      aria-label={`Ver pedido ${r.id}`}
+                      onClick={() => onView(r)}
+                    >
+                      <i className="bi bi-eye-fill"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+
+            {!rows.length && (
+              <tr>
+                <td colSpan={11} className="orders-empty">
+                  No hay pedidos para mostrar.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
