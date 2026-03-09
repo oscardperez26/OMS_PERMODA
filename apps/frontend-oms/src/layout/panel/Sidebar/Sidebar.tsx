@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { SIDEBAR_SECTIONS } from './SidebarMenu';
 import { getGroupsToOpenByPathname } from './sidebar.utils';
@@ -13,23 +13,19 @@ export function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
+  const autoOpenGroups = useMemo(() => {
     const keys = getGroupsToOpenByPathname(location.pathname);
-    if (keys.length === 0) {
-      return;
-    }
-
-    setOpenGroups((previous) => {
-      const next = { ...previous };
-      keys.forEach((key) => {
-        next[key] = true;
-      });
-      return next;
-    });
+    return keys.reduce<Record<string, boolean>>((accumulator, key) => {
+      accumulator[key] = true;
+      return accumulator;
+    }, {});
   }, [location.pathname]);
 
+  const isGroupOpen = (groupKey: string) =>
+    openGroups[groupKey] ?? autoOpenGroups[groupKey] ?? false;
+
   const toggleGroup = (groupKey: string) => {
-    setOpenGroups((previous) => ({ ...previous, [groupKey]: !previous[groupKey] }));
+    setOpenGroups((previous) => ({ ...previous, [groupKey]: !isGroupOpen(groupKey) }));
   };
 
   if (!isExpanded) {
@@ -39,7 +35,7 @@ export function Sidebar() {
           className="koaj-sidebar-item mb-4"
           onClick={() => setIsExpanded(true)}
           style={{ border: 'none', background: 'transparent', boxShadow: 'none' }}
-          title="Expandir menú"
+          title="Expandir menu"
         >
           <i className="bi bi-list fs-3 text-muted"></i>
         </button>
@@ -64,7 +60,7 @@ export function Sidebar() {
         <button
           onClick={() => setIsExpanded(false)}
           className="btn btn-sm text-muted border-0 bg-transparent"
-          title="Contraer menú"
+          title="Contraer menu"
         >
           <i className="bi bi-layout-sidebar-inset fs-5"></i>
         </button>
@@ -81,17 +77,23 @@ export function Sidebar() {
             <div key={group.key} className="mb-1">
               <button
                 className="d-flex justify-content-between align-items-center w-100 bg-transparent border-0 text-start"
-                style={{ color: 'var(--koaj-text-main)', fontSize: '0.875rem', fontWeight: 600, padding: '8px 12px' }}
+                style={{
+                  color: 'var(--koaj-text-main)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  padding: '8px 12px',
+                }}
                 onClick={() => toggleGroup(group.key)}
-                aria-expanded={!!openGroups[group.key]}
+                aria-expanded={isGroupOpen(group.key)}
               >
                 <span>{group.groupLabel}</span>
-                <span className="text-muted" style={{ fontSize: '0.7rem' }}>
-                  {openGroups[group.key] ? '▼' : '▶'}
-                </span>
+                <i
+                  className={`bi ${isGroupOpen(group.key) ? 'bi-chevron-down' : 'bi-chevron-right'} text-muted`}
+                  style={{ fontSize: '0.7rem' }}
+                ></i>
               </button>
 
-              {openGroups[group.key] && (
+              {isGroupOpen(group.key) && (
                 <div className="d-flex flex-column ps-3 mt-1">
                   {group.items.map((item) => (
                     <NavLink

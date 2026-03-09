@@ -10,7 +10,6 @@ import {
   type OrderDetail,
 } from '../../../src/orders/orders.api';
 import { ROUTES } from '../../../src/routes/routes';
-import './OrderDetailPage.css';
 
 export function OrderDetailPage() {
   const { id } = useParams();

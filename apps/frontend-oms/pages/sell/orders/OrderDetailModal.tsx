@@ -40,54 +40,58 @@ export function OrderDetailModal({
 }) {
   const navigate = useNavigate();
   const { accessToken } = useAuth();
-  const [apiDetail, setApiDetail] = useState<ApiOrderDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadError, setLoadError] = useState('');
+  const [apiDetailByOrderId, setApiDetailByOrderId] = useState<Record<number, ApiOrderDetail>>({});
+  const [loadErrorByOrderId, setLoadErrorByOrderId] = useState<Record<number, string>>({});
+
+  const currentOrderId = order?.pedidoId ?? null;
+  const apiDetail = currentOrderId ? apiDetailByOrderId[currentOrderId] ?? null : null;
+  const loadError = useMemo(() => {
+    if (!open || !order) {
+      return '';
+    }
+    if (!accessToken) {
+      return 'Sesion no disponible';
+    }
+    if (!currentOrderId) {
+      return 'Pedido no disponible';
+    }
+    return loadErrorByOrderId[currentOrderId] ?? '';
+  }, [accessToken, currentOrderId, loadErrorByOrderId, open, order]);
+
+  const isLoading =
+    Boolean(open && order && accessToken && !order.detail) && !apiDetail && !loadError;
 
   useEffect(() => {
-    if (!open || !order) {
-      setApiDetail(null);
-      setIsLoading(false);
-      setLoadError('');
+    if (!open || !order || !accessToken || order.detail) {
       return;
     }
 
-    if (!accessToken) {
-      setApiDetail(null);
-      setIsLoading(false);
-      setLoadError('Sesion no disponible');
+    if (apiDetailByOrderId[order.pedidoId] || loadErrorByOrderId[order.pedidoId]) {
       return;
     }
 
     let cancelled = false;
-    setIsLoading(true);
-    setLoadError('');
+    const requestedOrderId = order.pedidoId;
 
-    void getOrderDetail(accessToken, order.pedidoId)
+    void getOrderDetail(accessToken, requestedOrderId)
       .then((detail) => {
         if (cancelled) {
           return;
         }
-        setApiDetail(detail);
+        setApiDetailByOrderId((previous) => ({ ...previous, [requestedOrderId]: detail }));
       })
       .catch((error: unknown) => {
         if (cancelled) {
           return;
         }
-        setApiDetail(null);
-        setLoadError(error instanceof Error ? error.message : 'No se pudo cargar el detalle');
-      })
-      .finally(() => {
-        if (cancelled) {
-          return;
-        }
-        setIsLoading(false);
+        const message = error instanceof Error ? error.message : 'No se pudo cargar el detalle';
+        setLoadErrorByOrderId((previous) => ({ ...previous, [requestedOrderId]: message }));
       });
 
     return () => {
       cancelled = true;
     };
-  }, [open, order, accessToken]);
+  }, [accessToken, apiDetailByOrderId, loadErrorByOrderId, open, order]);
 
   const detail = useMemo(() => {
     if (order?.detail) {

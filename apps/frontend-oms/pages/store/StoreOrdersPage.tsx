@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { STORE_ORDERS_MOCK, type Order } from "./storeOrdersMock";
 import {
@@ -42,8 +42,7 @@ const INITIAL_FILTERS = {
 export function StoreOrdersPage() {
   const navigate = useNavigate();
 
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+  const orders: Order[] = STORE_ORDERS_MOCK;
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [activeTab, setActiveTab] = useState("Ver Todos");
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -61,16 +60,12 @@ export function StoreOrdersPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDatePicker]);
 
-  useEffect(() => {
-    setOrders(STORE_ORDERS_MOCK);
-  }, []);
-
   const set = (name: string, value: string) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  useEffect(() => {
-    const result = orders.filter((o) => {
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
       const alias = filters.orderAlias.trim().toLowerCase();
       const matchAlias =
         alias === "" ||
@@ -128,9 +123,17 @@ export function StoreOrdersPage() {
         matchTab = o.statusLabel === "Cancelado";
       }
 
-      return matchAlias && matchSearch && matchOrigin && matchStatus && matchTransporter && matchStore && matchTab && matchDate;
+      return (
+        matchAlias &&
+        matchSearch &&
+        matchOrigin &&
+        matchStatus &&
+        matchTransporter &&
+        matchStore &&
+        matchTab &&
+        matchDate
+      );
     });
-    setFilteredOrders(result);
   }, [filters, orders, activeTab]);
 
   const goToDetail = (order: Order) => navigate(`/tienda/orders/${order.orderId}`);
