@@ -27,6 +27,8 @@ import { ModulesPage } from '../../pages/personalize/ModulesPage';
 import { DesignPage } from '../../pages/personalize/DesignPage';
 import { TransportPage } from '../../pages/personalize/TransportPage';
 import { PaymentPage } from '../../pages/personalize/PaymentPage';
+import { StoreOrderDetailPage } from '../../pages/store/StoreOrderDetailPage';
+import { StoreOrderTicketPage } from '../../pages/store/StoreOrderTicketPage';
 import { StoreOrdersPage } from '../../pages/store/StoreOrdersPage';
 import { ProfilesPage } from '../../pages/gestor/ProfilesPage';
 import { ConfiguracionGeneralPage } from '../../pages/gestor/ConfiguracionGeneralPage';

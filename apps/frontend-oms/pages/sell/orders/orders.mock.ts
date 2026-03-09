@@ -1,7 +1,8 @@
-import { OrderRow } from "./OrdersTable";
+import type { OrderRow } from "./OrdersTable";
 
 export const MOCK_ORDERS: OrderRow[] = [
     {
+        pedidoId: 21829,
         id: "21829",
         reference: "ZSPTHAYRG",
         newCustomer: "No",
@@ -27,6 +28,7 @@ export const MOCK_ORDERS: OrderRow[] = [
         },
     },
     {
+        pedidoId: 21820,
         id: "21820",
         reference: "HPPZPFSHE",
         newCustomer: "No",
@@ -51,6 +53,7 @@ export const MOCK_ORDERS: OrderRow[] = [
         },
     },
     {
+        pedidoId: 21806,
         id: "21806",
         reference: "OSEFORRAV",
         newCustomer: "Sí",

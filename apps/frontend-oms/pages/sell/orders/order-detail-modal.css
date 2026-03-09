@@ -1,0 +1,163 @@
+/**
+ * order-detail-modal.css
+ * ----------------------
+ * Estilos del modal de detalle del pedido.
+ */
+
+.odm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.odm-panel {
+  width: 760px;
+  max-width: 95vw;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.odm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.odm-title {
+  font-weight: 800;
+  font-size: 16px;
+  color: #111827;
+}
+
+.odm-subtitle {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
+.odm-close {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.odm-body {
+  padding: 14px;
+}
+
+.odm-muted {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.odm-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.odm-primary {
+  border: 1px solid #cfd8e3;
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.odm-panel-wide {
+  width: 1100px;
+  max-width: 96vw;
+}
+
+.odm-like-oms {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 12px;
+}
+
+.odm-col {
+  border: 1px solid #d7e3ef;
+  background: #fff;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.odm-col-products {
+  overflow: hidden;
+}
+
+.odm-block-title {
+  font-weight: 800;
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.odm-line {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.odm-pre {
+  margin: 6px 0 0 0;
+  font-family: inherit;
+  font-size: 12px;
+  white-space: pre-wrap;
+  opacity: 0.9;
+}
+
+.odm-mt {
+  margin-top: 10px;
+}
+
+.odm-products-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.odm-products-table th,
+.odm-products-table td {
+  border-top: 1px solid #e5eef7;
+  padding: 6px;
+  text-align: left;
+}
+
+.odm-products-table th {
+  font-weight: 800;
+}
+
+.odm-product-name {
+  color: #2b90d9;
+}
+
+.right {
+  text-align: right;
+}
+
+.odm-products-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.odm-open-details {
+  border: 1px solid #cfd8e3;
+  background: #2b90d9;
+  color: #fff;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+}

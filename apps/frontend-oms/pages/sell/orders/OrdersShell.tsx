@@ -53,7 +53,7 @@ export function OrdersShell({
             aria-label="Configuración"
             onClick={onOpenSettings}
           >
-            <i class="bi bi-gear"></i>
+            <i className="bi bi-gear"></i>
           </button>
         </div>
 

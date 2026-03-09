@@ -5,8 +5,6 @@ import { OrderDetailModal } from './OrderDetailModal';
 import { OrdersShell } from './OrdersShell';
 import { OrdersTable, type OrderRow, type OrdersFilters } from './OrdersTable';
 
-import { MOCK_ORDERS } from "./orders.mock";
-
 /**
  * OrdersPage
  * ----------
