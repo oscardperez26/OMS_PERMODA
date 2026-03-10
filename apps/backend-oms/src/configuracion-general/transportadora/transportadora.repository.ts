@@ -4,11 +4,12 @@ import { DatabaseService } from '../../database/database.service';
 import type {
   CreateTransportadoraInput,
   TransportadoraBootstrapData,
-  TransportadoraConfiguracionDetail,
   TransportadoraConfigItem,
   TransportadoraEmpresaListItem,
   TransportadoraListItem,
+  TransportadoraTarifaZonaItem,
   TransportadoraTiendaItem,
+  TransportadoraZonaItem,
   UpdateTransportadoraConfiguracionInput,
   UpdateTransportadoraInput,
 } from './transportadora.types';
@@ -20,19 +21,15 @@ type TransportadoraRow = {
   Nombre: string;
   TrackingUrlTemplate: string | null;
   Activo: boolean;
+  Servicio: string | null;
+  PermiteExpress: boolean | null;
+  ModuloCode: string | null;
   CreatedAt: Date;
   UpdatedAt: Date | null;
 };
 
-type TransportadoraWithConfigRow = TransportadoraRow & {
-  Servicio: string | null;
-  PermiteExpress: boolean | null;
-  ModuloCode: string | null;
-  CosteFijo: string | number | null;
-  DistanciaFijaKm: string | number | null;
-  CosteIncrementalKm: string | number | null;
-  ConfigCreatedAt: Date | null;
-  ConfigUpdatedAt: Date | null;
+type TransportadoraWithEmpresaMonedaRow = TransportadoraRow & {
+  EmpresaMonedaId: number;
 };
 
 type TransportadoraIdentityRow = {
@@ -53,12 +50,40 @@ type TiendaRow = {
   Activo: boolean;
 };
 
+type ZonaRow = {
+  ZonaTransporteId: number;
+  EmpresaId: number;
+  Codigo: string;
+  Nombre: string;
+  Activo: boolean;
+};
+
+type TarifaZonaRow = {
+  CostoTransporteId: string | number;
+  MonedaId: number;
+  Costo: string | number;
+  DiasMin: number | null;
+  DiasMax: number | null;
+  Activo: boolean;
+};
+
+type TransportadoraConfiguracionBase = {
+  transportadora: TransportadoraListItem;
+  config: TransportadoraConfigItem;
+  tiendasSeleccionadas: TransportadoraTiendaItem[];
+  tiendasDisponibles: TransportadoraTiendaItem[];
+  zonasDisponibles: TransportadoraZonaItem[];
+  empresaMonedaId: number;
+};
+
 @Injectable()
 export class TransportadoraRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async list(): Promise<TransportadoraListItem[]> {
-    const result = await this.databaseService.execute<sql.IResult<TransportadoraRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<TransportadoraRow>
+    >(
       (pool) =>
         pool.request().query<TransportadoraRow>(`
           SELECT
@@ -68,6 +93,9 @@ export class TransportadoraRepository {
             [Nombre],
             [TrackingUrlTemplate],
             [Activo],
+            [Servicio],
+            [PermiteExpress],
+            [ModuloCode],
             [CreatedAt],
             [UpdatedAt]
           FROM [oms].[Transportadora]
@@ -90,6 +118,9 @@ export class TransportadoraRepository {
             [Nombre],
             [TrackingUrlTemplate],
             [Activo],
+            [Servicio],
+            [PermiteExpress],
+            [ModuloCode],
             [CreatedAt],
             [UpdatedAt]
           FROM [oms].[Transportadora]
@@ -105,21 +136,26 @@ export class TransportadoraRepository {
       'transportadora.listBootstrapData',
     );
 
-    const transportadorasRows = (result.recordsets?.[0] ?? []) as TransportadoraRow[];
+    const transportadorasRows = (result.recordsets?.[0] ??
+      []) as TransportadoraRow[];
     const empresasRows = (result.recordsets?.[1] ?? []) as EmpresaRow[];
 
     return {
-      transportadoras: transportadorasRows.map((row) => this.mapTransportadoraRow(row)),
+      transportadoras: transportadorasRows.map((row) =>
+        this.mapTransportadoraRow(row),
+      ),
       empresas: empresasRows.map((row) => this.mapEmpresaRow(row)),
     };
   }
 
-  async findById(transportadoraId: number): Promise<TransportadoraListItem | null> {
-    const result = await this.databaseService.execute<sql.IResult<TransportadoraRow>>(
+  async findById(
+    transportadoraId: number,
+  ): Promise<TransportadoraListItem | null> {
+    const result = await this.databaseService.execute<
+      sql.IResult<TransportadoraRow>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('transportadoraId', sql.Int, transportadoraId)
+        pool.request().input('transportadoraId', sql.Int, transportadoraId)
           .query<TransportadoraRow>(`
             SELECT
               [TransportadoraId],
@@ -128,6 +164,9 @@ export class TransportadoraRepository {
               [Nombre],
               [TrackingUrlTemplate],
               [Activo],
+              [Servicio],
+              [PermiteExpress],
+              [ModuloCode],
               [CreatedAt],
               [UpdatedAt]
             FROM [oms].[Transportadora]
@@ -144,14 +183,12 @@ export class TransportadoraRepository {
     return this.mapTransportadoraRow(row);
   }
 
-  async findConfiguracionById(
+  async findConfiguracionBaseById(
     transportadoraId: number,
-  ): Promise<TransportadoraConfiguracionDetail | null> {
+  ): Promise<TransportadoraConfiguracionBase | null> {
     const result = await this.databaseService.execute<sql.IResult<unknown>>(
       (pool) =>
-        pool
-          .request()
-          .input('transportadoraId', sql.Int, transportadoraId)
+        pool.request().input('transportadoraId', sql.Int, transportadoraId)
           .query(`
             SELECT
               t.[TransportadoraId],
@@ -160,19 +197,15 @@ export class TransportadoraRepository {
               t.[Nombre],
               t.[TrackingUrlTemplate],
               t.[Activo],
+              t.[Servicio],
+              t.[PermiteExpress],
+              t.[ModuloCode],
               t.[CreatedAt],
               t.[UpdatedAt],
-              cfg.[Servicio],
-              cfg.[PermiteExpress],
-              cfg.[ModuloCode],
-              cfg.[CosteFijo],
-              cfg.[DistanciaFijaKm],
-              cfg.[CosteIncrementalKm],
-              cfg.[CreatedAt] AS [ConfigCreatedAt],
-              cfg.[UpdatedAt] AS [ConfigUpdatedAt]
+              e.[MonedaId] AS [EmpresaMonedaId]
             FROM [oms].[Transportadora] t
-            LEFT JOIN [oms].[TransportadoraConfig] cfg
-              ON cfg.[TransportadoraId] = t.[TransportadoraId]
+            INNER JOIN [oms].[Empresa] e
+              ON e.[EmpresaId] = t.[EmpresaId]
             WHERE t.[TransportadoraId] = @transportadoraId;
 
             SELECT
@@ -199,31 +232,160 @@ export class TransportadoraRepository {
               ON t.[EmpresaId] = ti.[EmpresaId]
             WHERE t.[TransportadoraId] = @transportadoraId
             ORDER BY ti.[Nombre] ASC, ti.[TiendaId] ASC;
+
+            SELECT
+              z.[ZonaTransporteId],
+              z.[EmpresaId],
+              z.[Codigo],
+              z.[Nombre],
+              z.[Activo]
+            FROM [oms].[ZonaTransporte] z
+            INNER JOIN [oms].[Transportadora] t
+              ON t.[EmpresaId] = z.[EmpresaId]
+            WHERE t.[TransportadoraId] = @transportadoraId
+              AND z.[Activo] = 1
+            ORDER BY z.[Nombre] ASC, z.[ZonaTransporteId] ASC;
           `),
-      'transportadora.findConfiguracionById',
+      'transportadora.findConfiguracionBaseById',
     );
 
-    const baseRow = (result.recordsets?.[0]?.[0] ?? null) as
-      | TransportadoraWithConfigRow
-      | null;
+    const baseRow = (result.recordsets?.[0]?.[0] ??
+      null) as TransportadoraWithEmpresaMonedaRow | null;
     if (!baseRow) {
       return null;
     }
 
-    const tiendasSeleccionadasRows = (result.recordsets?.[1] ?? []) as TiendaRow[];
-    const tiendasDisponiblesRows = (result.recordsets?.[2] ?? []) as TiendaRow[];
+    const tiendasSeleccionadasRows = (result.recordsets?.[1] ??
+      []) as TiendaRow[];
+    const tiendasDisponiblesRows = (result.recordsets?.[2] ??
+      []) as TiendaRow[];
+    const zonasDisponiblesRows = (result.recordsets?.[3] ?? []) as ZonaRow[];
 
     return {
       transportadora: this.mapTransportadoraRow(baseRow),
-      config: this.mapTransportadoraConfigRow(baseRow),
-      tiendasSeleccionadas: tiendasSeleccionadasRows.map((row) => this.mapTiendaRow(row)),
-      tiendasDisponibles: tiendasDisponiblesRows.map((row) => this.mapTiendaRow(row)),
+      config: this.mapTransportadoraConfigFromRow(baseRow),
+      tiendasSeleccionadas: tiendasSeleccionadasRows.map((row) =>
+        this.mapTiendaRow(row),
+      ),
+      tiendasDisponibles: tiendasDisponiblesRows.map((row) =>
+        this.mapTiendaRow(row),
+      ),
+      zonasDisponibles: zonasDisponiblesRows.map((row) => this.mapZonaRow(row)),
+      empresaMonedaId: baseRow.EmpresaMonedaId,
     };
   }
 
-  async findTiendasByIds(tiendaIds: number[]): Promise<TransportadoraTiendaItem[]> {
+  async findTarifaZonaBase(
+    empresaId: number,
+    transportadoraId: number,
+    zonaSeleccionadaId: number,
+    monedaId: number,
+  ): Promise<TransportadoraTarifaZonaItem | null> {
+    const result = await this.databaseService.execute<
+      sql.IResult<TarifaZonaRow>
+    >(
+      (pool) =>
+        pool
+          .request()
+          .input('empresaId', sql.Int, empresaId)
+          .input('transportadoraId', sql.Int, transportadoraId)
+          .input('zonaSeleccionadaId', sql.Int, zonaSeleccionadaId)
+          .input('monedaId', sql.Int, monedaId).query<TarifaZonaRow>(`
+            SELECT TOP (1)
+              [CostoTransporteId],
+              [MonedaId],
+              [Costo],
+              [DiasMin],
+              [DiasMax],
+              [Activo]
+            FROM [oms].[CostoTransporte]
+            WHERE [EmpresaId] = @empresaId
+              AND [TransportadoraId] = @transportadoraId
+              AND [ZonaTransporteId] = @zonaSeleccionadaId
+              AND [MonedaId] = @monedaId
+              AND [PesoMinKg] IS NULL
+              AND [PesoMaxKg] IS NULL
+              AND [ValorMin] IS NULL
+              AND [ValorMax] IS NULL
+            ORDER BY
+              [Activo] DESC,
+              [UpdatedAt] DESC,
+              [CostoTransporteId] DESC
+          `),
+      'transportadora.findTarifaZonaBase',
+    );
+
+    const row = result.recordset[0];
+    if (!row) {
+      return null;
+    }
+
+    return {
+      zonaSeleccionadaId,
+      monedaId: row.MonedaId,
+      costo: Number(row.Costo),
+      diasMin: row.DiasMin ?? undefined,
+      diasMax: row.DiasMax ?? undefined,
+      activo: row.Activo,
+    };
+  }
+
+  async findEmpresaMonedaId(empresaId: number): Promise<number | null> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ MonedaId: number }>
+    >(
+      (pool) =>
+        pool.request().input('empresaId', sql.Int, empresaId).query<{
+          MonedaId: number;
+        }>(`
+            SELECT [MonedaId]
+            FROM [oms].[Empresa]
+            WHERE [EmpresaId] = @empresaId
+          `),
+      'transportadora.findEmpresaMonedaId',
+    );
+
+    return result.recordset[0]?.MonedaId ?? null;
+  }
+
+  async findZonaByIdAndEmpresaId(
+    zonaSeleccionadaId: number,
+    empresaId: number,
+  ): Promise<TransportadoraZonaItem | null> {
+    const result = await this.databaseService.execute<sql.IResult<ZonaRow>>(
+      (pool) =>
+        pool
+          .request()
+          .input('zonaSeleccionadaId', sql.Int, zonaSeleccionadaId)
+          .input('empresaId', sql.Int, empresaId).query<ZonaRow>(`
+            SELECT
+              [ZonaTransporteId],
+              [EmpresaId],
+              [Codigo],
+              [Nombre],
+              [Activo]
+            FROM [oms].[ZonaTransporte]
+            WHERE [ZonaTransporteId] = @zonaSeleccionadaId
+              AND [EmpresaId] = @empresaId
+          `),
+      'transportadora.findZonaByIdAndEmpresaId',
+    );
+
+    const row = result.recordset[0];
+    if (!row) {
+      return null;
+    }
+
+    return this.mapZonaRow(row);
+  }
+
+  async findTiendasByIds(
+    tiendaIds: number[],
+  ): Promise<TransportadoraTiendaItem[]> {
     const normalized = [
-      ...new Set(tiendaIds.filter((value) => Number.isInteger(value) && value > 0)),
+      ...new Set(
+        tiendaIds.filter((value) => Number.isInteger(value) && value > 0),
+      ),
     ];
     if (normalized.length === 0) {
       return [];
@@ -258,14 +420,19 @@ export class TransportadoraRepository {
     codigo: string,
     excludeTransportadoraId?: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('empresaId', sql.Int, empresaId)
           .input('codigo', sql.NVarChar(60), codigo)
-          .input('excludeTransportadoraId', sql.Int, excludeTransportadoraId ?? null)
-          .query<{ count: number }>(`
+          .input(
+            'excludeTransportadoraId',
+            sql.Int,
+            excludeTransportadoraId ?? null,
+          ).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Transportadora]
             WHERE [EmpresaId] = @empresaId
@@ -279,12 +446,13 @@ export class TransportadoraRepository {
   }
 
   async existsEmpresaById(empresaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+        pool.request().input('empresaId', sql.Int, empresaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Empresa]
             WHERE [EmpresaId] = @empresaId
@@ -295,15 +463,23 @@ export class TransportadoraRepository {
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
-  async create(input: CreateTransportadoraInput): Promise<{ transportadoraId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<TransportadoraIdentityRow>>(
+  async create(
+    input: CreateTransportadoraInput,
+  ): Promise<{ transportadoraId: number }> {
+    const result = await this.databaseService.execute<
+      sql.IResult<TransportadoraIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
           .input('EmpresaId', sql.Int, input.empresaId)
           .input('Codigo', sql.NVarChar(60), input.codigo)
           .input('Nombre', sql.NVarChar(180), input.nombre)
-          .input('TrackingUrlTemplate', sql.NVarChar(255), input.trackingUrlTemplate)
+          .input(
+            'TrackingUrlTemplate',
+            sql.NVarChar(255),
+            input.trackingUrlTemplate,
+          )
           .input('Activo', sql.Bit, input.activo)
           .query<TransportadoraIdentityRow>(`
             INSERT INTO [oms].[Transportadora]
@@ -313,6 +489,7 @@ export class TransportadoraRepository {
               [Nombre],
               [TrackingUrlTemplate],
               [Activo],
+              [PermiteExpress],
               [UpdatedAt]
             )
             OUTPUT INSERTED.[TransportadoraId]
@@ -323,6 +500,7 @@ export class TransportadoraRepository {
               @Nombre,
               @TrackingUrlTemplate,
               @Activo,
+              0,
               NULL
             )
           `),
@@ -344,9 +522,12 @@ export class TransportadoraRepository {
           .input('empresaId', sql.Int, input.empresaId)
           .input('codigo', sql.NVarChar(60), input.codigo)
           .input('nombre', sql.NVarChar(180), input.nombre)
-          .input('trackingUrlTemplate', sql.NVarChar(255), input.trackingUrlTemplate)
-          .input('activo', sql.Bit, input.activo)
-          .query(`
+          .input(
+            'trackingUrlTemplate',
+            sql.NVarChar(255),
+            input.trackingUrlTemplate,
+          )
+          .input('activo', sql.Bit, input.activo).query(`
             UPDATE [oms].[Transportadora]
             SET
               [EmpresaId] = @empresaId,
@@ -365,20 +546,25 @@ export class TransportadoraRepository {
     transportadoraId: number,
     input: UpdateTransportadoraConfiguracionInput,
   ): Promise<void> {
-    await this.databaseService.execute(
-      async (pool) => {
-        const transaction = new sql.Transaction(pool);
-        await transaction.begin();
+    await this.databaseService.execute(async (pool) => {
+      const transaction = new sql.Transaction(pool);
+      await transaction.begin();
 
-        try {
-          await new sql.Request(transaction)
-            .input('transportadoraId', sql.Int, transportadoraId)
-            .input('empresaId', sql.Int, input.empresaId)
-            .input('codigo', sql.NVarChar(60), input.codigo)
-            .input('nombre', sql.NVarChar(180), input.nombre)
-            .input('trackingUrlTemplate', sql.NVarChar(255), input.trackingUrlTemplate)
-            .input('activo', sql.Bit, input.activo)
-            .query(`
+      try {
+        await new sql.Request(transaction)
+          .input('transportadoraId', sql.Int, transportadoraId)
+          .input('empresaId', sql.Int, input.empresaId)
+          .input('codigo', sql.NVarChar(60), input.codigo)
+          .input('nombre', sql.NVarChar(180), input.nombre)
+          .input(
+            'trackingUrlTemplate',
+            sql.NVarChar(255),
+            input.trackingUrlTemplate,
+          )
+          .input('activo', sql.Bit, input.activo)
+          .input('servicio', sql.NVarChar(120), input.servicio)
+          .input('permiteExpress', sql.Bit, input.permiteExpress)
+          .input('moduloCode', sql.NVarChar(120), input.moduloCode).query(`
               UPDATE [oms].[Transportadora]
               SET
                 [EmpresaId] = @empresaId,
@@ -386,69 +572,98 @@ export class TransportadoraRepository {
                 [Nombre] = @nombre,
                 [TrackingUrlTemplate] = @trackingUrlTemplate,
                 [Activo] = @activo,
+                [Servicio] = @servicio,
+                [PermiteExpress] = @permiteExpress,
+                [ModuloCode] = @moduloCode,
                 [UpdatedAt] = SYSUTCDATETIME()
               WHERE [TransportadoraId] = @transportadoraId
             `);
 
+        if (
+          input.zonaSeleccionadaId !== undefined &&
+          input.tarifaZona !== undefined
+        ) {
           await new sql.Request(transaction)
+            .input('empresaId', sql.Int, input.empresaId)
             .input('transportadoraId', sql.Int, transportadoraId)
-            .input('servicio', sql.NVarChar(120), input.servicio)
-            .input('permiteExpress', sql.Bit, input.permiteExpress)
-            .input('moduloCode', sql.NVarChar(120), input.moduloCode)
-            .input('costeFijo', sql.Decimal(18, 6), input.costeFijo)
-            .input('distanciaFijaKm', sql.Decimal(18, 6), input.distanciaFijaKm)
-            .input('costeIncrementalKm', sql.Decimal(18, 6), input.costeIncrementalKm)
-            .query(`
-              MERGE [oms].[TransportadoraConfig] AS target
-              USING (SELECT @transportadoraId AS [TransportadoraId]) AS source
-              ON target.[TransportadoraId] = source.[TransportadoraId]
-              WHEN MATCHED THEN
-                UPDATE SET
-                  [Servicio] = @servicio,
-                  [PermiteExpress] = @permiteExpress,
-                  [ModuloCode] = @moduloCode,
-                  [CosteFijo] = @costeFijo,
-                  [DistanciaFijaKm] = @distanciaFijaKm,
-                  [CosteIncrementalKm] = @costeIncrementalKm,
-                  [UpdatedAt] = SYSUTCDATETIME()
-              WHEN NOT MATCHED THEN
-                INSERT
+            .input('zonaSeleccionadaId', sql.Int, input.zonaSeleccionadaId)
+            .input('tarifaCosto', sql.Decimal(18, 2), input.tarifaZona.costo)
+            .input('tarifaDiasMin', sql.Int, input.tarifaZona.diasMin)
+            .input('tarifaDiasMax', sql.Int, input.tarifaZona.diasMax)
+            .input('tarifaActiva', sql.Bit, input.tarifaZona.activo).query(`
+              DECLARE @monedaId INT;
+              SELECT @monedaId = [MonedaId]
+              FROM [oms].[Empresa]
+              WHERE [EmpresaId] = @empresaId;
+
+              UPDATE [oms].[CostoTransporte]
+              SET
+                [Costo] = @tarifaCosto,
+                [DiasMin] = @tarifaDiasMin,
+                [DiasMax] = @tarifaDiasMax,
+                [Activo] = @tarifaActiva,
+                [UpdatedAt] = SYSUTCDATETIME()
+              WHERE [EmpresaId] = @empresaId
+                AND [ZonaTransporteId] = @zonaSeleccionadaId
+                AND [TransportadoraId] = @transportadoraId
+                AND [MonedaId] = @monedaId
+                AND [PesoMinKg] IS NULL
+                AND [PesoMaxKg] IS NULL
+                AND [ValorMin] IS NULL
+                AND [ValorMax] IS NULL;
+
+              IF @@ROWCOUNT = 0
+              BEGIN
+                INSERT INTO [oms].[CostoTransporte]
                 (
+                  [EmpresaId],
+                  [ZonaTransporteId],
                   [TransportadoraId],
-                  [Servicio],
-                  [PermiteExpress],
-                  [ModuloCode],
-                  [CosteFijo],
-                  [DistanciaFijaKm],
-                  [CosteIncrementalKm],
-                  [CreatedAt],
+                  [MonedaId],
+                  [PesoMinKg],
+                  [PesoMaxKg],
+                  [ValorMin],
+                  [ValorMax],
+                  [Costo],
+                  [DiasMin],
+                  [DiasMax],
+                  [Activo],
                   [UpdatedAt]
                 )
                 VALUES
                 (
+                  @empresaId,
+                  @zonaSeleccionadaId,
                   @transportadoraId,
-                  @servicio,
-                  @permiteExpress,
-                  @moduloCode,
-                  @costeFijo,
-                  @distanciaFijaKm,
-                  @costeIncrementalKm,
-                  SYSUTCDATETIME(),
+                  @monedaId,
+                  NULL,
+                  NULL,
+                  NULL,
+                  NULL,
+                  @tarifaCosto,
+                  @tarifaDiasMin,
+                  @tarifaDiasMax,
+                  @tarifaActiva,
                   NULL
                 );
+              END;
             `);
+        }
 
-          const tiendaIds = [...new Set(input.tiendaIds)];
-          if (tiendaIds.length > 0) {
-            const requestActivate = new sql.Request(transaction).input(
-              'transportadoraId',
-              sql.Int,
-              transportadoraId,
-            );
-            const activateParamNames = this.bindTiendaIds(requestActivate, tiendaIds);
-            const activateInClause = this.toInClause(activateParamNames);
+        const tiendaIds = [...new Set(input.tiendaIds)];
+        if (tiendaIds.length > 0) {
+          const requestActivate = new sql.Request(transaction).input(
+            'transportadoraId',
+            sql.Int,
+            transportadoraId,
+          );
+          const activateParamNames = this.bindTiendaIds(
+            requestActivate,
+            tiendaIds,
+          );
+          const activateInClause = this.toInClause(activateParamNames);
 
-            await requestActivate.query(`
+          await requestActivate.query(`
               UPDATE [oms].[TransportadoraTienda]
               SET
                 [Activo] = 1,
@@ -457,14 +672,14 @@ export class TransportadoraRepository {
                 AND [TiendaId] IN (${activateInClause})
             `);
 
-            const requestInsert = new sql.Request(transaction).input(
-              'transportadoraId',
-              sql.Int,
-              transportadoraId,
-            );
-            const insertParamNames = this.bindTiendaIds(requestInsert, tiendaIds);
-            const insertValuesClause = this.toValuesClause(insertParamNames);
-            await requestInsert.query(`
+          const requestInsert = new sql.Request(transaction).input(
+            'transportadoraId',
+            sql.Int,
+            transportadoraId,
+          );
+          const insertParamNames = this.bindTiendaIds(requestInsert, tiendaIds);
+          const insertValuesClause = this.toValuesClause(insertParamNames);
+          await requestInsert.query(`
               INSERT INTO [oms].[TransportadoraTienda]
               (
                 [TransportadoraId],
@@ -488,17 +703,17 @@ export class TransportadoraRepository {
               )
             `);
 
-            const requestDeactivate = new sql.Request(transaction).input(
-              'transportadoraId',
-              sql.Int,
-              transportadoraId,
-            );
-            const deactivateParamNames = this.bindTiendaIds(
-              requestDeactivate,
-              tiendaIds,
-            );
-            const deactivateInClause = this.toInClause(deactivateParamNames);
-            await requestDeactivate.query(`
+          const requestDeactivate = new sql.Request(transaction).input(
+            'transportadoraId',
+            sql.Int,
+            transportadoraId,
+          );
+          const deactivateParamNames = this.bindTiendaIds(
+            requestDeactivate,
+            tiendaIds,
+          );
+          const deactivateInClause = this.toInClause(deactivateParamNames);
+          await requestDeactivate.query(`
               UPDATE [oms].[TransportadoraTienda]
               SET
                 [Activo] = 0,
@@ -507,10 +722,12 @@ export class TransportadoraRepository {
                 AND [Activo] = 1
                 AND [TiendaId] NOT IN (${deactivateInClause})
             `);
-          } else {
-            await new sql.Request(transaction)
-              .input('transportadoraId', sql.Int, transportadoraId)
-              .query(`
+        } else {
+          await new sql.Request(transaction).input(
+            'transportadoraId',
+            sql.Int,
+            transportadoraId,
+          ).query(`
                 UPDATE [oms].[TransportadoraTienda]
                 SET
                   [Activo] = 0,
@@ -518,16 +735,14 @@ export class TransportadoraRepository {
                 WHERE [TransportadoraId] = @transportadoraId
                   AND [Activo] = 1
               `);
-          }
-
-          await transaction.commit();
-        } catch (error) {
-          await transaction.rollback();
-          throw error;
         }
-      },
-      'transportadora.updateConfiguracion',
-    );
+
+        await transaction.commit();
+      } catch (error) {
+        await transaction.rollback();
+        throw error;
+      }
+    }, 'transportadora.updateConfiguracion');
   }
 
   private bindTiendaIds(request: sql.Request, tiendaIds: number[]): string[] {
@@ -558,21 +773,21 @@ export class TransportadoraRepository {
       nombre: row.Nombre,
       trackingUrlTemplate: row.TrackingUrlTemplate ?? undefined,
       activo: row.Activo,
+      servicio: row.Servicio ?? undefined,
+      permiteExpress: row.PermiteExpress ?? false,
+      moduloCode: row.ModuloCode ?? undefined,
       createdAt: row.CreatedAt.toISOString(),
       updatedAt: row.UpdatedAt?.toISOString() ?? null,
     };
   }
 
-  private mapTransportadoraConfigRow(row: TransportadoraWithConfigRow): TransportadoraConfigItem {
+  private mapTransportadoraConfigFromRow(
+    row: TransportadoraRow,
+  ): TransportadoraConfigItem {
     return {
       servicio: row.Servicio ?? undefined,
       permiteExpress: row.PermiteExpress ?? false,
       moduloCode: row.ModuloCode ?? undefined,
-      costeFijo: this.toUndefinedNumber(row.CosteFijo),
-      distanciaFijaKm: this.toUndefinedNumber(row.DistanciaFijaKm),
-      costeIncrementalKm: this.toUndefinedNumber(row.CosteIncrementalKm),
-      createdAt: row.ConfigCreatedAt?.toISOString(),
-      updatedAt: row.ConfigUpdatedAt?.toISOString() ?? null,
     };
   }
 
@@ -594,10 +809,14 @@ export class TransportadoraRepository {
     };
   }
 
-  private toUndefinedNumber(value: string | number | null): number | undefined {
-    if (value === null || value === undefined) {
-      return undefined;
-    }
-    return Number(value);
+  private mapZonaRow(row: ZonaRow): TransportadoraZonaItem {
+    return {
+      zonaTransporteId: row.ZonaTransporteId,
+      empresaId: row.EmpresaId,
+      codigo: row.Codigo,
+      nombre: row.Nombre,
+      activa: row.Activo,
+    };
   }
 }
+

@@ -80,11 +80,17 @@
 }
 
 .transportadora-config-grid input,
+.transportadora-config-grid select,
 .transportadora-store-column input {
   border: 1px solid #cfd8e3;
   border-radius: 8px;
   padding: 8px 10px;
   background: #fff;
+}
+
+.transportadora-config-field-note {
+  color: #667688;
+  font-size: 12px;
 }
 
 .transportadora-config-checkbox {

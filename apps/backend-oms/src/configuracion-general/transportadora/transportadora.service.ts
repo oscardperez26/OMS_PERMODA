@@ -11,6 +11,7 @@ import type {
   TransportadoraConfiguracionDetail,
   TransportadoraListItem,
   UpdateTransportadoraConfiguracionInput,
+  UpdateTransportadoraTarifaZonaInput,
 } from './transportadora.types';
 
 type CreateTransportadoraParams = {
@@ -29,6 +30,13 @@ type UpdateTransportadoraParams = {
   activo?: boolean;
 };
 
+type UpdateTransportadoraTarifaZonaParams = {
+  costo: number;
+  diasMin?: number | null;
+  diasMax?: number | null;
+  activo?: boolean;
+};
+
 type UpdateTransportadoraConfiguracionParams = {
   empresaId?: number;
   codigo?: string;
@@ -38,17 +46,25 @@ type UpdateTransportadoraConfiguracionParams = {
   servicio?: string | null;
   permiteExpress?: boolean;
   moduloCode?: string | null;
-  costeFijo?: number | null;
-  distanciaFijaKm?: number | null;
-  costeIncrementalKm?: number | null;
+  zonaSeleccionadaId?: number;
+  tarifaZona?: UpdateTransportadoraTarifaZonaParams;
   tiendaIds?: number[];
 };
+
+const SERVICIO_PERMITIDO_MAP = new Map<string, string>([
+  ['domicilio', 'Domicilio'],
+  ['tienda', 'Tienda'],
+  ['interno', 'Interno'],
+  ['manual', 'Manual'],
+]);
 
 @Injectable()
 export class TransportadoraService {
   private readonly logger = new Logger(TransportadoraService.name);
 
-  constructor(private readonly transportadoraRepository: TransportadoraRepository) {}
+  constructor(
+    private readonly transportadoraRepository: TransportadoraRepository,
+  ) {}
 
   async listTransportadoras(): Promise<TransportadoraListItem[]> {
     return this.transportadoraRepository.list();
@@ -58,8 +74,11 @@ export class TransportadoraService {
     return this.transportadoraRepository.listBootstrapData();
   }
 
-  async getTransportadoraById(transportadoraId: number): Promise<TransportadoraListItem> {
-    const transportadora = await this.transportadoraRepository.findById(transportadoraId);
+  async getTransportadoraById(
+    transportadoraId: number,
+  ): Promise<TransportadoraListItem> {
+    const transportadora =
+      await this.transportadoraRepository.findById(transportadoraId);
     if (!transportadora) {
       throw new NotFoundException('Transportadora no existe');
     }
@@ -68,12 +87,40 @@ export class TransportadoraService {
 
   async getTransportadoraConfiguracionById(
     transportadoraId: number,
+    zonaSeleccionadaId?: number,
   ): Promise<TransportadoraConfiguracionDetail> {
-    const detail = await this.transportadoraRepository.findConfiguracionById(transportadoraId);
+    const detail =
+      await this.transportadoraRepository.findConfiguracionBaseById(
+        transportadoraId,
+      );
     if (!detail) {
       throw new NotFoundException('Transportadora no existe');
     }
-    return detail;
+
+    const nextZonaSeleccionadaId = this.resolveZonaSeleccionadaId(
+      detail.zonasDisponibles.map((zona) => zona.zonaTransporteId),
+      zonaSeleccionadaId,
+    );
+
+    const tarifaZona =
+      nextZonaSeleccionadaId === null
+        ? null
+        : await this.transportadoraRepository.findTarifaZonaBase(
+            detail.transportadora.empresaId,
+            transportadoraId,
+            nextZonaSeleccionadaId,
+            detail.empresaMonedaId,
+          );
+
+    return {
+      transportadora: detail.transportadora,
+      config: detail.config,
+      tiendasSeleccionadas: detail.tiendasSeleccionadas,
+      tiendasDisponibles: detail.tiendasDisponibles,
+      zonasDisponibles: detail.zonasDisponibles,
+      zonaSeleccionadaId: nextZonaSeleccionadaId,
+      tarifaZona,
+    };
   }
 
   async createTransportadora(
@@ -89,10 +136,11 @@ export class TransportadoraService {
     );
     const activo = this.normalizeBoolean(params.activo, true);
 
-    const duplicated = await this.transportadoraRepository.existsByEmpresaAndCodigo(
-      empresaId,
-      codigo,
-    );
+    const duplicated =
+      await this.transportadoraRepository.existsByEmpresaAndCodigo(
+        empresaId,
+        codigo,
+      );
     if (duplicated) {
       throw new ConflictException(
         'Ya existe una transportadora con ese codigo en la empresa',
@@ -131,10 +179,13 @@ export class TransportadoraService {
       params.activo !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
-    const current = await this.transportadoraRepository.findById(transportadoraId);
+    const current =
+      await this.transportadoraRepository.findById(transportadoraId);
     if (!current) {
       throw new NotFoundException('Transportadora no existe');
     }
@@ -144,7 +195,9 @@ export class TransportadoraService {
         ? this.normalizeRequiredId(params.empresaId, 'empresaId')
         : current.empresaId;
     const nextCodigo =
-      params.codigo !== undefined ? this.normalizeCodigo(params.codigo) : current.codigo;
+      params.codigo !== undefined
+        ? this.normalizeCodigo(params.codigo)
+        : current.codigo;
     const nextNombre =
       params.nombre !== undefined
         ? this.normalizeRequiredText(params.nombre, 'nombre', 180)
@@ -156,15 +209,18 @@ export class TransportadoraService {
             'trackingUrlTemplate',
             255,
           )
-        : current.trackingUrlTemplate ?? null;
+        : (current.trackingUrlTemplate ?? null);
     const nextActivo =
-      params.activo !== undefined ? this.normalizeBoolean(params.activo) : current.activo;
+      params.activo !== undefined
+        ? this.normalizeBoolean(params.activo)
+        : current.activo;
 
-    const duplicated = await this.transportadoraRepository.existsByEmpresaAndCodigo(
-      nextEmpresaId,
-      nextCodigo,
-      transportadoraId,
-    );
+    const duplicated =
+      await this.transportadoraRepository.existsByEmpresaAndCodigo(
+        nextEmpresaId,
+        nextCodigo,
+        transportadoraId,
+      );
     if (duplicated) {
       throw new ConflictException(
         'Ya existe una transportadora con ese codigo en la empresa',
@@ -197,6 +253,8 @@ export class TransportadoraService {
   ): Promise<void> {
     const tiendaIdsFromRequest = params.tiendaIds;
     const hasTiendaIdsField = params.tiendaIds !== undefined;
+    const hasZonaSeleccionadaIdField = params.zonaSeleccionadaId !== undefined;
+    const hasTarifaZonaField = params.tarifaZona !== undefined;
     if (hasTiendaIdsField && !Array.isArray(tiendaIdsFromRequest)) {
       throw new BadRequestException('tiendaIds debe ser una lista de enteros');
     }
@@ -210,16 +268,26 @@ export class TransportadoraService {
       params.servicio !== undefined ||
       params.permiteExpress !== undefined ||
       params.moduloCode !== undefined ||
-      params.costeFijo !== undefined ||
-      params.distanciaFijaKm !== undefined ||
-      params.costeIncrementalKm !== undefined ||
+      params.zonaSeleccionadaId !== undefined ||
+      params.tarifaZona !== undefined ||
       hasTiendaIdsField;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
-    const detail = await this.transportadoraRepository.findConfiguracionById(transportadoraId);
+    if (hasZonaSeleccionadaIdField !== hasTarifaZonaField) {
+      throw new BadRequestException(
+        'zonaSeleccionadaId y tarifaZona deben enviarse juntos',
+      );
+    }
+
+    const detail =
+      await this.transportadoraRepository.findConfiguracionBaseById(
+        transportadoraId,
+      );
     if (!detail) {
       throw new NotFoundException('Transportadora no existe');
     }
@@ -232,7 +300,9 @@ export class TransportadoraService {
         ? this.normalizeRequiredId(params.empresaId, 'empresaId')
         : base.empresaId;
     const nextCodigo =
-      params.codigo !== undefined ? this.normalizeCodigo(params.codigo) : base.codigo;
+      params.codigo !== undefined
+        ? this.normalizeCodigo(params.codigo)
+        : base.codigo;
     const nextNombre =
       params.nombre !== undefined
         ? this.normalizeRequiredText(params.nombre, 'nombre', 180)
@@ -244,14 +314,16 @@ export class TransportadoraService {
             'trackingUrlTemplate',
             255,
           )
-        : base.trackingUrlTemplate ?? null;
+        : (base.trackingUrlTemplate ?? null);
     const nextActivo =
-      params.activo !== undefined ? this.normalizeBoolean(params.activo) : base.activo;
+      params.activo !== undefined
+        ? this.normalizeBoolean(params.activo)
+        : base.activo;
 
     const nextServicio =
       params.servicio !== undefined
-        ? this.normalizeOptionalText(params.servicio, 'servicio', 120)
-        : config.servicio ?? null;
+        ? this.normalizeServicio(params.servicio)
+        : (config.servicio ?? null);
     const nextPermiteExpress =
       params.permiteExpress !== undefined
         ? this.normalizeBoolean(params.permiteExpress)
@@ -259,29 +331,40 @@ export class TransportadoraService {
     const nextModuloCode =
       params.moduloCode !== undefined
         ? this.normalizeOptionalText(params.moduloCode, 'moduloCode', 120)
-        : config.moduloCode ?? null;
-    const nextCosteFijo =
-      params.costeFijo !== undefined
-        ? this.normalizeOptionalDecimal(params.costeFijo, 'costeFijo')
-        : config.costeFijo ?? null;
-    const nextDistanciaFijaKm =
-      params.distanciaFijaKm !== undefined
-        ? this.normalizeOptionalDecimal(params.distanciaFijaKm, 'distanciaFijaKm')
-        : config.distanciaFijaKm ?? null;
-    const nextCosteIncrementalKm =
-      params.costeIncrementalKm !== undefined
-        ? this.normalizeOptionalDecimal(params.costeIncrementalKm, 'costeIncrementalKm')
-        : config.costeIncrementalKm ?? null;
+        : (config.moduloCode ?? null);
+
+    let nextZonaSeleccionadaId: number | undefined;
+    let nextTarifaZona: UpdateTransportadoraTarifaZonaInput | undefined;
+    if (hasZonaSeleccionadaIdField && hasTarifaZonaField) {
+      nextZonaSeleccionadaId = this.normalizeRequiredId(
+        params.zonaSeleccionadaId as number,
+        'zonaSeleccionadaId',
+      );
+      nextTarifaZona = this.normalizeTarifaZona(
+        params.tarifaZona as UpdateTransportadoraTarifaZonaParams,
+      );
+
+      if (
+        nextTarifaZona.diasMin !== null &&
+        nextTarifaZona.diasMax !== null &&
+        nextTarifaZona.diasMin > nextTarifaZona.diasMax
+      ) {
+        throw new BadRequestException(
+          'El campo tarifaZona.diasMin no puede ser mayor que tarifaZona.diasMax',
+        );
+      }
+    }
 
     const nextTiendaIds = hasTiendaIdsField
       ? this.normalizeTiendaIds(tiendaIdsFromRequest as number[])
       : detail.tiendasSeleccionadas.map((item) => item.tiendaId);
 
-    const duplicated = await this.transportadoraRepository.existsByEmpresaAndCodigo(
-      nextEmpresaId,
-      nextCodigo,
-      transportadoraId,
-    );
+    const duplicated =
+      await this.transportadoraRepository.existsByEmpresaAndCodigo(
+        nextEmpresaId,
+        nextCodigo,
+        transportadoraId,
+      );
     if (duplicated) {
       throw new ConflictException(
         'Ya existe una transportadora con ese codigo en la empresa',
@@ -290,6 +373,10 @@ export class TransportadoraService {
 
     await this.validateEmpresa(nextEmpresaId);
     await this.validateTiendas(nextTiendaIds, nextEmpresaId);
+    if (nextZonaSeleccionadaId !== undefined && nextTarifaZona !== undefined) {
+      await this.validateEmpresaMoneda(nextEmpresaId);
+      await this.validateZona(nextZonaSeleccionadaId, nextEmpresaId);
+    }
 
     const input: UpdateTransportadoraConfiguracionInput = {
       empresaId: nextEmpresaId,
@@ -300,16 +387,20 @@ export class TransportadoraService {
       servicio: nextServicio,
       permiteExpress: nextPermiteExpress,
       moduloCode: nextModuloCode,
-      costeFijo: nextCosteFijo,
-      distanciaFijaKm: nextDistanciaFijaKm,
-      costeIncrementalKm: nextCosteIncrementalKm,
       tiendaIds: nextTiendaIds,
+      ...(nextZonaSeleccionadaId !== undefined
+        ? { zonaSeleccionadaId: nextZonaSeleccionadaId }
+        : {}),
+      ...(nextTarifaZona !== undefined ? { tarifaZona: nextTarifaZona } : {}),
     };
 
     try {
-      await this.transportadoraRepository.updateConfiguracion(transportadoraId, input);
+      await this.transportadoraRepository.updateConfiguracion(
+        transportadoraId,
+        input,
+      );
       this.logger.log(
-        `Transportadora ${transportadoraId} actualizada: empresa=${nextEmpresaId}, tiendas=${nextTiendaIds.length}`,
+        `Transportadora ${transportadoraId} actualizada: empresa=${nextEmpresaId}, zona=${nextZonaSeleccionadaId ?? 'sin-cambio'}, tiendas=${nextTiendaIds.length}`,
       );
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
@@ -321,19 +412,101 @@ export class TransportadoraService {
     }
   }
 
+  private resolveZonaSeleccionadaId(
+    zonaIdsDisponibles: number[],
+    requestedZonaSeleccionadaId?: number,
+  ): number | null {
+    if (zonaIdsDisponibles.length === 0) {
+      return null;
+    }
+
+    if (requestedZonaSeleccionadaId === undefined) {
+      return zonaIdsDisponibles[0];
+    }
+
+    const normalized = this.normalizeRequiredId(
+      requestedZonaSeleccionadaId,
+      'zonaSeleccionadaId',
+    );
+
+    if (!zonaIdsDisponibles.includes(normalized)) {
+      throw new BadRequestException(
+        'zonaSeleccionadaId no pertenece a la empresa o no esta activa',
+      );
+    }
+
+    return normalized;
+  }
+
+  private normalizeTarifaZona(
+    tarifaZona: UpdateTransportadoraTarifaZonaParams,
+  ): UpdateTransportadoraTarifaZonaInput {
+    return {
+      costo: this.normalizeRequiredDecimal(
+        tarifaZona.costo,
+        'tarifaZona.costo',
+      ),
+      diasMin: this.normalizeOptionalInteger(
+        tarifaZona.diasMin,
+        'tarifaZona.diasMin',
+      ),
+      diasMax: this.normalizeOptionalInteger(
+        tarifaZona.diasMax,
+        'tarifaZona.diasMax',
+      ),
+      activo:
+        tarifaZona.activo !== undefined
+          ? this.normalizeBoolean(tarifaZona.activo)
+          : true,
+    };
+  }
+
   private async validateEmpresa(empresaId: number): Promise<void> {
-    const empresaExists = await this.transportadoraRepository.existsEmpresaById(empresaId);
+    const empresaExists =
+      await this.transportadoraRepository.existsEmpresaById(empresaId);
     if (!empresaExists) {
       throw new BadRequestException('EmpresaId no existe en la base de datos');
     }
   }
 
-  private async validateTiendas(tiendaIds: number[], empresaId: number): Promise<void> {
+  private async validateEmpresaMoneda(empresaId: number): Promise<void> {
+    const monedaId =
+      await this.transportadoraRepository.findEmpresaMonedaId(empresaId);
+    if (!monedaId) {
+      throw new BadRequestException('La empresa no tiene MonedaId configurada');
+    }
+  }
+
+  private async validateZona(
+    zonaSeleccionadaId: number,
+    empresaId: number,
+  ): Promise<void> {
+    const zona = await this.transportadoraRepository.findZonaByIdAndEmpresaId(
+      zonaSeleccionadaId,
+      empresaId,
+    );
+
+    if (!zona) {
+      throw new BadRequestException(
+        'zonaSeleccionadaId no pertenece a la empresa de la transportadora',
+      );
+    }
+
+    if (!zona.activa) {
+      throw new BadRequestException('zonaSeleccionadaId no esta activa');
+    }
+  }
+
+  private async validateTiendas(
+    tiendaIds: number[],
+    empresaId: number,
+  ): Promise<void> {
     if (tiendaIds.length === 0) {
       return;
     }
 
-    const tiendas = await this.transportadoraRepository.findTiendasByIds(tiendaIds);
+    const tiendas =
+      await this.transportadoraRepository.findTiendasByIds(tiendaIds);
     if (tiendas.length !== tiendaIds.length) {
       throw new BadRequestException('Una o mas tiendas no existen');
     }
@@ -352,7 +525,9 @@ export class TransportadoraService {
       throw new BadRequestException('El campo codigo no puede estar vacio');
     }
     if (normalized.length > 60) {
-      throw new BadRequestException('El campo codigo no puede exceder 60 caracteres');
+      throw new BadRequestException(
+        'El campo codigo no puede exceder 60 caracteres',
+      );
     }
     return normalized;
   }
@@ -364,7 +539,9 @@ export class TransportadoraService {
   ): string {
     const normalized = value.trim();
     if (!normalized) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacio`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacio`,
+      );
     }
     if (normalized.length > maxLength) {
       throw new BadRequestException(
@@ -391,14 +568,35 @@ export class TransportadoraService {
     return normalized;
   }
 
+  private normalizeServicio(value: string | null | undefined): string | null {
+    const normalized = value?.trim();
+    if (!normalized) {
+      return null;
+    }
+
+    const canonical = SERVICIO_PERMITIDO_MAP.get(normalized.toLowerCase());
+    if (!canonical) {
+      throw new BadRequestException(
+        'El campo servicio solo permite: Domicilio, Tienda, Interno o Manual',
+      );
+    }
+
+    return canonical;
+  }
+
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
 
-  private normalizeBoolean(value: boolean | undefined, fallback?: boolean): boolean {
+  private normalizeBoolean(
+    value: boolean | undefined,
+    fallback?: boolean,
+  ): boolean {
     if (value === undefined) {
       if (fallback === undefined) {
         throw new BadRequestException('Valor booleano no enviado');
@@ -408,15 +606,26 @@ export class TransportadoraService {
     return value;
   }
 
-  private normalizeOptionalDecimal(
+  private normalizeRequiredDecimal(value: number, fieldName: string): number {
+    if (!Number.isFinite(value) || value < 0) {
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un numero >= 0`,
+      );
+    }
+    return value;
+  }
+
+  private normalizeOptionalInteger(
     value: number | null | undefined,
     fieldName: string,
   ): number | null {
     if (value === undefined || value === null) {
       return null;
     }
-    if (!Number.isFinite(value) || value < 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un numero >= 0`);
+    if (!Number.isInteger(value) || value < 0) {
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero >= 0`,
+      );
     }
     return value;
   }
@@ -425,7 +634,9 @@ export class TransportadoraService {
     const ids = [...new Set(values)];
     const invalid = ids.find((value) => !Number.isInteger(value) || value <= 0);
     if (invalid !== undefined) {
-      throw new BadRequestException('Cada tiendaId debe ser un entero mayor a 0');
+      throw new BadRequestException(
+        'Cada tiendaId debe ser un entero mayor a 0',
+      );
     }
     return ids;
   }

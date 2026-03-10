@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { Permissions } from '../../auth/auth.decorators';
 import { CreateTransportadoraDto } from './dto/create-transportadora.dto';
@@ -21,7 +22,8 @@ export class TransportadoraController {
   @Get()
   @Permissions('catalog.read')
   async list() {
-    const transportadoras = await this.transportadoraService.listTransportadoras();
+    const transportadoras =
+      await this.transportadoraService.listTransportadoras();
     return { transportadoras };
   }
 
@@ -34,7 +36,8 @@ export class TransportadoraController {
   @Get(':id')
   @Permissions('catalog.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
-    const transportadora = await this.transportadoraService.getTransportadoraById(id);
+    const transportadora =
+      await this.transportadoraService.getTransportadoraById(id);
     return { transportadora };
   }
 
@@ -42,8 +45,17 @@ export class TransportadoraController {
   @Permissions('catalog.read')
   async getConfiguracion(
     @Param('id', ParseIntPipe) id: number,
+    @Query('zonaSeleccionadaId') zonaSeleccionadaId?: string,
   ): Promise<TransportadoraConfiguracionResponseDto> {
-    return this.transportadoraService.getTransportadoraConfiguracionById(id);
+    const zonaId =
+      zonaSeleccionadaId !== undefined && zonaSeleccionadaId.trim() !== ''
+        ? Number(zonaSeleccionadaId)
+        : undefined;
+
+    return this.transportadoraService.getTransportadoraConfiguracionById(
+      id,
+      zonaId,
+    );
   }
 
   @Post()
@@ -72,7 +84,10 @@ export class TransportadoraController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateTransportadoraConfiguracionDto,
   ): Promise<{ success: true }> {
-    await this.transportadoraService.updateTransportadoraConfiguracion(id, body);
+    await this.transportadoraService.updateTransportadoraConfiguracion(
+      id,
+      body,
+    );
     return { success: true };
   }
 }

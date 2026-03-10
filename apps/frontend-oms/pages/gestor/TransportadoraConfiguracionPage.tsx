@@ -6,6 +6,7 @@ import {
   updateTransportadoraConfiguracion,
   type TransportadoraConfiguracionDetail,
   type TransportadoraConfiguracionStoreItem,
+  type UpdateTransportadoraConfiguracionRequest,
 } from '../../src/configuracion-general/transportadora.api';
 import { ROUTES } from '../../src/routes/routes';
 import './TransportadoraConfiguracionPage.css';
@@ -19,9 +20,11 @@ type FormState = {
   servicio: string;
   permiteExpress: boolean;
   moduloCode: string;
-  costeFijo: string;
-  distanciaFijaKm: string;
-  costeIncrementalKm: string;
+  zonaSeleccionadaId: string;
+  tarifaCosto: string;
+  tarifaDiasMin: string;
+  tarifaDiasMax: string;
+  tarifaActiva: boolean;
   tiendaIds: number[];
 };
 
@@ -34,32 +37,43 @@ const EMPTY_FORM: FormState = {
   servicio: '',
   permiteExpress: false,
   moduloCode: '',
-  costeFijo: '',
-  distanciaFijaKm: '',
-  costeIncrementalKm: '',
+  zonaSeleccionadaId: '',
+  tarifaCosto: '',
+  tarifaDiasMin: '',
+  tarifaDiasMax: '',
+  tarifaActiva: true,
   tiendaIds: [],
 };
 
-function toTextDecimal(value?: number): string {
-  if (value === undefined) {
-    return '';
-  }
-  return String(value);
-}
+const SERVICIO_OPTIONS = ['Domicilio', 'Tienda', 'Interno', 'Manual'] as const;
 
 function toStoreLabel(store: TransportadoraConfiguracionStoreItem): string {
   return `${store.codigo} ${store.nombre}`;
 }
 
-function parseOptionalDecimal(value: string, fieldName: string): number | null {
+function parseRequiredDecimal(value: string, fieldName: string): number {
   const normalized = value.trim().replace(',', '.');
   if (!normalized) {
-    return null;
+    throw new Error(`El campo ${fieldName} es obligatorio`);
   }
 
   const parsed = Number(normalized);
   if (!Number.isFinite(parsed) || parsed < 0) {
     throw new Error(`El campo ${fieldName} debe ser un numero mayor o igual a 0`);
+  }
+
+  return parsed;
+}
+
+function parseOptionalInteger(value: string, fieldName: string): number | null {
+  const normalized = value.trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const parsed = Number(normalized);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`El campo ${fieldName} debe ser un entero mayor o igual a 0`);
   }
 
   return parsed;
@@ -76,6 +90,33 @@ function byStoreNameAsc(
   return left.tiendaId - right.tiendaId;
 }
 
+function buildFormFromDetail(payload: TransportadoraConfiguracionDetail): FormState {
+  const hasTarifaZona = payload.tarifaZona !== null;
+  return {
+    empresaId: payload.transportadora.empresaId,
+    codigo: payload.transportadora.codigo,
+    nombre: payload.transportadora.nombre,
+    trackingUrlTemplate: payload.transportadora.trackingUrlTemplate ?? '',
+    activo: payload.transportadora.activo,
+    servicio: payload.config.servicio ?? '',
+    permiteExpress: payload.config.permiteExpress,
+    moduloCode: payload.config.moduloCode ?? '',
+    zonaSeleccionadaId: hasTarifaZona
+      ? payload.zonaSeleccionadaId !== null
+        ? String(payload.zonaSeleccionadaId)
+        : ''
+      : '',
+    tarifaCosto:
+      payload.tarifaZona?.costo !== undefined ? String(payload.tarifaZona.costo) : '',
+    tarifaDiasMin:
+      payload.tarifaZona?.diasMin !== undefined ? String(payload.tarifaZona.diasMin) : '',
+    tarifaDiasMax:
+      payload.tarifaZona?.diasMax !== undefined ? String(payload.tarifaZona.diasMax) : '',
+    tarifaActiva: payload.tarifaZona?.activo ?? true,
+    tiendaIds: payload.tiendasSeleccionadas.map((item) => item.tiendaId),
+  };
+}
+
 export function TransportadoraConfiguracionPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -87,6 +128,7 @@ export function TransportadoraConfiguracionPage() {
   const [availableSearch, setAvailableSearch] = useState('');
   const [selectedSearch, setSelectedSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingZonaTarifa, setIsLoadingZonaTarifa] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -109,20 +151,7 @@ export function TransportadoraConfiguracionPage() {
       try {
         const payload = await getTransportadoraConfiguracion(accessToken, transportadoraId);
         setDetail(payload);
-        setForm({
-          empresaId: payload.transportadora.empresaId,
-          codigo: payload.transportadora.codigo,
-          nombre: payload.transportadora.nombre,
-          trackingUrlTemplate: payload.transportadora.trackingUrlTemplate ?? '',
-          activo: payload.transportadora.activo,
-          servicio: payload.config.servicio ?? '',
-          permiteExpress: payload.config.permiteExpress,
-          moduloCode: payload.config.moduloCode ?? '',
-          costeFijo: toTextDecimal(payload.config.costeFijo),
-          distanciaFijaKm: toTextDecimal(payload.config.distanciaFijaKm),
-          costeIncrementalKm: toTextDecimal(payload.config.costeIncrementalKm),
-          tiendaIds: payload.tiendasSeleccionadas.map((item) => item.tiendaId),
-        });
+        setForm(buildFormFromDetail(payload));
         setError('');
       } catch (requestError) {
         const message =
@@ -183,6 +212,20 @@ export function TransportadoraConfiguracionPage() {
       .sort(byStoreNameAsc);
   }, [form.tiendaIds, storeMap, selectedSearch]);
 
+  const servicioOptions = useMemo(() => {
+    const options: string[] = [...SERVICIO_OPTIONS];
+    const current = form.servicio.trim();
+
+    if (
+      current &&
+      !options.some((option) => option.toLowerCase() === current.toLowerCase())
+    ) {
+      options.unshift(current);
+    }
+
+    return options;
+  }, [form.servicio]);
+
   function addStore(tiendaId: number) {
     setForm((previous) => {
       if (previous.tiendaIds.includes(tiendaId)) {
@@ -197,6 +240,46 @@ export function TransportadoraConfiguracionPage() {
       ...previous,
       tiendaIds: previous.tiendaIds.filter((value) => value !== tiendaId),
     }));
+  }
+
+  async function handleZonaChange(nextZonaValue: string) {
+    setForm((previous) => ({ ...previous, zonaSeleccionadaId: nextZonaValue }));
+
+    const zonaSeleccionadaId = Number(nextZonaValue);
+    if (!accessToken || !Number.isInteger(zonaSeleccionadaId) || zonaSeleccionadaId <= 0) {
+      return;
+    }
+
+    try {
+      setIsLoadingZonaTarifa(true);
+      const payload = await getTransportadoraConfiguracion(
+        accessToken,
+        transportadoraId,
+        zonaSeleccionadaId,
+      );
+      setDetail(payload);
+      setForm((previous) => ({
+        ...previous,
+        zonaSeleccionadaId:
+          payload.zonaSeleccionadaId !== null ? String(payload.zonaSeleccionadaId) : '',
+        tarifaCosto:
+          payload.tarifaZona?.costo !== undefined ? String(payload.tarifaZona.costo) : '',
+        tarifaDiasMin:
+          payload.tarifaZona?.diasMin !== undefined ? String(payload.tarifaZona.diasMin) : '',
+        tarifaDiasMax:
+          payload.tarifaZona?.diasMax !== undefined ? String(payload.tarifaZona.diasMax) : '',
+        tarifaActiva: payload.tarifaZona?.activo ?? true,
+      }));
+      setError('');
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'No se pudo cargar la tarifa de la zona seleccionada';
+      setError(message);
+    } finally {
+      setIsLoadingZonaTarifa(false);
+    }
   }
 
   function goToList() {
@@ -228,17 +311,9 @@ export function TransportadoraConfiguracionPage() {
       setIsSubmitting(true);
       setError('');
 
-      const costeFijo = parseOptionalDecimal(form.costeFijo, 'coste fijo');
-      const distanciaFijaKm = parseOptionalDecimal(
-        form.distanciaFijaKm,
-        'distancia fija km',
-      );
-      const costeIncrementalKm = parseOptionalDecimal(
-        form.costeIncrementalKm,
-        'coste incremental km',
-      );
-
-      await updateTransportadoraConfiguracion(accessToken, transportadoraId, {
+      const zonaValue = form.zonaSeleccionadaId.trim();
+      const costoValue = form.tarifaCosto.trim();
+      const requestPayload: UpdateTransportadoraConfiguracionRequest = {
         empresaId: form.empresaId,
         codigo,
         nombre,
@@ -247,11 +322,41 @@ export function TransportadoraConfiguracionPage() {
         servicio: form.servicio.trim() || null,
         permiteExpress: form.permiteExpress,
         moduloCode: form.moduloCode.trim() || null,
-        costeFijo,
-        distanciaFijaKm,
-        costeIncrementalKm,
         tiendaIds: form.tiendaIds,
-      });
+      };
+
+      if (zonaValue || costoValue) {
+        if (!zonaValue || !costoValue) {
+          throw new Error('Para guardar tarifa debes completar zona y costo');
+        }
+
+        const zonaSeleccionadaId = Number(zonaValue);
+        if (!Number.isInteger(zonaSeleccionadaId) || zonaSeleccionadaId <= 0) {
+          throw new Error('La zona seleccionada no es valida');
+        }
+
+        const costo = parseRequiredDecimal(form.tarifaCosto, 'costo');
+        const diasMin = parseOptionalInteger(form.tarifaDiasMin, 'dias min');
+        const diasMax = parseOptionalInteger(form.tarifaDiasMax, 'dias max');
+
+        if (diasMin !== null && diasMax !== null && diasMin > diasMax) {
+          throw new Error('El campo dias min no puede ser mayor a dias max');
+        }
+
+        requestPayload.zonaSeleccionadaId = zonaSeleccionadaId;
+        requestPayload.tarifaZona = {
+          costo,
+          diasMin,
+          diasMax,
+          activo: form.tarifaActiva,
+        };
+      }
+
+      await updateTransportadoraConfiguracion(
+        accessToken,
+        transportadoraId,
+        requestPayload,
+      );
 
       goToList();
     } catch (requestError) {
@@ -270,7 +375,10 @@ export function TransportadoraConfiguracionPage() {
       <header className="transportadora-config-header">
         <div>
           <h1>Configuracion de transportadora</h1>
-          <p>Actualiza datos base, parametros logisticos y tiendas asociadas.</p>
+          <p>
+            Actualiza datos base, parametros logisticos, tarifa base por zona y tiendas
+            asociadas.
+          </p>
         </div>
         <button type="button" className="btn-secondary" onClick={goToList}>
           Volver al listado
@@ -371,15 +479,20 @@ export function TransportadoraConfiguracionPage() {
             <div className="transportadora-config-grid">
               <label>
                 Servicio
-                <input
-                  type="text"
+                <select
                   value={form.servicio}
                   onChange={(event) =>
                     setForm((previous) => ({ ...previous, servicio: event.target.value }))
                   }
-                  maxLength={120}
                   disabled={!canManage || isSubmitting}
-                />
+                >
+                  <option value="">Seleccione un servicio</option>
+                  {servicioOptions.map((servicioOption) => (
+                    <option key={servicioOption} value={servicioOption}>
+                      {servicioOption}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label className="transportadora-config-checkbox">
@@ -409,55 +522,120 @@ export function TransportadoraConfiguracionPage() {
                   disabled={!canManage || isSubmitting}
                 />
               </label>
+            </div>
+          </article>
+
+          <article className="transportadora-config-card">
+            <h2>Tarifa base por zona</h2>
+            <div className="transportadora-config-grid">
+              <label>
+                Zona
+                <select
+                  value={form.zonaSeleccionadaId}
+                  onChange={(event) => void handleZonaChange(event.target.value)}
+                  disabled={
+                    !canManage ||
+                    isSubmitting ||
+                    isLoadingZonaTarifa ||
+                    detail.zonasDisponibles.length === 0
+                  }
+                >
+                  <option value="">Seleccione una zona</option>
+                  {detail.zonasDisponibles.map((zona) => (
+                    <option key={zona.zonaTransporteId} value={String(zona.zonaTransporteId)}>
+                      {zona.nombre} ({zona.codigo})
+                    </option>
+                  ))}
+                </select>
+              </label>
 
               <label>
-                Coste fijo
+                Costo
                 <input
                   type="number"
                   min={0}
-                  step="0.000001"
-                  value={form.costeFijo}
+                  step="0.01"
+                  value={form.tarifaCosto}
                   onChange={(event) =>
-                    setForm((previous) => ({ ...previous, costeFijo: event.target.value }))
+                    setForm((previous) => ({ ...previous, tarifaCosto: event.target.value }))
                   }
-                  disabled={!canManage || isSubmitting}
+                  disabled={
+                    !canManage ||
+                    isSubmitting ||
+                    isLoadingZonaTarifa ||
+                    detail.zonasDisponibles.length === 0
+                  }
                 />
               </label>
 
               <label>
-                Distancia fija (km)
+                Dias min
                 <input
                   type="number"
                   min={0}
-                  step="0.000001"
-                  value={form.distanciaFijaKm}
+                  step="1"
+                  value={form.tarifaDiasMin}
                   onChange={(event) =>
-                    setForm((previous) => ({
-                      ...previous,
-                      distanciaFijaKm: event.target.value,
-                    }))
+                    setForm((previous) => ({ ...previous, tarifaDiasMin: event.target.value }))
                   }
-                  disabled={!canManage || isSubmitting}
+                  disabled={
+                    !canManage ||
+                    isSubmitting ||
+                    isLoadingZonaTarifa ||
+                    detail.zonasDisponibles.length === 0
+                  }
                 />
               </label>
 
               <label>
-                Coste incremental por km
+                Dias max
                 <input
                   type="number"
                   min={0}
-                  step="0.000001"
-                  value={form.costeIncrementalKm}
+                  step="1"
+                  value={form.tarifaDiasMax}
                   onChange={(event) =>
-                    setForm((previous) => ({
-                      ...previous,
-                      costeIncrementalKm: event.target.value,
-                    }))
+                    setForm((previous) => ({ ...previous, tarifaDiasMax: event.target.value }))
                   }
-                  disabled={!canManage || isSubmitting}
+                  disabled={
+                    !canManage ||
+                    isSubmitting ||
+                    isLoadingZonaTarifa ||
+                    detail.zonasDisponibles.length === 0
+                  }
                 />
+              </label>
+
+              <label className="transportadora-config-checkbox">
+                <input
+                  type="checkbox"
+                  checked={form.tarifaActiva}
+                  onChange={(event) =>
+                    setForm((previous) => ({ ...previous, tarifaActiva: event.target.checked }))
+                  }
+                  disabled={
+                    !canManage ||
+                    isSubmitting ||
+                    isLoadingZonaTarifa ||
+                    detail.zonasDisponibles.length === 0
+                  }
+                />
+                Activo tarifa
               </label>
             </div>
+            <p className="transportadora-config-hint">
+              Moneda de tarifa:{' '}
+              {detail.tarifaZona?.monedaId ?? 'segun moneda de la empresa'}
+            </p>
+            {detail.zonasDisponibles.length === 0 && (
+              <p className="transportadora-config-hint">
+                No hay zonas activas disponibles. Puedes guardar datos base y tiendas
+                sin tarifa.
+              </p>
+            )}
+            {isLoadingZonaTarifa && (
+              <p className="transportadora-config-hint">Cargando tarifa de zona...</p>
+            )}
           </article>
 
           <article className="transportadora-config-card">

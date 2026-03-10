@@ -9,7 +9,29 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class UpdateTransportadoraTarifaZonaDto {
+  @IsNumber()
+  @Min(0)
+  costo: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  diasMin?: number | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  diasMax?: number | null;
+
+  @IsOptional()
+  @IsBoolean()
+  activo?: boolean;
+}
 
 export class UpdateTransportadoraConfiguracionDto {
   @IsOptional()
@@ -53,19 +75,14 @@ export class UpdateTransportadoraConfiguracionDto {
   moduloCode?: string | null;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  costeFijo?: number | null;
+  @IsInt()
+  @Min(1)
+  zonaSeleccionadaId?: number;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  distanciaFijaKm?: number | null;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  costeIncrementalKm?: number | null;
+  @ValidateNested()
+  @Type(() => UpdateTransportadoraTarifaZonaDto)
+  tarifaZona?: UpdateTransportadoraTarifaZonaDto;
 
   @IsOptional()
   @IsArray()

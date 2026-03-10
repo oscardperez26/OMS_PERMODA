@@ -5,6 +5,9 @@ export type TransportadoraListItem = {
   nombre: string;
   trackingUrlTemplate?: string;
   activo: boolean;
+  servicio?: string;
+  permiteExpress: boolean;
+  moduloCode?: string;
   createdAt: string;
   updatedAt?: string | null;
 };
@@ -40,11 +43,6 @@ export type TransportadoraConfigItem = {
   servicio?: string;
   permiteExpress: boolean;
   moduloCode?: string;
-  costeFijo?: number;
-  distanciaFijaKm?: number;
-  costeIncrementalKm?: number;
-  createdAt?: string;
-  updatedAt?: string | null;
 };
 
 export type TransportadoraTiendaItem = {
@@ -55,11 +53,38 @@ export type TransportadoraTiendaItem = {
   activa: boolean;
 };
 
+export type TransportadoraZonaItem = {
+  zonaTransporteId: number;
+  empresaId: number;
+  codigo: string;
+  nombre: string;
+  activa: boolean;
+};
+
+export type TransportadoraTarifaZonaItem = {
+  zonaSeleccionadaId: number;
+  monedaId: number;
+  costo?: number;
+  diasMin?: number;
+  diasMax?: number;
+  activo: boolean;
+};
+
 export type TransportadoraConfiguracionDetail = {
   transportadora: TransportadoraListItem;
   config: TransportadoraConfigItem;
   tiendasSeleccionadas: TransportadoraTiendaItem[];
   tiendasDisponibles: TransportadoraTiendaItem[];
+  zonasDisponibles: TransportadoraZonaItem[];
+  zonaSeleccionadaId: number | null;
+  tarifaZona: TransportadoraTarifaZonaItem | null;
+};
+
+export type UpdateTransportadoraTarifaZonaInput = {
+  costo: number;
+  diasMin: number | null;
+  diasMax: number | null;
+  activo: boolean;
 };
 
 export type UpdateTransportadoraConfiguracionInput = {
@@ -71,8 +96,7 @@ export type UpdateTransportadoraConfiguracionInput = {
   servicio: string | null;
   permiteExpress: boolean;
   moduloCode: string | null;
-  costeFijo: number | null;
-  distanciaFijaKm: number | null;
-  costeIncrementalKm: number | null;
+  zonaSeleccionadaId?: number;
+  tarifaZona?: UpdateTransportadoraTarifaZonaInput;
   tiendaIds: number[];
 };

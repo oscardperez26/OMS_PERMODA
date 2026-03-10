@@ -9,6 +9,9 @@ export type TransportadoraListItem = {
   nombre: string;
   trackingUrlTemplate?: string;
   activo: boolean;
+  servicio?: string;
+  permiteExpress: boolean;
+  moduloCode?: string;
   createdAt: string;
   updatedAt?: string | null;
 };
@@ -42,15 +45,27 @@ export type TransportadoraConfiguracionStoreItem = {
   activa: boolean;
 };
 
+export type TransportadoraConfiguracionZonaItem = {
+  zonaTransporteId: number;
+  empresaId: number;
+  codigo: string;
+  nombre: string;
+  activa: boolean;
+};
+
+export type TransportadoraConfiguracionTarifaZona = {
+  zonaSeleccionadaId: number;
+  monedaId: number;
+  costo?: number;
+  diasMin?: number;
+  diasMax?: number;
+  activo: boolean;
+};
+
 export type TransportadoraConfiguracionData = {
   servicio?: string;
   permiteExpress: boolean;
   moduloCode?: string;
-  costeFijo?: number;
-  distanciaFijaKm?: number;
-  costeIncrementalKm?: number;
-  createdAt?: string;
-  updatedAt?: string | null;
 };
 
 export type TransportadoraConfiguracionDetail = {
@@ -58,6 +73,9 @@ export type TransportadoraConfiguracionDetail = {
   config: TransportadoraConfiguracionData;
   tiendasSeleccionadas: TransportadoraConfiguracionStoreItem[];
   tiendasDisponibles: TransportadoraConfiguracionStoreItem[];
+  zonasDisponibles: TransportadoraConfiguracionZonaItem[];
+  zonaSeleccionadaId: number | null;
+  tarifaZona: TransportadoraConfiguracionTarifaZona | null;
 };
 
 export type UpdateTransportadoraConfiguracionRequest = {
@@ -69,9 +87,13 @@ export type UpdateTransportadoraConfiguracionRequest = {
   servicio?: string | null;
   permiteExpress: boolean;
   moduloCode?: string | null;
-  costeFijo?: number | null;
-  distanciaFijaKm?: number | null;
-  costeIncrementalKm?: number | null;
+  zonaSeleccionadaId?: number;
+  tarifaZona?: {
+    costo: number;
+    diasMin?: number | null;
+    diasMax?: number | null;
+    activo?: boolean;
+  };
   tiendaIds: number[];
 };
 
@@ -166,9 +188,15 @@ export async function updateTransportadora(
 export async function getTransportadoraConfiguracion(
   accessToken: string,
   transportadoraId: number,
+  zonaSeleccionadaId?: number,
 ): Promise<TransportadoraConfiguracionDetail> {
+  const query =
+    zonaSeleccionadaId !== undefined
+      ? `?zonaSeleccionadaId=${encodeURIComponent(String(zonaSeleccionadaId))}`
+      : '';
+
   const response = await fetch(
-    `${API_URL}/configuracion-general/transportadora/${transportadoraId}/configuracion`,
+    `${API_URL}/configuracion-general/transportadora/${transportadoraId}/configuracion${query}`,
     {
       method: 'GET',
       credentials: 'include',
