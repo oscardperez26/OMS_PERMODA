@@ -6,6 +6,7 @@ import type { CreateUserInput, UserListItem } from './users.types';
 type UsuarioRow = {
   UsuarioId: number;
   EmpresaId: number | null;
+  EmpresaClienteId: number | null;
   PerfilId: number;
   Nombre: string | null;
   Email: string;
@@ -28,6 +29,7 @@ export class UsersRepository {
           SELECT
             [UsuarioId],
             [EmpresaId],
+            [EmpresaClienteId],
             [PerfilId],
             [Nombre],
             [Email],
@@ -45,6 +47,7 @@ export class UsersRepository {
     return result.recordset.map((row) => ({
       id: String(row.UsuarioId),
       empresaId: row.EmpresaId ?? 0,
+      empresaClienteId: row.EmpresaClienteId ?? undefined,
       perfilId: Number(row.PerfilId),
       nombre: row.Nombre ?? '',
       email: row.Email,
@@ -58,12 +61,13 @@ export class UsersRepository {
 
   // Verifica email existente usando longitud real de columna (nvarchar(180)).
   async existsByEmail(email: string): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('email', sql.NVarChar(180), email)
-          .query<{ count: number }>(`
+        pool.request().input('email', sql.NVarChar(180), email).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Usuario]
             WHERE [Email] = @email
@@ -76,12 +80,13 @@ export class UsersRepository {
 
   // Integracion con catalogo de empresas para validar FK antes del INSERT.
   async existsEmpresaById(empresaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+        pool.request().input('empresaId', sql.Int, empresaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Empresa]
             WHERE [EmpresaId] = @empresaId
@@ -94,17 +99,41 @@ export class UsersRepository {
 
   // Integracion con catalogo de perfiles segun tabla oms.Perfil.
   async existsPerfilById(perfilId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('perfilId', sql.Int, perfilId)
-          .query<{ count: number }>(`
+        pool.request().input('perfilId', sql.Int, perfilId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Perfil]
             WHERE [PerfilId] = @perfilId
           `),
       'users.existsPerfilById',
+    );
+
+    return (result.recordset[0]?.count ?? 0) > 0;
+  }
+
+  async existsEmpresaClienteByIdAndEmpresaId(
+    empresaClienteId: number,
+    empresaId: number,
+  ): Promise<boolean> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
+      (pool) =>
+        pool
+          .request()
+          .input('empresaClienteId', sql.Int, empresaClienteId)
+          .input('empresaId', sql.Int, empresaId).query<{ count: number }>(`
+            SELECT COUNT(1) AS [count]
+            FROM [oms].[EmpresaCliente]
+            WHERE [EmpresaClienteId] = @empresaClienteId
+              AND [EmpresaId] = @empresaId
+          `),
+      'users.existsEmpresaClienteByIdAndEmpresaId',
     );
 
     return (result.recordset[0]?.count ?? 0) > 0;
@@ -121,16 +150,19 @@ export class UsersRepository {
         pool
           .request()
           .input('EmpresaId', sql.Int, input.empresaId)
+          .input('EmpresaClienteId', sql.Int, input.empresaClienteId ?? null)
           .input('PerfilId', sql.Int, input.perfilId)
           .input('Nombre', sql.NVarChar(140), input.nombre)
           .input('Email', sql.NVarChar(180), input.email)
           .input('Telefono', sql.NVarChar(50), input.telefono ?? null)
           .input('PasswordHash', sql.NVarChar(255), input.passwordHash)
-          .input('Estado', sql.NVarChar(20), estado)
-          .query<{ UsuarioId: number | string }>(`
+          .input('Estado', sql.NVarChar(20), estado).query<{
+          UsuarioId: number | string;
+        }>(`
             INSERT INTO [oms].[Usuario]
             (
               [EmpresaId],
+              [EmpresaClienteId],
               [PerfilId],
               [Nombre],
               [Email],
@@ -145,6 +177,7 @@ export class UsersRepository {
             VALUES
             (
               @EmpresaId,
+              @EmpresaClienteId,
               @PerfilId,
               @Nombre,
               @Email,
@@ -171,8 +204,7 @@ export class UsersRepository {
         pool
           .request()
           .input('userId', sql.NVarChar(50), userId)
-          .input('estado', sql.NVarChar(20), estadoTexto)
-          .query(`
+          .input('estado', sql.NVarChar(20), estadoTexto).query(`
             UPDATE [oms].[Usuario]
             SET [Estado] = @estado,
                 [UpdatedAt] = GETDATE()
@@ -183,14 +215,16 @@ export class UsersRepository {
   }
 
   // Mantiene firma actual (string) pero evita CAST sobre la columna indexada.
-  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+  async updatePasswordHash(
+    userId: string,
+    passwordHash: string,
+  ): Promise<void> {
     await this.databaseService.execute(
       (pool) =>
         pool
           .request()
           .input('userId', sql.NVarChar(50), userId)
-          .input('passwordHash', sql.NVarChar(255), passwordHash)
-          .query(`
+          .input('passwordHash', sql.NVarChar(255), passwordHash).query(`
             UPDATE [oms].[Usuario]
             SET [PasswordHash] = @passwordHash,
                 [UpdatedAt] = GETDATE()

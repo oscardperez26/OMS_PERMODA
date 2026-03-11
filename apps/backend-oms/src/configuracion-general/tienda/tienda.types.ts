@@ -1,6 +1,7 @@
 export type TiendaListItem = {
   tiendaId: number;
   empresaId: number;
+  empresaClienteId?: number;
   codigo: string;
   nombre: string;
   paisId?: number;
@@ -19,6 +20,12 @@ export type TiendaEmpresaListItem = {
   nombre: string;
 };
 
+export type TiendaEmpresaClienteListItem = {
+  empresaClienteId: number;
+  empresaId: number;
+  nombre: string;
+};
+
 export type TiendaPaisListItem = {
   paisId: number;
   codigoISO2: string;
@@ -34,12 +41,14 @@ export type TiendaCiudadListItem = {
 export type TiendaBootstrapData = {
   tiendas: TiendaListItem[];
   empresas: TiendaEmpresaListItem[];
+  empresaClientes: TiendaEmpresaClienteListItem[];
   paises: TiendaPaisListItem[];
   ciudades: TiendaCiudadListItem[];
 };
 
 export type CreateTiendaInput = {
   empresaId: number;
+  empresaClienteId: number | null;
   codigo: string;
   nombre: string;
   paisId: number | null;
@@ -52,6 +61,7 @@ export type CreateTiendaInput = {
 
 export type UpdateTiendaInput = {
   empresaId: number;
+  empresaClienteId: number | null;
   codigo: string;
   nombre: string;
   paisId: number | null;

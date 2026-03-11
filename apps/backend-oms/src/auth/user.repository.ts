@@ -5,6 +5,7 @@ import { DatabaseService } from '../database/database.service';
 type UsuarioRow = {
   UsuarioId: number;
   EmpresaId: number | null;
+  EmpresaClienteId: number | null;
   PerfilId: number;
   Nombre: string | null;
   Email: string;
@@ -18,6 +19,7 @@ export type AuthDbUser = {
   name: string;
   perfilId: number;
   empresaId?: string;
+  empresaClienteId?: string;
   passwordHash: string;
   isActive: boolean;
 };
@@ -30,13 +32,12 @@ export class UserRepository {
   async findByEmail(email: string): Promise<AuthDbUser | null> {
     const pool = await this.databaseService.getPool();
 
-    const result = await pool
-      .request()
-      .input('email', sql.NVarChar(180), email)
+    const result = await pool.request().input('email', sql.NVarChar(180), email)
       .query<UsuarioRow>(`
         SELECT TOP (1)
           [UsuarioId],
           [EmpresaId],
+          [EmpresaClienteId],
           [PerfilId],
           [Nombre],
           [Email],
@@ -62,13 +63,12 @@ export class UserRepository {
     }
 
     const pool = await this.databaseService.getPool();
-    const result = await pool
-      .request()
-      .input('userId', sql.Int, parsedUserId)
+    const result = await pool.request().input('userId', sql.Int, parsedUserId)
       .query<UsuarioRow>(`
         SELECT TOP (1)
           [UsuarioId],
           [EmpresaId],
+          [EmpresaClienteId],
           [PerfilId],
           [Nombre],
           [Email],
@@ -93,9 +93,7 @@ export class UserRepository {
     }
 
     const pool = await this.databaseService.getPool();
-    const result = await pool
-      .request()
-      .input('userId', sql.Int, parsedUserId)
+    const result = await pool.request().input('userId', sql.Int, parsedUserId)
       .query<{ PasswordHash: string | null }>(`
         SELECT TOP (1) [PasswordHash]
         FROM [oms].[Usuario]
@@ -105,7 +103,10 @@ export class UserRepository {
     return result.recordset[0]?.PasswordHash ?? null;
   }
 
-  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+  async updatePasswordHash(
+    userId: string,
+    passwordHash: string,
+  ): Promise<void> {
     const parsedUserId = this.parseUserId(userId);
     if (parsedUserId == null) {
       return;
@@ -115,8 +116,7 @@ export class UserRepository {
     await pool
       .request()
       .input('userId', sql.Int, parsedUserId)
-      .input('passwordHash', sql.NVarChar(255), passwordHash)
-      .query(`
+      .input('passwordHash', sql.NVarChar(255), passwordHash).query(`
         UPDATE [oms].[Usuario]
         SET [PasswordHash] = @passwordHash,
             [UpdatedAt] = GETDATE()
@@ -131,6 +131,8 @@ export class UserRepository {
       name: row.Nombre?.trim() || row.Email,
       perfilId: Number(row.PerfilId),
       empresaId: row.EmpresaId == null ? undefined : String(row.EmpresaId),
+      empresaClienteId:
+        row.EmpresaClienteId == null ? undefined : String(row.EmpresaClienteId),
       passwordHash: row.PasswordHash!,
       isActive: this.isActive(row.Estado),
     };
@@ -142,7 +144,9 @@ export class UserRepository {
     if (typeof value === 'number') return value === 1;
     if (typeof value === 'string') {
       const normalized = value.trim().toUpperCase();
-      return normalized === '1' || normalized === 'ACTIVO' || normalized === 'ACTIVE';
+      return (
+        normalized === '1' || normalized === 'ACTIVO' || normalized === 'ACTIVE'
+      );
     }
     return false;
   }

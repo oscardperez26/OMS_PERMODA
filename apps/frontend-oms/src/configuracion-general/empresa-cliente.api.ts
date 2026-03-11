@@ -8,6 +8,9 @@ export type EmpresaClienteListItem = {
   empresaClienteId: number;
   empresaId: number;
   nombre: string;
+  displayName?: string;
+  logoUrl?: string;
+  faviconUrl?: string;
   documento?: string;
   email?: string;
   telefono?: string;
@@ -29,6 +32,9 @@ export type EmpresaClienteBootstrapResponse = {
 export type CreateEmpresaClienteRequest = {
   empresaId: number;
   nombre: string;
+  displayName?: string;
+  logoUrl?: string;
+  faviconUrl?: string;
   documento?: string;
   email?: string;
   telefono?: string;
@@ -41,6 +47,9 @@ export type CreateEmpresaClienteRequest = {
 export type UpdateEmpresaClienteRequest = {
   empresaId?: number;
   nombre?: string;
+  displayName?: string | null;
+  logoUrl?: string | null;
+  faviconUrl?: string | null;
   documento?: string | null;
   email?: string | null;
   telefono?: string | null;

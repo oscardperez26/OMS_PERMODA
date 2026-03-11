@@ -16,7 +16,9 @@ export class TokenService {
     process.env.AUTH_SECRET ?? 'dev-secret-change-me-in-production';
 
   private signPayload(payload: TokenPayload): string {
-    const header = base64UrlEncode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+    const header = base64UrlEncode(
+      JSON.stringify({ alg: 'HS256', typ: 'JWT' }),
+    );
     const body = base64UrlEncode(JSON.stringify(payload));
     const content = `${header}.${body}`;
     const signature = createHmac('sha256', this.secret)
@@ -40,7 +42,10 @@ export class TokenService {
       throw new UnauthorizedException('Firma de token inválida');
     }
 
-    const isValid = timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
+    const isValid = timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expectedSignature),
+    );
 
     if (!isValid) {
       throw new UnauthorizedException('Firma de token inválida');
@@ -62,6 +67,7 @@ export class TokenService {
       permissions: user.permissions,
       sessionId: user.sessionId,
       storeId: user.storeId,
+      empresaClienteId: user.empresaClienteId,
       type: 'access',
       exp: Math.floor(Date.now() / 1000) + 60 * 15,
     };
@@ -75,6 +81,7 @@ export class TokenService {
       permissions: user.permissions,
       sessionId: user.sessionId,
       storeId: user.storeId,
+      empresaClienteId: user.empresaClienteId,
       type: 'refresh',
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
     };

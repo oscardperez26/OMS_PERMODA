@@ -1,6 +1,7 @@
 export type UserListItem = {
   id: string;
   empresaId: number;
+  empresaClienteId?: number;
   perfilId: number;
   nombre: string;
   email: string;
@@ -13,6 +14,7 @@ export type UserListItem = {
 
 export type CreateUserInput = {
   empresaId: number;
+  empresaClienteId?: number;
   perfilId: number;
   nombre: string;
   email: string;

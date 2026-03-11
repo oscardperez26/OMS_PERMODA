@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useAuth } from '../../src/auth/useAuth';
 import {
   createUser,
@@ -9,10 +9,24 @@ import {
   type ProfileCatalogItem,
   type UserListItem,
 } from '../../src/auth/users.api';
+import { getEmpresaClientesBootstrap } from '../../src/configuracion-general/empresa-cliente.api';
+
+type EmpresaOption = {
+  empresaId: number;
+  codigo: string;
+  nombre: string;
+};
+
+type EmpresaClienteOption = {
+  empresaClienteId: number;
+  empresaId: number;
+  nombre: string;
+};
 
 
 type FormState = {
   empresaId: string;
+  empresaClienteId: string;
   perfilId: string;
   nombre: string;
   email: string;
@@ -21,7 +35,8 @@ type FormState = {
 };
 
 const INITIAL_FORM: FormState = {
-  empresaId: '1',
+  empresaId: '',
+  empresaClienteId: '',
   perfilId: '1',
   nombre: '',
   email: '',
@@ -33,6 +48,8 @@ export function ProfilesPage() {
   const { accessToken } = useAuth();
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [profiles, setProfiles] = useState<ProfileCatalogItem[]>([]);
+  const [empresas, setEmpresas] = useState<EmpresaOption[]>([]);
+  const [empresaClientes, setEmpresaClientes] = useState<EmpresaClienteOption[]>([]);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -46,12 +63,15 @@ export function ProfilesPage() {
     }
 
     try {
-      const [usersData, profilesData] = await Promise.all([
+      const [usersData, profilesData, empresaClienteBootstrap] = await Promise.all([
         listUsers(accessToken),
         listProfiles(accessToken),
+        getEmpresaClientesBootstrap(accessToken),
       ]);
       setUsers(usersData);
       setProfiles(profilesData);
+      setEmpresas(empresaClienteBootstrap.empresas);
+      setEmpresaClientes(empresaClienteBootstrap.empresaClientes);
       setError('');
     } catch (requestError) {
       const message =
@@ -78,10 +98,65 @@ export function ProfilesPage() {
     }
   }, [profiles, form.perfilId]);
 
+  useEffect(() => {
+    if (empresas.length === 0) {
+      return;
+    }
+
+    const exists = empresas.some((empresa) => String(empresa.empresaId) === form.empresaId);
+    if (!exists) {
+      setForm((prev) => ({ ...prev, empresaId: String(empresas[0].empresaId) }));
+    }
+  }, [empresas, form.empresaId]);
+
+  useEffect(() => {
+    if (!form.empresaClienteId) {
+      return;
+    }
+
+    const selectedEmpresaId = Number(form.empresaId);
+    const selectedEmpresaClienteId = Number(form.empresaClienteId);
+    const belongs = empresaClientes.some(
+      (empresaCliente) =>
+        empresaCliente.empresaClienteId === selectedEmpresaClienteId &&
+        empresaCliente.empresaId === selectedEmpresaId,
+    );
+    if (!belongs) {
+      setForm((prev) => ({ ...prev, empresaClienteId: '' }));
+    }
+  }, [empresaClientes, form.empresaClienteId, form.empresaId]);
+
+  const empresaClientesPorEmpresa = useMemo(() => {
+    const empresaId = Number(form.empresaId);
+    if (!Number.isInteger(empresaId) || empresaId <= 0) {
+      return [] as EmpresaClienteOption[];
+    }
+    return empresaClientes.filter((empresaCliente) => empresaCliente.empresaId === empresaId);
+  }, [empresaClientes, form.empresaId]);
+
   async function handleCreate(event: FormEvent) {
     event.preventDefault();
     if (!accessToken) {
       setError('Sesion no disponible');
+      return;
+    }
+
+    const empresaId = Number(form.empresaId);
+    const perfilId = Number(form.perfilId);
+    const empresaClienteId = form.empresaClienteId ? Number(form.empresaClienteId) : undefined;
+    if (!Number.isInteger(empresaId) || empresaId <= 0) {
+      setError('EmpresaId invalido');
+      return;
+    }
+    if (!Number.isInteger(perfilId) || perfilId <= 0) {
+      setError('PerfilId invalido');
+      return;
+    }
+    if (
+      empresaClienteId !== undefined &&
+      (!Number.isInteger(empresaClienteId) || empresaClienteId <= 0)
+    ) {
+      setError('EmpresaClienteId invalido');
       return;
     }
 
@@ -90,15 +165,20 @@ export function ProfilesPage() {
 
     try {
       await createUser(accessToken, {
-        empresaId: Number(form.empresaId),
-        perfilId: Number(form.perfilId),
+        empresaId,
+        empresaClienteId,
+        perfilId,
         nombre: form.nombre,
         email: form.email,
         telefono: form.telefono || undefined,
         temporaryPassword: form.temporaryPassword,
       });
 
-      setForm(INITIAL_FORM);
+      setForm((prev) => ({
+        ...INITIAL_FORM,
+        empresaId: prev.empresaId,
+        perfilId: prev.perfilId,
+      }));
       await loadUsers();
     } catch (requestError) {
       const message =
@@ -190,13 +270,44 @@ export function ProfilesPage() {
             onChange={(event) => setForm((prev) => ({ ...prev, telefono: event.target.value }))}
           />
 
-          <input
-            type="number"
-            placeholder="EmpresaId"
+          <select
             value={form.empresaId}
-            onChange={(event) => setForm((prev) => ({ ...prev, empresaId: event.target.value }))}
+            onChange={(event) => {
+              const nextEmpresaId = event.target.value;
+              setForm((prev) => ({
+                ...prev,
+                empresaId: nextEmpresaId,
+                empresaClienteId: '',
+              }));
+            }}
             required
-          />
+          >
+            <option value="" disabled>
+              Selecciona empresa
+            </option>
+            {empresas.map((empresa) => (
+              <option key={empresa.empresaId} value={String(empresa.empresaId)}>
+                {empresa.nombre} ({empresa.codigo})
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={form.empresaClienteId}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, empresaClienteId: event.target.value }))
+            }
+          >
+            <option value="">Sin empresa cliente</option>
+            {empresaClientesPorEmpresa.map((empresaCliente) => (
+              <option
+                key={empresaCliente.empresaClienteId}
+                value={String(empresaCliente.empresaClienteId)}
+              >
+                {empresaCliente.nombre} (#{empresaCliente.empresaClienteId})
+              </option>
+            ))}
+          </select>
 
           <select
             value={form.perfilId}
@@ -239,6 +350,7 @@ export function ProfilesPage() {
                 <th align="left">Nombre</th>
                 <th align="left">Email</th>
                 <th align="left">PerfilId</th>
+                <th align="left">EmpresaClienteId</th>
                 <th align="left">Estado</th>
                 <th align="left">Acciones</th>
               </tr>
@@ -250,6 +362,7 @@ export function ProfilesPage() {
                   <td>{user.nombre}</td>
                   <td>{user.email}</td>
                   <td>{user.perfilId}</td>
+                  <td>{user.empresaClienteId ?? '-'}</td>
                   <td>{isActive(user) ? 'Activo' : 'Inactivo'}</td>
                   <td style={{ display: 'flex', gap: 8 }}>
                     <button onClick={() => handleToggleStatus(user)}>

@@ -1,10 +1,12 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../auth/useAuth';
+import { useBranding } from '../../../branding/useBranding';
 
 
 export function StoreLayout() {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { branding } = useBranding();
 
   async function handleLogout() {
     await logout();
@@ -18,7 +20,15 @@ export function StoreLayout() {
       <div className="koaj-main-area">
         {/* Header */}
         <header className="koaj-topbar">
-          <h1 className="koaj-topbar-logo">KOAJ</h1>
+          {branding.logoUrl ? (
+            <img
+              src={branding.logoUrl}
+              alt={branding.displayName}
+              className="koaj-topbar-logo-image"
+            />
+          ) : (
+            <h1 className="koaj-topbar-logo">{branding.displayName || 'KOAJ'}</h1>
+          )}
 
           <div className="koaj-topbar-actions gap-3">
             <button className="btn-koaj-outline" title="Panel" onClick={() => window.location.href = '/panel'}>

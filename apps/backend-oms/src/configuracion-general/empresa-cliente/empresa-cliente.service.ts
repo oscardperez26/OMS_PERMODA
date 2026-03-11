@@ -13,6 +13,9 @@ import type {
 type CreateEmpresaClienteParams = {
   empresaId: number;
   nombre: string;
+  displayName?: string;
+  logoUrl?: string;
+  faviconUrl?: string;
   documento?: string;
   email?: string;
   telefono?: string;
@@ -25,6 +28,9 @@ type CreateEmpresaClienteParams = {
 type UpdateEmpresaClienteParams = {
   empresaId?: number;
   nombre?: string;
+  displayName?: string | null;
+  logoUrl?: string | null;
+  faviconUrl?: string | null;
   documento?: string | null;
   email?: string | null;
   telefono?: string | null;
@@ -40,16 +46,50 @@ export class EmpresaClienteService {
     private readonly empresaClienteRepository: EmpresaClienteRepository,
   ) {}
 
-  async listEmpresaClientes(): Promise<EmpresaClienteListItem[]> {
-    return this.empresaClienteRepository.list();
+  async listEmpresaClientes(
+    scopedEmpresaClienteId: number | null = null,
+  ): Promise<EmpresaClienteListItem[]> {
+    const empresaClientes = await this.empresaClienteRepository.list();
+    if (scopedEmpresaClienteId === null) {
+      return empresaClientes;
+    }
+
+    return empresaClientes.filter(
+      (empresaCliente) =>
+        empresaCliente.empresaClienteId === scopedEmpresaClienteId,
+    );
   }
 
-  async getBootstrapData(): Promise<EmpresaClienteBootstrapData> {
-    return this.empresaClienteRepository.listBootstrapData();
+  async getBootstrapData(
+    scopedEmpresaClienteId: number | null = null,
+  ): Promise<EmpresaClienteBootstrapData> {
+    const data = await this.empresaClienteRepository.listBootstrapData();
+    if (scopedEmpresaClienteId === null) {
+      return data;
+    }
+
+    const empresaClientes = data.empresaClientes.filter(
+      (empresaCliente) =>
+        empresaCliente.empresaClienteId === scopedEmpresaClienteId,
+    );
+    const allowedEmpresaIds = new Set(
+      empresaClientes.map((empresaCliente) => empresaCliente.empresaId),
+    );
+
+    return {
+      ...data,
+      empresaClientes,
+      empresas: data.empresas.filter((empresa) =>
+        allowedEmpresaIds.has(empresa.empresaId),
+      ),
+    };
   }
 
-  async getEmpresaClienteById(empresaClienteId: number): Promise<EmpresaClienteListItem> {
-    const empresaCliente = await this.empresaClienteRepository.findById(empresaClienteId);
+  async getEmpresaClienteById(
+    empresaClienteId: number,
+  ): Promise<EmpresaClienteListItem> {
+    const empresaCliente =
+      await this.empresaClienteRepository.findById(empresaClienteId);
     if (!empresaCliente) {
       throw new NotFoundException('Empresa cliente no existe');
     }
@@ -61,12 +101,35 @@ export class EmpresaClienteService {
   ): Promise<{ empresaClienteId: number }> {
     const empresaId = this.normalizeRequiredId(params.empresaId, 'empresaId');
     const nombre = this.normalizeRequiredText(params.nombre, 'nombre', 180);
-    const documento = this.normalizeOptionalText(params.documento, 'documento', 60);
+    const displayName = this.normalizeOptionalText(
+      params.displayName,
+      'displayName',
+      180,
+    );
+    const logoUrl = this.normalizeOptionalText(params.logoUrl, 'logoUrl', 800);
+    const faviconUrl = this.normalizeOptionalText(
+      params.faviconUrl,
+      'faviconUrl',
+      800,
+    );
+    const documento = this.normalizeOptionalText(
+      params.documento,
+      'documento',
+      60,
+    );
     const email = this.normalizeOptionalText(params.email, 'email', 180, true);
-    const telefono = this.normalizeOptionalText(params.telefono, 'telefono', 50);
+    const telefono = this.normalizeOptionalText(
+      params.telefono,
+      'telefono',
+      50,
+    );
     const paisId = this.normalizeOptionalId(params.paisId, 'paisId');
     const ciudadId = this.normalizeOptionalId(params.ciudadId, 'ciudadId');
-    const direccion = this.normalizeOptionalText(params.direccion, 'direccion', 255);
+    const direccion = this.normalizeOptionalText(
+      params.direccion,
+      'direccion',
+      255,
+    );
     const estado = this.normalizeEstado(params.estado);
 
     this.validateDocumentoOrEmail(documento, email);
@@ -77,6 +140,9 @@ export class EmpresaClienteService {
       return await this.empresaClienteRepository.create({
         empresaId,
         nombre,
+        displayName,
+        logoUrl,
+        faviconUrl,
         documento,
         email,
         telefono,
@@ -87,7 +153,9 @@ export class EmpresaClienteService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe un empresa cliente con esos datos');
+        throw new ConflictException(
+          'Ya existe un empresa cliente con esos datos',
+        );
       }
       throw error;
     }
@@ -100,6 +168,9 @@ export class EmpresaClienteService {
     const hasAnyField =
       params.empresaId !== undefined ||
       params.nombre !== undefined ||
+      params.displayName !== undefined ||
+      params.logoUrl !== undefined ||
+      params.faviconUrl !== undefined ||
       params.documento !== undefined ||
       params.email !== undefined ||
       params.telefono !== undefined ||
@@ -109,10 +180,13 @@ export class EmpresaClienteService {
       params.estado !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
-    const current = await this.empresaClienteRepository.findById(empresaClienteId);
+    const current =
+      await this.empresaClienteRepository.findById(empresaClienteId);
     if (!current) {
       throw new NotFoundException('Empresa cliente no existe');
     }
@@ -125,30 +199,42 @@ export class EmpresaClienteService {
       params.nombre !== undefined
         ? this.normalizeRequiredText(params.nombre, 'nombre', 180)
         : current.nombre;
+    const nextDisplayName =
+      params.displayName !== undefined
+        ? this.normalizeOptionalText(params.displayName, 'displayName', 180)
+        : (current.displayName ?? null);
+    const nextLogoUrl =
+      params.logoUrl !== undefined
+        ? this.normalizeOptionalText(params.logoUrl, 'logoUrl', 800)
+        : (current.logoUrl ?? null);
+    const nextFaviconUrl =
+      params.faviconUrl !== undefined
+        ? this.normalizeOptionalText(params.faviconUrl, 'faviconUrl', 800)
+        : (current.faviconUrl ?? null);
     const nextDocumento =
       params.documento !== undefined
         ? this.normalizeOptionalText(params.documento, 'documento', 60)
-        : current.documento ?? null;
+        : (current.documento ?? null);
     const nextEmail =
       params.email !== undefined
         ? this.normalizeOptionalText(params.email, 'email', 180, true)
-        : current.email ?? null;
+        : (current.email ?? null);
     const nextTelefono =
       params.telefono !== undefined
         ? this.normalizeOptionalText(params.telefono, 'telefono', 50)
-        : current.telefono ?? null;
+        : (current.telefono ?? null);
     const nextPaisId =
       params.paisId !== undefined
         ? this.normalizeOptionalId(params.paisId, 'paisId')
-        : current.paisId ?? null;
+        : (current.paisId ?? null);
     const nextCiudadId =
       params.ciudadId !== undefined
         ? this.normalizeOptionalId(params.ciudadId, 'ciudadId')
-        : current.ciudadId ?? null;
+        : (current.ciudadId ?? null);
     const nextDireccion =
       params.direccion !== undefined
         ? this.normalizeOptionalText(params.direccion, 'direccion', 255)
-        : current.direccion ?? null;
+        : (current.direccion ?? null);
     const nextEstado =
       params.estado !== undefined
         ? this.normalizeEstado(params.estado)
@@ -167,6 +253,9 @@ export class EmpresaClienteService {
       await this.empresaClienteRepository.update(empresaClienteId, {
         empresaId: nextEmpresaId,
         nombre: nextNombre,
+        displayName: nextDisplayName,
+        logoUrl: nextLogoUrl,
+        faviconUrl: nextFaviconUrl,
         documento: nextDocumento,
         email: nextEmail,
         telefono: nextTelefono,
@@ -177,7 +266,9 @@ export class EmpresaClienteService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe un empresa cliente con esos datos');
+        throw new ConflictException(
+          'Ya existe un empresa cliente con esos datos',
+        );
       }
       throw error;
     }
@@ -197,7 +288,9 @@ export class EmpresaClienteService {
           excludeEmpresaClienteId,
         );
       if (duplicatedDocumento) {
-        throw new ConflictException('Ya existe un cliente con ese documento en la empresa');
+        throw new ConflictException(
+          'Ya existe un cliente con ese documento en la empresa',
+        );
       }
       return;
     }
@@ -206,13 +299,16 @@ export class EmpresaClienteService {
       return;
     }
 
-    const duplicatedEmail = await this.empresaClienteRepository.existsByEmpresaAndEmail(
-      empresaId,
-      email,
-      excludeEmpresaClienteId,
-    );
+    const duplicatedEmail =
+      await this.empresaClienteRepository.existsByEmpresaAndEmail(
+        empresaId,
+        email,
+        excludeEmpresaClienteId,
+      );
     if (duplicatedEmail) {
-      throw new ConflictException('Ya existe un cliente con ese email en la empresa');
+      throw new ConflictException(
+        'Ya existe un cliente con ese email en la empresa',
+      );
     }
   }
 
@@ -221,13 +317,15 @@ export class EmpresaClienteService {
     paisId: number | null,
     ciudadId: number | null,
   ): Promise<void> {
-    const empresaExists = await this.empresaClienteRepository.existsEmpresaById(empresaId);
+    const empresaExists =
+      await this.empresaClienteRepository.existsEmpresaById(empresaId);
     if (!empresaExists) {
       throw new BadRequestException('EmpresaId no existe en la base de datos');
     }
 
     if (paisId !== null) {
-      const paisExists = await this.empresaClienteRepository.existsPaisById(paisId);
+      const paisExists =
+        await this.empresaClienteRepository.existsPaisById(paisId);
       if (!paisExists) {
         throw new BadRequestException('PaisId no existe en la base de datos');
       }
@@ -238,7 +336,8 @@ export class EmpresaClienteService {
     }
 
     if (paisId === null) {
-      const ciudadExists = await this.empresaClienteRepository.existsCiudadById(ciudadId);
+      const ciudadExists =
+        await this.empresaClienteRepository.existsCiudadById(ciudadId);
       if (!ciudadExists) {
         throw new BadRequestException('CiudadId no existe en la base de datos');
       }
@@ -246,9 +345,14 @@ export class EmpresaClienteService {
     }
 
     const ciudadBelongsToPais =
-      await this.empresaClienteRepository.existsCiudadByIdAndPaisId(ciudadId, paisId);
+      await this.empresaClienteRepository.existsCiudadByIdAndPaisId(
+        ciudadId,
+        paisId,
+      );
     if (!ciudadBelongsToPais) {
-      throw new BadRequestException('CiudadId no pertenece al pais seleccionado');
+      throw new BadRequestException(
+        'CiudadId no pertenece al pais seleccionado',
+      );
     }
   }
 
@@ -270,7 +374,9 @@ export class EmpresaClienteService {
   ): string {
     const normalized = value.trim();
     if (!normalized) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacio`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacio`,
+      );
     }
     if (normalized.length > maxLength) {
       throw new BadRequestException(
@@ -300,7 +406,9 @@ export class EmpresaClienteService {
 
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
@@ -313,7 +421,9 @@ export class EmpresaClienteService {
       return null;
     }
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
@@ -324,7 +434,9 @@ export class EmpresaClienteService {
       return 'ACTIVA';
     }
     if (normalized.length > 20) {
-      throw new BadRequestException('El campo estado no puede exceder 20 caracteres');
+      throw new BadRequestException(
+        'El campo estado no puede exceder 20 caracteres',
+      );
     }
     return normalized;
   }

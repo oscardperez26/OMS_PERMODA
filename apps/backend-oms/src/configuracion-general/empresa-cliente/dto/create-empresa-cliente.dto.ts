@@ -33,6 +33,21 @@ export class CreateEmpresaClienteDto {
   telefono?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(180)
+  displayName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(800)
+  logoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(800)
+  faviconUrl?: string;
+
+  @IsOptional()
   @IsInt()
   @Min(1)
   paisId?: number;

@@ -1,4 +1,8 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { listProfileCatalog } from '../auth/profile-map';
 import { UsersRepository } from './users.repository';
@@ -6,6 +10,7 @@ import type { UserListItem } from './users.types';
 
 type CreateUserParams = {
   empresaId: number;
+  empresaClienteId?: number;
   perfilId: number;
   nombre: string;
   email: string;
@@ -41,6 +46,19 @@ export class UsersService {
       throw new BadRequestException('PerfilId no existe en la base de datos');
     }
 
+    if (params.empresaClienteId !== undefined) {
+      const empresaClienteValida =
+        await this.usersRepository.existsEmpresaClienteByIdAndEmpresaId(
+          params.empresaClienteId,
+          params.empresaId,
+        );
+      if (!empresaClienteValida) {
+        throw new BadRequestException(
+          'EmpresaClienteId no existe o no pertenece a la empresa seleccionada',
+        );
+      }
+    }
+
     const normalizedEmail = params.email.trim().toLowerCase();
     const exists = await this.usersRepository.existsByEmail(normalizedEmail);
 
@@ -48,10 +66,14 @@ export class UsersService {
       throw new ConflictException('Ya existe un usuario con ese email');
     }
 
-    const passwordHash = await bcrypt.hash(params.temporaryPassword, this.saltRounds);
+    const passwordHash = await bcrypt.hash(
+      params.temporaryPassword,
+      this.saltRounds,
+    );
 
     return this.usersRepository.create({
       empresaId: params.empresaId,
+      empresaClienteId: params.empresaClienteId,
       perfilId: params.perfilId,
       nombre: params.nombre.trim(),
       email: normalizedEmail,
@@ -65,8 +87,14 @@ export class UsersService {
     await this.usersRepository.updateStatus(userId, estado);
   }
 
-  async resetPassword(userId: string, newTemporaryPassword: string): Promise<void> {
-    const passwordHash = await bcrypt.hash(newTemporaryPassword, this.saltRounds);
+  async resetPassword(
+    userId: string,
+    newTemporaryPassword: string,
+  ): Promise<void> {
+    const passwordHash = await bcrypt.hash(
+      newTemporaryPassword,
+      this.saltRounds,
+    );
     await this.usersRepository.updatePasswordHash(userId, passwordHash);
   }
 }

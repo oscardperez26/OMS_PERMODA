@@ -15,4 +15,5 @@ export type AuthUser = {
   role: Role;
   permissions: Permission[];
   storeId?: string;
+  empresaClienteId?: string;
 };

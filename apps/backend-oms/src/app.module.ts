@@ -8,6 +8,7 @@ import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { ConfiguracionGeneralModule } from './configuracion-general/configuracion-general.module';
 import { OrdersModule } from './orders/orders.module';
+import { BrandingModule } from './branding/branding.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { OrdersModule } from './orders/orders.module';
     DatabaseModule,
     HealthModule,
     UsersModule,
+    BrandingModule,
     ConfiguracionGeneralModule,
     OrdersModule,
   ],

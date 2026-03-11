@@ -48,6 +48,7 @@ import { TransportadoraConfiguracionPage } from '../../pages/gestor/Transportado
 import { ZonaTransportePage } from '../../pages/gestor/ZonaTransportePage';
 import { ZonaCiudadPage } from '../../pages/gestor/ZonaCiudadPage';
 import { CostoTransportePage } from '../../pages/gestor/CostoTransportePage';
+import { StoreParamsPage } from '../../pages/configure/StoreParamsPage';
 
 
 /**
@@ -133,6 +134,18 @@ export function AppRouter() {
           <Route path={ROUTES.PERSONALIZE_DESIGN} element={<DesignPage />} />
           <Route path={ROUTES.PERSONALIZE_TRANSPORT} element={<TransportPage />} />
           <Route path={ROUTES.PERSONALIZE_PAYMENT} element={<PaymentPage />} />
+
+          <Route
+            path="configure/store-params"
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['catalog.read']}
+              >
+                <StoreParamsPage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG}

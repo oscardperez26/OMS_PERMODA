@@ -1,4 +1,5 @@
 import type { CiudadListItem } from './ciudad.api';
+import type { EmpresaClienteListItem } from './empresa-cliente.api';
 import type { EmpresaListItem } from './empresa.api';
 import type { PaisListItem } from './pais.api';
 
@@ -7,6 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 export type TiendaListItem = {
   tiendaId: number;
   empresaId: number;
+  empresaClienteId?: number;
   codigo: string;
   nombre: string;
   paisId?: number;
@@ -22,12 +24,14 @@ export type TiendaListItem = {
 export type TiendaBootstrapResponse = {
   tiendas: TiendaListItem[];
   empresas: Pick<EmpresaListItem, 'empresaId' | 'codigo' | 'nombre'>[];
+  empresaClientes: Pick<EmpresaClienteListItem, 'empresaClienteId' | 'empresaId' | 'nombre'>[];
   paises: Pick<PaisListItem, 'paisId' | 'codigoISO2' | 'nombre'>[];
   ciudades: Pick<CiudadListItem, 'ciudadId' | 'paisId' | 'nombre'>[];
 };
 
 export type CreateTiendaRequest = {
   empresaId: number;
+  empresaClienteId?: number;
   codigo: string;
   nombre: string;
   paisId?: number;
@@ -40,6 +44,7 @@ export type CreateTiendaRequest = {
 
 export type UpdateTiendaRequest = {
   empresaId?: number;
+  empresaClienteId?: number | null;
   codigo?: string;
   nombre?: string;
   paisId?: number | null;

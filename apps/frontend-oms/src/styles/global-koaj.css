@@ -445,6 +445,13 @@ body {
     line-height: 1;
 }
 
+.koaj-topbar-logo-image {
+    max-height: 44px;
+    width: auto;
+    max-width: 220px;
+    object-fit: contain;
+}
+
 .koaj-topbar-actions {
     display: flex;
     align-items: center;

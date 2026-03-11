@@ -15,6 +15,9 @@ type EmpresaClienteRow = {
   EmpresaClienteId: number;
   EmpresaId: number;
   Nombre: string;
+  DisplayName: string | null;
+  LogoUrl: string | null;
+  FaviconUrl: string | null;
   Documento: string | null;
   Email: string | null;
   Telefono: string | null;
@@ -53,13 +56,18 @@ export class EmpresaClienteRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async list(): Promise<EmpresaClienteListItem[]> {
-    const result = await this.databaseService.execute<sql.IResult<EmpresaClienteRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<EmpresaClienteRow>
+    >(
       (pool) =>
         pool.request().query<EmpresaClienteRow>(`
           SELECT
             [EmpresaClienteId],
             [EmpresaId],
             [Nombre],
+            [DisplayName],
+            [LogoUrl],
+            [FaviconUrl],
             [Documento],
             [Email],
             [Telefono],
@@ -86,6 +94,9 @@ export class EmpresaClienteRepository {
             [EmpresaClienteId],
             [EmpresaId],
             [Nombre],
+            [DisplayName],
+            [LogoUrl],
+            [FaviconUrl],
             [Documento],
             [Email],
             [Telefono],
@@ -122,30 +133,38 @@ export class EmpresaClienteRepository {
       'empresa-cliente.listBootstrapData',
     );
 
-    const empresaClientesRows = (result.recordsets?.[0] ?? []) as EmpresaClienteRow[];
+    const empresaClientesRows = (result.recordsets?.[0] ??
+      []) as EmpresaClienteRow[];
     const empresasRows = (result.recordsets?.[1] ?? []) as EmpresaRow[];
     const paisesRows = (result.recordsets?.[2] ?? []) as PaisRow[];
     const ciudadesRows = (result.recordsets?.[3] ?? []) as CiudadRow[];
 
     return {
-      empresaClientes: empresaClientesRows.map((row) => this.mapEmpresaClienteRow(row)),
+      empresaClientes: empresaClientesRows.map((row) =>
+        this.mapEmpresaClienteRow(row),
+      ),
       empresas: empresasRows.map((row) => this.mapEmpresaRow(row)),
       paises: paisesRows.map((row) => this.mapPaisRow(row)),
       ciudades: ciudadesRows.map((row) => this.mapCiudadRow(row)),
     };
   }
 
-  async findById(empresaClienteId: number): Promise<EmpresaClienteListItem | null> {
-    const result = await this.databaseService.execute<sql.IResult<EmpresaClienteRow>>(
+  async findById(
+    empresaClienteId: number,
+  ): Promise<EmpresaClienteListItem | null> {
+    const result = await this.databaseService.execute<
+      sql.IResult<EmpresaClienteRow>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('empresaClienteId', sql.Int, empresaClienteId)
+        pool.request().input('empresaClienteId', sql.Int, empresaClienteId)
           .query<EmpresaClienteRow>(`
             SELECT
               [EmpresaClienteId],
               [EmpresaId],
               [Nombre],
+              [DisplayName],
+              [LogoUrl],
+              [FaviconUrl],
               [Documento],
               [Email],
               [Telefono],
@@ -174,14 +193,19 @@ export class EmpresaClienteRepository {
     documento: string,
     excludeEmpresaClienteId?: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('empresaId', sql.Int, empresaId)
           .input('documento', sql.NVarChar(60), documento)
-          .input('excludeEmpresaClienteId', sql.Int, excludeEmpresaClienteId ?? null)
-          .query<{ count: number }>(`
+          .input(
+            'excludeEmpresaClienteId',
+            sql.Int,
+            excludeEmpresaClienteId ?? null,
+          ).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[EmpresaCliente]
             WHERE [EmpresaId] = @empresaId
@@ -199,14 +223,19 @@ export class EmpresaClienteRepository {
     email: string,
     excludeEmpresaClienteId?: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('empresaId', sql.Int, empresaId)
           .input('email', sql.NVarChar(180), email)
-          .input('excludeEmpresaClienteId', sql.Int, excludeEmpresaClienteId ?? null)
-          .query<{ count: number }>(`
+          .input(
+            'excludeEmpresaClienteId',
+            sql.Int,
+            excludeEmpresaClienteId ?? null,
+          ).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[EmpresaCliente]
             WHERE [EmpresaId] = @empresaId
@@ -220,12 +249,13 @@ export class EmpresaClienteRepository {
   }
 
   async existsEmpresaById(empresaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+        pool.request().input('empresaId', sql.Int, empresaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Empresa]
             WHERE [EmpresaId] = @empresaId
@@ -237,12 +267,13 @@ export class EmpresaClienteRepository {
   }
 
   async existsPaisById(paisId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('paisId', sql.Int, paisId)
-          .query<{ count: number }>(`
+        pool.request().input('paisId', sql.Int, paisId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Pais]
             WHERE [PaisId] = @paisId
@@ -254,12 +285,13 @@ export class EmpresaClienteRepository {
   }
 
   async existsCiudadById(ciudadId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('ciudadId', sql.Int, ciudadId)
-          .query<{ count: number }>(`
+        pool.request().input('ciudadId', sql.Int, ciudadId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Ciudad]
             WHERE [CiudadId] = @ciudadId
@@ -270,14 +302,18 @@ export class EmpresaClienteRepository {
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
-  async existsCiudadByIdAndPaisId(ciudadId: number, paisId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+  async existsCiudadByIdAndPaisId(
+    ciudadId: number,
+    paisId: number,
+  ): Promise<boolean> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('ciudadId', sql.Int, ciudadId)
-          .input('paisId', sql.Int, paisId)
-          .query<{ count: number }>(`
+          .input('paisId', sql.Int, paisId).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Ciudad]
             WHERE [CiudadId] = @ciudadId
@@ -289,13 +325,20 @@ export class EmpresaClienteRepository {
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
-  async create(input: CreateEmpresaClienteInput): Promise<{ empresaClienteId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<EmpresaClienteIdentityRow>>(
+  async create(
+    input: CreateEmpresaClienteInput,
+  ): Promise<{ empresaClienteId: number }> {
+    const result = await this.databaseService.execute<
+      sql.IResult<EmpresaClienteIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
           .input('EmpresaId', sql.Int, input.empresaId)
           .input('Nombre', sql.NVarChar(180), input.nombre)
+          .input('DisplayName', sql.NVarChar(180), input.displayName)
+          .input('LogoUrl', sql.NVarChar(800), input.logoUrl)
+          .input('FaviconUrl', sql.NVarChar(800), input.faviconUrl)
           .input('Documento', sql.NVarChar(60), input.documento)
           .input('Email', sql.NVarChar(180), input.email)
           .input('Telefono', sql.NVarChar(50), input.telefono)
@@ -308,6 +351,9 @@ export class EmpresaClienteRepository {
             (
               [EmpresaId],
               [Nombre],
+              [DisplayName],
+              [LogoUrl],
+              [FaviconUrl],
               [Documento],
               [Email],
               [Telefono],
@@ -322,6 +368,9 @@ export class EmpresaClienteRepository {
             (
               @EmpresaId,
               @Nombre,
+              @DisplayName,
+              @LogoUrl,
+              @FaviconUrl,
               @Documento,
               @Email,
               @Telefono,
@@ -338,7 +387,10 @@ export class EmpresaClienteRepository {
     return { empresaClienteId: result.recordset[0].EmpresaClienteId };
   }
 
-  async update(empresaClienteId: number, input: UpdateEmpresaClienteInput): Promise<void> {
+  async update(
+    empresaClienteId: number,
+    input: UpdateEmpresaClienteInput,
+  ): Promise<void> {
     await this.databaseService.execute<sql.IResult<unknown>>(
       (pool) =>
         pool
@@ -346,18 +398,23 @@ export class EmpresaClienteRepository {
           .input('empresaClienteId', sql.Int, empresaClienteId)
           .input('empresaId', sql.Int, input.empresaId)
           .input('nombre', sql.NVarChar(180), input.nombre)
+          .input('displayName', sql.NVarChar(180), input.displayName)
+          .input('logoUrl', sql.NVarChar(800), input.logoUrl)
+          .input('faviconUrl', sql.NVarChar(800), input.faviconUrl)
           .input('documento', sql.NVarChar(60), input.documento)
           .input('email', sql.NVarChar(180), input.email)
           .input('telefono', sql.NVarChar(50), input.telefono)
           .input('paisId', sql.Int, input.paisId)
           .input('ciudadId', sql.Int, input.ciudadId)
           .input('direccion', sql.NVarChar(255), input.direccion)
-          .input('estado', sql.NVarChar(20), input.estado)
-          .query(`
+          .input('estado', sql.NVarChar(20), input.estado).query(`
             UPDATE [oms].[EmpresaCliente]
             SET
               [EmpresaId] = @empresaId,
               [Nombre] = @nombre,
+              [DisplayName] = @displayName,
+              [LogoUrl] = @logoUrl,
+              [FaviconUrl] = @faviconUrl,
               [Documento] = @documento,
               [Email] = @email,
               [Telefono] = @telefono,
@@ -377,6 +434,9 @@ export class EmpresaClienteRepository {
       empresaClienteId: row.EmpresaClienteId,
       empresaId: row.EmpresaId,
       nombre: row.Nombre,
+      displayName: row.DisplayName ?? undefined,
+      logoUrl: row.LogoUrl ?? undefined,
+      faviconUrl: row.FaviconUrl ?? undefined,
       documento: row.Documento ?? undefined,
       email: row.Email ?? undefined,
       telefono: row.Telefono ?? undefined,

@@ -5,6 +5,7 @@ import type {
   CreateTiendaInput,
   TiendaBootstrapData,
   TiendaCiudadListItem,
+  TiendaEmpresaClienteListItem,
   TiendaEmpresaListItem,
   TiendaListItem,
   TiendaPaisListItem,
@@ -14,6 +15,7 @@ import type {
 type TiendaRow = {
   TiendaId: number;
   EmpresaId: number;
+  EmpresaClienteId: number | null;
   Codigo: string;
   Nombre: string;
   PaisId: number | null;
@@ -33,6 +35,12 @@ type TiendaIdentityRow = {
 type EmpresaRow = {
   EmpresaId: number;
   Codigo: string;
+  Nombre: string;
+};
+
+type EmpresaClienteRow = {
+  EmpresaClienteId: number;
+  EmpresaId: number;
   Nombre: string;
 };
 
@@ -59,6 +67,7 @@ export class TiendaRepository {
           SELECT
             [TiendaId],
             [EmpresaId],
+            [EmpresaClienteId],
             [Codigo],
             [Nombre],
             [PaisId],
@@ -85,6 +94,7 @@ export class TiendaRepository {
           SELECT
             [TiendaId],
             [EmpresaId],
+            [EmpresaClienteId],
             [Codigo],
             [Nombre],
             [PaisId],
@@ -106,6 +116,13 @@ export class TiendaRepository {
           ORDER BY [Nombre] ASC, [EmpresaId] ASC;
 
           SELECT
+            [EmpresaClienteId],
+            [EmpresaId],
+            [Nombre]
+          FROM [oms].[EmpresaCliente]
+          ORDER BY [Nombre] ASC, [EmpresaClienteId] ASC;
+
+          SELECT
             [PaisId],
             [CodigoISO2],
             [Nombre]
@@ -124,12 +141,17 @@ export class TiendaRepository {
 
     const tiendasRows = (result.recordsets?.[0] ?? []) as TiendaRow[];
     const empresasRows = (result.recordsets?.[1] ?? []) as EmpresaRow[];
-    const paisesRows = (result.recordsets?.[2] ?? []) as PaisRow[];
-    const ciudadesRows = (result.recordsets?.[3] ?? []) as CiudadRow[];
+    const empresaClientesRows = (result.recordsets?.[2] ??
+      []) as EmpresaClienteRow[];
+    const paisesRows = (result.recordsets?.[3] ?? []) as PaisRow[];
+    const ciudadesRows = (result.recordsets?.[4] ?? []) as CiudadRow[];
 
     return {
       tiendas: tiendasRows.map((row) => this.mapTiendaRow(row)),
       empresas: empresasRows.map((row) => this.mapEmpresaRow(row)),
+      empresaClientes: empresaClientesRows.map((row) =>
+        this.mapEmpresaClienteRow(row),
+      ),
       paises: paisesRows.map((row) => this.mapPaisRow(row)),
       ciudades: ciudadesRows.map((row) => this.mapCiudadRow(row)),
     };
@@ -138,13 +160,11 @@ export class TiendaRepository {
   async findById(tiendaId: number): Promise<TiendaListItem | null> {
     const result = await this.databaseService.execute<sql.IResult<TiendaRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('tiendaId', sql.Int, tiendaId)
-          .query<TiendaRow>(`
+        pool.request().input('tiendaId', sql.Int, tiendaId).query<TiendaRow>(`
             SELECT
               [TiendaId],
               [EmpresaId],
+              [EmpresaClienteId],
               [Codigo],
               [Nombre],
               [PaisId],
@@ -174,14 +194,17 @@ export class TiendaRepository {
     codigo: string,
     excludeTiendaId?: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('empresaId', sql.Int, empresaId)
           .input('codigo', sql.NVarChar(60), codigo)
-          .input('excludeTiendaId', sql.Int, excludeTiendaId ?? null)
-          .query<{ count: number }>(`
+          .input('excludeTiendaId', sql.Int, excludeTiendaId ?? null).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Tienda]
             WHERE [EmpresaId] = @empresaId
@@ -195,12 +218,13 @@ export class TiendaRepository {
   }
 
   async existsEmpresaById(empresaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+        pool.request().input('empresaId', sql.Int, empresaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Empresa]
             WHERE [EmpresaId] = @empresaId
@@ -211,13 +235,37 @@ export class TiendaRepository {
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
-  async existsPaisById(paisId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+  async existsEmpresaClienteByIdAndEmpresaId(
+    empresaClienteId: number,
+    empresaId: number,
+  ): Promise<boolean> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
-          .input('paisId', sql.Int, paisId)
-          .query<{ count: number }>(`
+          .input('empresaClienteId', sql.Int, empresaClienteId)
+          .input('empresaId', sql.Int, empresaId).query<{ count: number }>(`
+            SELECT COUNT(1) AS [count]
+            FROM [oms].[EmpresaCliente]
+            WHERE [EmpresaClienteId] = @empresaClienteId
+              AND [EmpresaId] = @empresaId
+          `),
+      'tienda.existsEmpresaClienteByIdAndEmpresaId',
+    );
+
+    return (result.recordset[0]?.count ?? 0) > 0;
+  }
+
+  async existsPaisById(paisId: number): Promise<boolean> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
+      (pool) =>
+        pool.request().input('paisId', sql.Int, paisId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Pais]
             WHERE [PaisId] = @paisId
@@ -229,12 +277,13 @@ export class TiendaRepository {
   }
 
   async existsCiudadById(ciudadId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('ciudadId', sql.Int, ciudadId)
-          .query<{ count: number }>(`
+        pool.request().input('ciudadId', sql.Int, ciudadId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Ciudad]
             WHERE [CiudadId] = @ciudadId
@@ -245,14 +294,18 @@ export class TiendaRepository {
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
-  async existsCiudadByIdAndPaisId(ciudadId: number, paisId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+  async existsCiudadByIdAndPaisId(
+    ciudadId: number,
+    paisId: number,
+  ): Promise<boolean> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('ciudadId', sql.Int, ciudadId)
-          .input('paisId', sql.Int, paisId)
-          .query<{ count: number }>(`
+          .input('paisId', sql.Int, paisId).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Ciudad]
             WHERE [CiudadId] = @ciudadId
@@ -265,11 +318,14 @@ export class TiendaRepository {
   }
 
   async create(input: CreateTiendaInput): Promise<{ tiendaId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<TiendaIdentityRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<TiendaIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
           .input('EmpresaId', sql.Int, input.empresaId)
+          .input('EmpresaClienteId', sql.Int, input.empresaClienteId)
           .input('Codigo', sql.NVarChar(60), input.codigo)
           .input('Nombre', sql.NVarChar(180), input.nombre)
           .input('PaisId', sql.Int, input.paisId)
@@ -277,11 +333,11 @@ export class TiendaRepository {
           .input('Direccion', sql.NVarChar(255), input.direccion)
           .input('Telefono', sql.NVarChar(50), input.telefono)
           .input('FulfillmentHabilitado', sql.Bit, input.fulfillmentHabilitado)
-          .input('Activo', sql.Bit, input.activo)
-          .query<TiendaIdentityRow>(`
+          .input('Activo', sql.Bit, input.activo).query<TiendaIdentityRow>(`
             INSERT INTO [oms].[Tienda]
             (
               [EmpresaId],
+              [EmpresaClienteId],
               [Codigo],
               [Nombre],
               [PaisId],
@@ -296,6 +352,7 @@ export class TiendaRepository {
             VALUES
             (
               @EmpresaId,
+              @EmpresaClienteId,
               @Codigo,
               @Nombre,
               @PaisId,
@@ -320,6 +377,7 @@ export class TiendaRepository {
           .request()
           .input('tiendaId', sql.Int, tiendaId)
           .input('empresaId', sql.Int, input.empresaId)
+          .input('empresaClienteId', sql.Int, input.empresaClienteId)
           .input('codigo', sql.NVarChar(60), input.codigo)
           .input('nombre', sql.NVarChar(180), input.nombre)
           .input('paisId', sql.Int, input.paisId)
@@ -327,11 +385,11 @@ export class TiendaRepository {
           .input('direccion', sql.NVarChar(255), input.direccion)
           .input('telefono', sql.NVarChar(50), input.telefono)
           .input('fulfillmentHabilitado', sql.Bit, input.fulfillmentHabilitado)
-          .input('activo', sql.Bit, input.activo)
-          .query(`
+          .input('activo', sql.Bit, input.activo).query(`
             UPDATE [oms].[Tienda]
             SET
               [EmpresaId] = @empresaId,
+              [EmpresaClienteId] = @empresaClienteId,
               [Codigo] = @codigo,
               [Nombre] = @nombre,
               [PaisId] = @paisId,
@@ -351,6 +409,7 @@ export class TiendaRepository {
     return {
       tiendaId: row.TiendaId,
       empresaId: row.EmpresaId,
+      empresaClienteId: row.EmpresaClienteId ?? undefined,
       codigo: row.Codigo,
       nombre: row.Nombre,
       paisId: row.PaisId ?? undefined,
@@ -368,6 +427,16 @@ export class TiendaRepository {
     return {
       empresaId: row.EmpresaId,
       codigo: row.Codigo,
+      nombre: row.Nombre,
+    };
+  }
+
+  private mapEmpresaClienteRow(
+    row: EmpresaClienteRow,
+  ): TiendaEmpresaClienteListItem {
+    return {
+      empresaClienteId: row.EmpresaClienteId,
+      empresaId: row.EmpresaId,
       nombre: row.Nombre,
     };
   }

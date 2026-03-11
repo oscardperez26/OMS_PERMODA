@@ -3,6 +3,7 @@ const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 export type UserListItem = {
   id: string;
   empresaId: number;
+  empresaClienteId?: number;
   perfilId: number;
   nombre: string;
   email: string;
@@ -15,6 +16,7 @@ export type UserListItem = {
 
 export type CreateUserRequest = {
   empresaId: number;
+  empresaClienteId?: number;
   perfilId: number;
   nombre: string;
   email: string;

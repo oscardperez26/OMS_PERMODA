@@ -2,6 +2,9 @@ export type EmpresaClienteListItem = {
   empresaClienteId: number;
   empresaId: number;
   nombre: string;
+  displayName?: string;
+  logoUrl?: string;
+  faviconUrl?: string;
   documento?: string;
   email?: string;
   telefono?: string;
@@ -41,6 +44,9 @@ export type EmpresaClienteBootstrapData = {
 export type CreateEmpresaClienteInput = {
   empresaId: number;
   nombre: string;
+  displayName: string | null;
+  logoUrl: string | null;
+  faviconUrl: string | null;
   documento: string | null;
   email: string | null;
   telefono: string | null;
@@ -53,6 +59,9 @@ export type CreateEmpresaClienteInput = {
 export type UpdateEmpresaClienteInput = {
   empresaId: number;
   nombre: string;
+  displayName: string | null;
+  logoUrl: string | null;
+  faviconUrl: string | null;
   documento: string | null;
   email: string | null;
   telefono: string | null;

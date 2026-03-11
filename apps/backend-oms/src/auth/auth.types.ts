@@ -19,6 +19,7 @@ export type SafeUser = {
   role: Role;
   permissions: Permission[];
   storeId?: string;
+  empresaClienteId?: string;
 };
 // aqui puedes definir otros tipos relacionados con la autenticación, como el tipo de usuario que se obtiene de la base de datos, o el tipo de datos que se espera en el proceso de login. Por ejemplo:
 export type AuthenticatedUser = SafeUser & {
@@ -31,6 +32,7 @@ export type TokenPayload = {
   permissions: Permission[];
   sessionId: string;
   storeId?: string;
+  empresaClienteId?: string;
   type: 'access' | 'refresh';
   exp: number;
 };

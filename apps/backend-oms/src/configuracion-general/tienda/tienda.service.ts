@@ -9,6 +9,7 @@ import type { TiendaBootstrapData, TiendaListItem } from './tienda.types';
 
 type CreateTiendaParams = {
   empresaId: number;
+  empresaClienteId?: number;
   codigo: string;
   nombre: string;
   paisId?: number;
@@ -21,6 +22,7 @@ type CreateTiendaParams = {
 
 type UpdateTiendaParams = {
   empresaId?: number;
+  empresaClienteId?: number | null;
   codigo?: string;
   nombre?: string;
   paisId?: number | null;
@@ -51,14 +53,28 @@ export class TiendaService {
     return tienda;
   }
 
-  async createTienda(params: CreateTiendaParams): Promise<{ tiendaId: number }> {
+  async createTienda(
+    params: CreateTiendaParams,
+  ): Promise<{ tiendaId: number }> {
     const empresaId = this.normalizeRequiredId(params.empresaId, 'empresaId');
+    const empresaClienteId = this.normalizeOptionalId(
+      params.empresaClienteId,
+      'empresaClienteId',
+    );
     const codigo = this.normalizeCodigo(params.codigo);
     const nombre = this.normalizeRequiredText(params.nombre, 'nombre', 180);
     const paisId = this.normalizeOptionalId(params.paisId, 'paisId');
     const ciudadId = this.normalizeOptionalId(params.ciudadId, 'ciudadId');
-    const direccion = this.normalizeOptionalText(params.direccion, 'direccion', 255);
-    const telefono = this.normalizeOptionalText(params.telefono, 'telefono', 50);
+    const direccion = this.normalizeOptionalText(
+      params.direccion,
+      'direccion',
+      255,
+    );
+    const telefono = this.normalizeOptionalText(
+      params.telefono,
+      'telefono',
+      50,
+    );
     const fulfillmentHabilitado = this.normalizeBoolean(
       params.fulfillmentHabilitado,
       true,
@@ -70,14 +86,22 @@ export class TiendaService {
       codigo,
     );
     if (duplicated) {
-      throw new ConflictException('Ya existe una tienda con ese codigo en la empresa');
+      throw new ConflictException(
+        'Ya existe una tienda con ese codigo en la empresa',
+      );
     }
 
-    await this.validateForeignKeys(empresaId, paisId, ciudadId);
+    await this.validateForeignKeys(
+      empresaId,
+      empresaClienteId,
+      paisId,
+      ciudadId,
+    );
 
     try {
       return await this.tiendaRepository.create({
         empresaId,
+        empresaClienteId,
         codigo,
         nombre,
         paisId,
@@ -89,15 +113,21 @@ export class TiendaService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe una tienda con ese codigo en la empresa');
+        throw new ConflictException(
+          'Ya existe una tienda con ese codigo en la empresa',
+        );
       }
       throw error;
     }
   }
 
-  async updateTienda(tiendaId: number, params: UpdateTiendaParams): Promise<void> {
+  async updateTienda(
+    tiendaId: number,
+    params: UpdateTiendaParams,
+  ): Promise<void> {
     const hasAnyField =
       params.empresaId !== undefined ||
+      params.empresaClienteId !== undefined ||
       params.codigo !== undefined ||
       params.nombre !== undefined ||
       params.paisId !== undefined ||
@@ -108,7 +138,9 @@ export class TiendaService {
       params.activo !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.tiendaRepository.findById(tiendaId);
@@ -121,7 +153,13 @@ export class TiendaService {
         ? this.normalizeRequiredId(params.empresaId, 'empresaId')
         : current.empresaId;
     const nextCodigo =
-      params.codigo !== undefined ? this.normalizeCodigo(params.codigo) : current.codigo;
+      params.codigo !== undefined
+        ? this.normalizeCodigo(params.codigo)
+        : current.codigo;
+    const nextEmpresaClienteId =
+      params.empresaClienteId !== undefined
+        ? this.normalizeOptionalId(params.empresaClienteId, 'empresaClienteId')
+        : (current.empresaClienteId ?? null);
     const nextNombre =
       params.nombre !== undefined
         ? this.normalizeRequiredText(params.nombre, 'nombre', 180)
@@ -129,25 +167,27 @@ export class TiendaService {
     const nextPaisId =
       params.paisId !== undefined
         ? this.normalizeOptionalId(params.paisId, 'paisId')
-        : current.paisId ?? null;
+        : (current.paisId ?? null);
     const nextCiudadId =
       params.ciudadId !== undefined
         ? this.normalizeOptionalId(params.ciudadId, 'ciudadId')
-        : current.ciudadId ?? null;
+        : (current.ciudadId ?? null);
     const nextDireccion =
       params.direccion !== undefined
         ? this.normalizeOptionalText(params.direccion, 'direccion', 255)
-        : current.direccion ?? null;
+        : (current.direccion ?? null);
     const nextTelefono =
       params.telefono !== undefined
         ? this.normalizeOptionalText(params.telefono, 'telefono', 50)
-        : current.telefono ?? null;
+        : (current.telefono ?? null);
     const nextFulfillmentHabilitado =
       params.fulfillmentHabilitado !== undefined
         ? this.normalizeBoolean(params.fulfillmentHabilitado)
         : current.fulfillmentHabilitado;
     const nextActivo =
-      params.activo !== undefined ? this.normalizeBoolean(params.activo) : current.activo;
+      params.activo !== undefined
+        ? this.normalizeBoolean(params.activo)
+        : current.activo;
 
     const duplicated = await this.tiendaRepository.existsByEmpresaAndCodigo(
       nextEmpresaId,
@@ -155,14 +195,22 @@ export class TiendaService {
       tiendaId,
     );
     if (duplicated) {
-      throw new ConflictException('Ya existe una tienda con ese codigo en la empresa');
+      throw new ConflictException(
+        'Ya existe una tienda con ese codigo en la empresa',
+      );
     }
 
-    await this.validateForeignKeys(nextEmpresaId, nextPaisId, nextCiudadId);
+    await this.validateForeignKeys(
+      nextEmpresaId,
+      nextEmpresaClienteId,
+      nextPaisId,
+      nextCiudadId,
+    );
 
     try {
       await this.tiendaRepository.update(tiendaId, {
         empresaId: nextEmpresaId,
+        empresaClienteId: nextEmpresaClienteId,
         codigo: nextCodigo,
         nombre: nextNombre,
         paisId: nextPaisId,
@@ -174,7 +222,9 @@ export class TiendaService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe una tienda con ese codigo en la empresa');
+        throw new ConflictException(
+          'Ya existe una tienda con ese codigo en la empresa',
+        );
       }
       throw error;
     }
@@ -182,10 +232,12 @@ export class TiendaService {
 
   private async validateForeignKeys(
     empresaId: number,
+    empresaClienteId: number | null,
     paisId: number | null,
     ciudadId: number | null,
   ): Promise<void> {
-    const empresaExists = await this.tiendaRepository.existsEmpresaById(empresaId);
+    const empresaExists =
+      await this.tiendaRepository.existsEmpresaById(empresaId);
     if (!empresaExists) {
       throw new BadRequestException('EmpresaId no existe en la base de datos');
     }
@@ -197,24 +249,38 @@ export class TiendaService {
       }
     }
 
+    if (empresaClienteId !== null) {
+      const empresaClienteValida =
+        await this.tiendaRepository.existsEmpresaClienteByIdAndEmpresaId(
+          empresaClienteId,
+          empresaId,
+        );
+      if (!empresaClienteValida) {
+        throw new BadRequestException(
+          'EmpresaClienteId no existe o no pertenece a la empresa seleccionada',
+        );
+      }
+    }
+
     if (ciudadId === null) {
       return;
     }
 
     if (paisId === null) {
-      const ciudadExists = await this.tiendaRepository.existsCiudadById(ciudadId);
+      const ciudadExists =
+        await this.tiendaRepository.existsCiudadById(ciudadId);
       if (!ciudadExists) {
         throw new BadRequestException('CiudadId no existe en la base de datos');
       }
       return;
     }
 
-    const ciudadBelongsToPais = await this.tiendaRepository.existsCiudadByIdAndPaisId(
-      ciudadId,
-      paisId,
-    );
+    const ciudadBelongsToPais =
+      await this.tiendaRepository.existsCiudadByIdAndPaisId(ciudadId, paisId);
     if (!ciudadBelongsToPais) {
-      throw new BadRequestException('CiudadId no pertenece al pais seleccionado');
+      throw new BadRequestException(
+        'CiudadId no pertenece al pais seleccionado',
+      );
     }
   }
 
@@ -224,7 +290,9 @@ export class TiendaService {
       throw new BadRequestException('El campo codigo no puede estar vacio');
     }
     if (normalized.length > 60) {
-      throw new BadRequestException('El campo codigo no puede exceder 60 caracteres');
+      throw new BadRequestException(
+        'El campo codigo no puede exceder 60 caracteres',
+      );
     }
     return normalized;
   }
@@ -236,7 +304,9 @@ export class TiendaService {
   ): string {
     const normalized = value.trim();
     if (!normalized) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacio`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacio`,
+      );
     }
     if (normalized.length > maxLength) {
       throw new BadRequestException(
@@ -265,7 +335,9 @@ export class TiendaService {
 
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
@@ -278,12 +350,17 @@ export class TiendaService {
       return null;
     }
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
 
-  private normalizeBoolean(value: boolean | undefined, fallback?: boolean): boolean {
+  private normalizeBoolean(
+    value: boolean | undefined,
+    fallback?: boolean,
+  ): boolean {
     if (value === undefined) {
       if (fallback === undefined) {
         throw new BadRequestException('Valor booleano no enviado');

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import * as bcrypt from 'bcrypt';
 import { TokenService } from './token.service';
@@ -31,7 +35,11 @@ export class AuthService {
    * `username` se usa como email para mantener compatibilidad temporal
    * con tu DTO/controlador actuales.
    */
-  async login(username: string, password: string, portal: Portal): Promise<LoginResult> {
+  async login(
+    username: string,
+    password: string,
+    portal: Portal,
+  ): Promise<LoginResult> {
     const dbUser = await this.userRepository.findByEmail(username);
 
     if (!dbUser) {
@@ -66,6 +74,7 @@ export class AuthService {
       role: profileAccess.role,
       permissions: profileAccess.permissions,
       storeId: dbUser.empresaId,
+      empresaClienteId: dbUser.empresaClienteId,
     };
 
     const sessionId = randomUUID();
@@ -94,7 +103,11 @@ export class AuthService {
     const payload = this.tokenService.verifyRefreshToken(refreshToken);
 
     const session = this.sessions.get(payload.sessionId);
-    if (!session || session.user.id !== payload.sub || Date.now() >= session.expiresAt) {
+    if (
+      !session ||
+      session.user.id !== payload.sub ||
+      Date.now() >= session.expiresAt
+    ) {
       throw new UnauthorizedException('Sesión inválida');
     }
 
@@ -117,7 +130,11 @@ export class AuthService {
     const payload = this.tokenService.verifyAccessToken(accessToken);
     const session = this.sessions.get(payload.sessionId);
 
-    if (!session || session.user.id !== payload.sub || Date.now() >= session.expiresAt) {
+    if (
+      !session ||
+      session.user.id !== payload.sub ||
+      Date.now() >= session.expiresAt
+    ) {
       throw new UnauthorizedException('Sesión no válida');
     }
 
@@ -135,7 +152,8 @@ export class AuthService {
       );
     }
 
-    const currentHash = await this.userRepository.getPasswordHashByUserId(userId);
+    const currentHash =
+      await this.userRepository.getPasswordHashByUserId(userId);
     if (!currentHash) {
       throw new BadRequestException('Usuario sin credenciales registradas');
     }

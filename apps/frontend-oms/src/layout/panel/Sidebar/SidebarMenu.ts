@@ -77,10 +77,6 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
             label: "Parametros de la tienda",
             path: ROUTES.CONFIGURE_STORE_PARAMS,
           },
-          {
-            label: "Parametros Avanzados",
-            path: ROUTES.CONFIGURE_ADVANCED_PARAMS,
-          },
         ],
       },
     ],

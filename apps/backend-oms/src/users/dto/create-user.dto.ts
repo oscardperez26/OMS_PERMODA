@@ -31,6 +31,11 @@ export class CreateUserDto {
   @MaxLength(50)
   telefono?: string;
 
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  empresaClienteId?: number;
+
   @IsString()
   @MinLength(8)
   temporaryPassword: string;

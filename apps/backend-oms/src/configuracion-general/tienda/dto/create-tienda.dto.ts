@@ -44,6 +44,11 @@ export class CreateTiendaDto {
   telefono?: string;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
+  empresaClienteId?: number;
+
+  @IsOptional()
   @IsBoolean()
   fulfillmentHabilitado?: boolean;
 

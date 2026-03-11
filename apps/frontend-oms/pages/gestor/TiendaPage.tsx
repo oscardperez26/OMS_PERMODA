@@ -14,6 +14,12 @@ type EmpresaOption = {
   nombre: string;
 };
 
+type EmpresaClienteOption = {
+  empresaClienteId: number;
+  empresaId: number;
+  nombre: string;
+};
+
 type PaisOption = {
   paisId: number;
   codigoISO2: string;
@@ -28,6 +34,7 @@ type CiudadOption = {
 
 type FormState = {
   empresaId: string;
+  empresaClienteId: string;
   codigo: string;
   nombre: string;
   paisId: string;
@@ -40,6 +47,7 @@ type FormState = {
 
 const INITIAL_FORM: FormState = {
   empresaId: '',
+  empresaClienteId: '',
   codigo: '',
   nombre: '',
   paisId: '',
@@ -74,6 +82,7 @@ export function TiendaPage() {
 
   const [tiendas, setTiendas] = useState<TiendaListItem[]>([]);
   const [empresas, setEmpresas] = useState<EmpresaOption[]>([]);
+  const [empresaClientes, setEmpresaClientes] = useState<EmpresaClienteOption[]>([]);
   const [paises, setPaises] = useState<PaisOption[]>([]);
   const [ciudades, setCiudades] = useState<CiudadOption[]>([]);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
@@ -96,6 +105,12 @@ export function TiendaPage() {
         [...bootstrap.empresas].sort((a, b) => {
           const byName = a.nombre.localeCompare(b.nombre);
           return byName !== 0 ? byName : a.empresaId - b.empresaId;
+        }),
+      );
+      setEmpresaClientes(
+        [...bootstrap.empresaClientes].sort((a, b) => {
+          const byName = a.nombre.localeCompare(b.nombre);
+          return byName !== 0 ? byName : a.empresaClienteId - b.empresaClienteId;
         }),
       );
       setPaises(
@@ -147,6 +162,23 @@ export function TiendaPage() {
     }
   }, [ciudades, form.ciudadId, form.paisId]);
 
+  useEffect(() => {
+    if (!form.empresaClienteId) {
+      return;
+    }
+
+    const selectedEmpresaId = Number(form.empresaId);
+    const selectedEmpresaClienteId = Number(form.empresaClienteId);
+    const belongs = empresaClientes.some(
+      (empresaCliente) =>
+        empresaCliente.empresaClienteId === selectedEmpresaClienteId &&
+        empresaCliente.empresaId === selectedEmpresaId,
+    );
+    if (!belongs) {
+      setForm((previous) => ({ ...previous, empresaClienteId: '' }));
+    }
+  }, [empresaClientes, form.empresaClienteId, form.empresaId]);
+
   const sortedTiendas = useMemo(
     () =>
       [...tiendas].sort((a, b) => {
@@ -163,6 +195,14 @@ export function TiendaPage() {
     });
     return map;
   }, [empresas]);
+
+  const empresaClienteMap = useMemo(() => {
+    const map = new Map<number, EmpresaClienteOption>();
+    empresaClientes.forEach((empresaCliente) => {
+      map.set(empresaCliente.empresaClienteId, empresaCliente);
+    });
+    return map;
+  }, [empresaClientes]);
 
   const paisMap = useMemo(() => {
     const map = new Map<number, PaisOption>();
@@ -189,6 +229,17 @@ export function TiendaPage() {
     return ciudades.filter((ciudad) => ciudad.paisId === selectedPaisId);
   }, [ciudades, form.paisId]);
 
+  const empresaClientesPorEmpresa = useMemo(() => {
+    const selectedEmpresaId = Number(form.empresaId);
+    if (!Number.isInteger(selectedEmpresaId) || selectedEmpresaId <= 0) {
+      return [] as EmpresaClienteOption[];
+    }
+
+    return empresaClientes.filter(
+      (empresaCliente) => empresaCliente.empresaId === selectedEmpresaId,
+    );
+  }, [empresaClientes, form.empresaId]);
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
@@ -202,6 +253,10 @@ export function TiendaPage() {
     }
 
     const empresaId = Number(form.empresaId);
+    const empresaClienteIdRaw = form.empresaClienteId.trim();
+    const empresaClienteId = empresaClienteIdRaw
+      ? Number(empresaClienteIdRaw)
+      : undefined;
     const codigo = form.codigo.trim().toUpperCase();
     const nombre = form.nombre.trim();
     const paisIdRaw = form.paisId.trim();
@@ -217,6 +272,13 @@ export function TiendaPage() {
     }
     if (!codigo || !nombre) {
       setError('Codigo y nombre son obligatorios');
+      return;
+    }
+    if (
+      empresaClienteId !== undefined &&
+      (!Number.isInteger(empresaClienteId) || empresaClienteId <= 0)
+    ) {
+      setError('Empresa cliente debe ser un entero mayor a 0');
       return;
     }
     if (paisId !== undefined && (!Number.isInteger(paisId) || paisId <= 0)) {
@@ -235,6 +297,7 @@ export function TiendaPage() {
       if (editingTiendaId) {
         await updateTienda(accessToken, editingTiendaId, {
           empresaId,
+          empresaClienteId: empresaClienteId ?? null,
           codigo,
           nombre,
           paisId: paisId ?? null,
@@ -247,6 +310,7 @@ export function TiendaPage() {
       } else {
         await createTienda(accessToken, {
           empresaId,
+          empresaClienteId,
           codigo,
           nombre,
           paisId,
@@ -277,6 +341,7 @@ export function TiendaPage() {
     setEditingTiendaId(tienda.tiendaId);
     setForm({
       empresaId: String(tienda.empresaId),
+      empresaClienteId: tienda.empresaClienteId ? String(tienda.empresaClienteId) : '',
       codigo: tienda.codigo,
       nombre: tienda.nombre,
       paisId: tienda.paisId ? String(tienda.paisId) : '',
@@ -324,13 +389,51 @@ export function TiendaPage() {
               <select
                 value={form.empresaId}
                 onChange={(event) =>
-                  setForm((previous) => ({ ...previous, empresaId: event.target.value }))
+                  setForm((previous) => {
+                    const nextEmpresaId = event.target.value;
+                    const keepEmpresaCliente = empresaClientes.some(
+                      (empresaCliente) =>
+                        String(empresaCliente.empresaClienteId) ===
+                          previous.empresaClienteId &&
+                        String(empresaCliente.empresaId) === nextEmpresaId,
+                    );
+                    return {
+                      ...previous,
+                      empresaId: nextEmpresaId,
+                      empresaClienteId: keepEmpresaCliente
+                        ? previous.empresaClienteId
+                        : '',
+                    };
+                  })
                 }
                 required
               >
                 {empresas.map((empresa) => (
                   <option key={empresa.empresaId} value={String(empresa.empresaId)}>
                     {empresa.nombre} ({empresa.codigo})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Empresa cliente
+              <select
+                value={form.empresaClienteId}
+                onChange={(event) =>
+                  setForm((previous) => ({
+                    ...previous,
+                    empresaClienteId: event.target.value,
+                  }))
+                }
+              >
+                <option value="">Sin empresa cliente</option>
+                {empresaClientesPorEmpresa.map((empresaCliente) => (
+                  <option
+                    key={empresaCliente.empresaClienteId}
+                    value={String(empresaCliente.empresaClienteId)}
+                  >
+                    {empresaCliente.nombre} (#{empresaCliente.empresaClienteId})
                   </option>
                 ))}
               </select>
@@ -483,6 +586,7 @@ export function TiendaPage() {
                 <tr>
                   <th>ID</th>
                   <th>Empresa</th>
+                  <th>Empresa cliente</th>
                   <th>Codigo</th>
                   <th>Nombre</th>
                   <th>Pais</th>
@@ -499,13 +603,17 @@ export function TiendaPage() {
               <tbody>
                 {sortedTiendas.length === 0 ? (
                   <tr>
-                    <td colSpan={canManage ? 13 : 12} className="tienda-empty-cell">
+                    <td colSpan={canManage ? 14 : 13} className="tienda-empty-cell">
                       Sin registros
                     </td>
                   </tr>
                 ) : (
                   sortedTiendas.map((tienda) => {
                     const empresa = empresaMap.get(tienda.empresaId);
+                    const empresaCliente =
+                      tienda.empresaClienteId === undefined
+                        ? undefined
+                        : empresaClienteMap.get(tienda.empresaClienteId);
                     const pais = tienda.paisId === undefined ? undefined : paisMap.get(tienda.paisId);
                     const ciudad =
                       tienda.ciudadId === undefined ? undefined : ciudadMap.get(tienda.ciudadId);
@@ -516,6 +624,13 @@ export function TiendaPage() {
                           {empresa
                             ? `${empresa.nombre} (${empresa.codigo})`
                             : `EmpresaId ${tienda.empresaId}`}
+                        </td>
+                        <td>
+                          {tienda.empresaClienteId === undefined
+                            ? '-'
+                            : empresaCliente
+                              ? `${empresaCliente.nombre} (#${empresaCliente.empresaClienteId})`
+                              : `EmpresaClienteId ${tienda.empresaClienteId}`}
                         </td>
                         <td>{tienda.codigo}</td>
                         <td>{tienda.nombre}</td>

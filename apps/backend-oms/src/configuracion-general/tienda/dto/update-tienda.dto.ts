@@ -47,6 +47,11 @@ export class UpdateTiendaDto {
   telefono?: string;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
+  empresaClienteId?: number | null;
+
+  @IsOptional()
   @IsBoolean()
   fulfillmentHabilitado?: boolean;
 
