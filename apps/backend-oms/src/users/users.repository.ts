@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as sql from 'mssql';
 import { DatabaseService } from '../database/database.service';
-import type { CreateUserInput, UserListItem } from './users.types';
+import type { CreateUserInput, UserListItem, UserScopeItem } from './users.types';
 
 type UsuarioRow = {
   UsuarioId: number;
@@ -44,19 +44,81 @@ export class UsersRepository {
       'users.list',
     );
 
-    return result.recordset.map((row) => ({
+    return result.recordset.map((row) => this.mapUserListItem(row));
+  }
+
+  async listByEmpresaClienteId(
+    empresaClienteId: number,
+  ): Promise<UserListItem[]> {
+    const result = await this.databaseService.execute<sql.IResult<UsuarioRow>>(
+      (pool) =>
+        pool
+          .request()
+          .input('empresaClienteId', sql.Int, empresaClienteId)
+          .query<UsuarioRow>(`
+            SELECT
+              [UsuarioId],
+              [EmpresaId],
+              [EmpresaClienteId],
+              [PerfilId],
+              [Nombre],
+              [Email],
+              [Telefono],
+              [Estado],
+              [LastLoginAt],
+              [CreatedAt],
+              [UpdatedAt]
+            FROM [oms].[Usuario]
+            WHERE [EmpresaClienteId] = @empresaClienteId
+            ORDER BY [CreatedAt] DESC
+          `),
+      'users.listByEmpresaClienteId',
+    );
+
+    return result.recordset.map((row) => this.mapUserListItem(row));
+  }
+
+  async findScopeById(userId: string): Promise<UserScopeItem | null> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{
+        UsuarioId: number;
+        EmpresaId: number | null;
+        EmpresaClienteId: number | null;
+        PerfilId: number;
+      }>
+    >(
+      (pool) =>
+        pool
+          .request()
+          .input('userId', sql.NVarChar(50), userId)
+          .query<{
+            UsuarioId: number;
+            EmpresaId: number | null;
+            EmpresaClienteId: number | null;
+            PerfilId: number;
+          }>(`
+            SELECT TOP (1)
+              [UsuarioId],
+              [EmpresaId],
+              [EmpresaClienteId],
+              [PerfilId]
+            FROM [oms].[Usuario]
+            WHERE [UsuarioId] = TRY_CONVERT(INT, @userId)
+          `),
+      'users.findScopeById',
+    );
+
+    const row = result.recordset[0];
+    if (!row) {
+      return null;
+    }
+
+    return {
       id: String(row.UsuarioId),
-      empresaId: row.EmpresaId ?? 0,
-      empresaClienteId: row.EmpresaClienteId ?? undefined,
-      perfilId: Number(row.PerfilId),
-      nombre: row.Nombre ?? '',
-      email: row.Email,
-      telefono: row.Telefono ?? undefined,
-      estado: row.Estado as number | string | boolean,
-      lastLoginAt: row.LastLoginAt?.toISOString() ?? null,
-      createdAt: row.CreatedAt?.toISOString() ?? null,
-      updatedAt: row.UpdatedAt?.toISOString() ?? null,
-    }));
+      empresaId: row.EmpresaId,
+      empresaClienteId: row.EmpresaClienteId,
+      perfilId: row.PerfilId,
+    };
   }
 
   // Verifica email existente usando longitud real de columna (nvarchar(180)).
@@ -232,5 +294,21 @@ export class UsersRepository {
           `),
       'users.updatePasswordHash',
     );
+  }
+
+  private mapUserListItem(row: UsuarioRow): UserListItem {
+    return {
+      id: String(row.UsuarioId),
+      empresaId: row.EmpresaId ?? 0,
+      empresaClienteId: row.EmpresaClienteId ?? undefined,
+      perfilId: Number(row.PerfilId),
+      nombre: row.Nombre ?? '',
+      email: row.Email,
+      telefono: row.Telefono ?? undefined,
+      estado: row.Estado as number | string | boolean,
+      lastLoginAt: row.LastLoginAt?.toISOString() ?? null,
+      createdAt: row.CreatedAt?.toISOString() ?? null,
+      updatedAt: row.UpdatedAt?.toISOString() ?? null,
+    };
   }
 }

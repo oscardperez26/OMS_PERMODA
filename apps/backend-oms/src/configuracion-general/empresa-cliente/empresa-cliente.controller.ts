@@ -25,7 +25,7 @@ export class EmpresaClienteController {
   constructor(private readonly empresaClienteService: EmpresaClienteService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list(@Req() req: RequestWithUser) {
     const scopedEmpresaClienteId = this.parseScopedEmpresaClienteId(req.user);
     const empresaClientes =
@@ -36,14 +36,14 @@ export class EmpresaClienteController {
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap(@Req() req: RequestWithUser) {
     const scopedEmpresaClienteId = this.parseScopedEmpresaClienteId(req.user);
     return this.empresaClienteService.getBootstrapData(scopedEmpresaClienteId);
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: RequestWithUser,
@@ -55,7 +55,7 @@ export class EmpresaClienteController {
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateEmpresaClienteDto, @Req() req: RequestWithUser) {
     if (this.parseScopedEmpresaClienteId(req.user) !== null) {
       throw new ForbiddenException(
@@ -71,7 +71,7 @@ export class EmpresaClienteController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateEmpresaClienteDto,

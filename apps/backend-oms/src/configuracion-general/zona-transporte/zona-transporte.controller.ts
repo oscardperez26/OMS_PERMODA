@@ -17,27 +17,27 @@ export class ZonaTransporteController {
   constructor(private readonly zonaTransporteService: ZonaTransporteService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const zonasTransporte = await this.zonaTransporteService.listZonasTransporte();
     return { zonasTransporte };
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap() {
     return this.zonaTransporteService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const zonaTransporte = await this.zonaTransporteService.getZonaTransporteById(id);
     return { zonaTransporte };
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateZonaTransporteDto) {
     const result = await this.zonaTransporteService.createZonaTransporte(body);
     return {
@@ -47,7 +47,7 @@ export class ZonaTransporteController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateZonaTransporteDto,

@@ -17,27 +17,27 @@ export class TiendaController {
   constructor(private readonly tiendaService: TiendaService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const tiendas = await this.tiendaService.listTiendas();
     return { tiendas };
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap() {
     return this.tiendaService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const tienda = await this.tiendaService.getTiendaById(id);
     return { tienda };
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateTiendaDto) {
     const result = await this.tiendaService.createTienda(body);
     return {
@@ -47,7 +47,7 @@ export class TiendaController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateTiendaDto,

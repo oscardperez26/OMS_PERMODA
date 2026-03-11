@@ -5,7 +5,10 @@ export type Permission =
   | 'orders.manage'
   | 'catalog.read'
   | 'catalog.manage'
-  | 'users.manage';
+  | 'config.read'
+  | 'config.manage'
+  | 'users.manage'
+  | 'security.manage';
 
 export type Portal = 'panel' | 'tienda';
 

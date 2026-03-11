@@ -17,20 +17,20 @@ export class ZonaCiudadController {
   constructor(private readonly zonaCiudadService: ZonaCiudadService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const zonasCiudad = await this.zonaCiudadService.listZonasCiudad();
     return { zonasCiudad };
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap() {
     return this.zonaCiudadService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id') id: string) {
     const parsed = this.parseCompositeId(id);
     const zonaCiudad = await this.zonaCiudadService.getZonaCiudadById(
@@ -41,14 +41,14 @@ export class ZonaCiudadController {
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateZonaCiudadDto) {
     await this.zonaCiudadService.createZonaCiudad(body);
     return { success: true };
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id') id: string,
     @Body() body: UpdateZonaCiudadDto,

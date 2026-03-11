@@ -17,27 +17,27 @@ export class BodegaController {
   constructor(private readonly bodegaService: BodegaService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const bodegas = await this.bodegaService.listBodegas();
     return { bodegas };
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap() {
     return this.bodegaService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const bodega = await this.bodegaService.getBodegaById(id);
     return { bodega };
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateBodegaDto) {
     const result = await this.bodegaService.createBodega(body);
     return {
@@ -47,7 +47,7 @@ export class BodegaController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateBodegaDto,

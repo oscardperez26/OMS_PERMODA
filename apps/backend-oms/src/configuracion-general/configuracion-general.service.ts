@@ -11,7 +11,7 @@ export class ConfiguracionGeneralService {
         label: 'Bodegas',
         description: 'Bodegas operativas asociadas a empresa y tienda',
         frontendPath: '/panel/order-manager/configuracion-general/bodega',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -19,7 +19,7 @@ export class ConfiguracionGeneralService {
         label: 'Ciudades',
         description: 'Gestion de ciudades y su relacion con pais',
         frontendPath: '/panel/order-manager/configuracion-general/ciudad',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -27,7 +27,7 @@ export class ConfiguracionGeneralService {
         label: 'Empresas',
         description: 'Configuracion de empresas con pais, ciudad y moneda',
         frontendPath: '/panel/order-manager/configuracion-general/empresa',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -35,7 +35,7 @@ export class ConfiguracionGeneralService {
         label: 'Empresa Cliente',
         description: 'Clientes por empresa con validaciones de documento y email',
         frontendPath: '/panel/order-manager/configuracion-general/empresa-cliente',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -43,7 +43,7 @@ export class ConfiguracionGeneralService {
         label: 'Monedas',
         description: 'Catalogo de monedas para operaciones y configuraciones',
         frontendPath: '/panel/order-manager/configuracion-general/moneda',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -51,7 +51,7 @@ export class ConfiguracionGeneralService {
         label: 'Pasarelas de Pago',
         description: 'Catalogo de pasarelas de pago por empresa',
         frontendPath: '/panel/order-manager/configuracion-general/pasarela-pago',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -59,7 +59,7 @@ export class ConfiguracionGeneralService {
         label: 'Productos',
         description: 'Catalogo de productos base para variantes e inventario',
         frontendPath: '/panel/order-manager/configuracion-general/producto',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -67,7 +67,7 @@ export class ConfiguracionGeneralService {
         label: 'Producto Variante',
         description: 'Variantes de producto con SKU/EAN y atributos logisticos',
         frontendPath: '/panel/order-manager/configuracion-general/producto-variante',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -75,7 +75,7 @@ export class ConfiguracionGeneralService {
         label: 'Paises',
         description: 'Catalogo base relacionado por FK con ciudades',
         frontendPath: '/panel/order-manager/configuracion-general/pais',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -83,7 +83,7 @@ export class ConfiguracionGeneralService {
         label: 'Inventario',
         description: 'Stock total, reservado y disponible por bodega y variante',
         frontendPath: '/panel/order-manager/configuracion-general/inventario',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -91,7 +91,7 @@ export class ConfiguracionGeneralService {
         label: 'Tiendas',
         description: 'Tiendas asociadas a empresas con ubicacion y estado operativo',
         frontendPath: '/panel/order-manager/configuracion-general/tienda',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -99,7 +99,7 @@ export class ConfiguracionGeneralService {
         label: 'Transportadoras',
         description: 'Catalogo de transportadoras por empresa',
         frontendPath: '/panel/order-manager/configuracion-general/transportadora',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -107,7 +107,7 @@ export class ConfiguracionGeneralService {
         label: 'Zonas de Transporte',
         description: 'Zonas logisticas por empresa y pais',
         frontendPath: '/panel/order-manager/configuracion-general/zona-transporte',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -115,7 +115,7 @@ export class ConfiguracionGeneralService {
         label: 'Zona Ciudad',
         description: 'Relacion entre zonas de transporte y ciudades',
         frontendPath: '/panel/order-manager/configuracion-general/zona-ciudad',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {
@@ -123,7 +123,7 @@ export class ConfiguracionGeneralService {
         label: 'Costos de Transporte',
         description: 'Rangos y costos de transporte por combinacion operativa',
         frontendPath: '/panel/order-manager/configuracion-general/costo-transporte',
-        permission: 'catalog.read',
+        permission: 'config.read',
         enabled: true,
       },
       {

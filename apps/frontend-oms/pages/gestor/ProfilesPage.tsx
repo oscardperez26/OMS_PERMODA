@@ -45,7 +45,7 @@ const INITIAL_FORM: FormState = {
 };
 
 export function ProfilesPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [profiles, setProfiles] = useState<ProfileCatalogItem[]>([]);
   const [empresas, setEmpresas] = useState<EmpresaOption[]>([]);
@@ -54,6 +54,22 @@ export function ProfilesPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const scopedEmpresaClienteId = useMemo(() => {
+    const raw = user?.empresaClienteId?.trim();
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = Number(raw);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      return null;
+    }
+
+    return parsed;
+  }, [user?.empresaClienteId]);
+
+  const isFranchiseMode = scopedEmpresaClienteId !== null;
 
   async function loadUsers() {
     if (!accessToken) {
@@ -127,12 +143,42 @@ export function ProfilesPage() {
   }, [empresaClientes, form.empresaClienteId, form.empresaId]);
 
   const empresaClientesPorEmpresa = useMemo(() => {
+    if (isFranchiseMode) {
+      return empresaClientes.filter(
+        (empresaCliente) => empresaCliente.empresaClienteId === scopedEmpresaClienteId,
+      );
+    }
+
     const empresaId = Number(form.empresaId);
     if (!Number.isInteger(empresaId) || empresaId <= 0) {
       return [] as EmpresaClienteOption[];
     }
     return empresaClientes.filter((empresaCliente) => empresaCliente.empresaId === empresaId);
-  }, [empresaClientes, form.empresaId]);
+  }, [empresaClientes, form.empresaId, isFranchiseMode, scopedEmpresaClienteId]);
+
+  const scopedEmpresaCliente = useMemo(() => {
+    if (!isFranchiseMode) {
+      return null;
+    }
+
+    return (
+      empresaClientes.find(
+        (empresaCliente) => empresaCliente.empresaClienteId === scopedEmpresaClienteId,
+      ) ?? null
+    );
+  }, [empresaClientes, isFranchiseMode, scopedEmpresaClienteId]);
+
+  useEffect(() => {
+    if (!isFranchiseMode || !scopedEmpresaCliente) {
+      return;
+    }
+
+    setForm((previous) => ({
+      ...previous,
+      empresaId: String(scopedEmpresaCliente.empresaId),
+      empresaClienteId: String(scopedEmpresaCliente.empresaClienteId),
+    }));
+  }, [isFranchiseMode, scopedEmpresaCliente]);
 
   async function handleCreate(event: FormEvent) {
     event.preventDefault();
@@ -141,9 +187,15 @@ export function ProfilesPage() {
       return;
     }
 
-    const empresaId = Number(form.empresaId);
+    const empresaId = isFranchiseMode
+      ? (scopedEmpresaCliente?.empresaId ?? NaN)
+      : Number(form.empresaId);
     const perfilId = Number(form.perfilId);
-    const empresaClienteId = form.empresaClienteId ? Number(form.empresaClienteId) : undefined;
+    const empresaClienteId = isFranchiseMode
+      ? (scopedEmpresaClienteId ?? undefined)
+      : form.empresaClienteId
+        ? Number(form.empresaClienteId)
+        : undefined;
     if (!Number.isInteger(empresaId) || empresaId <= 0) {
       setError('EmpresaId invalido');
       return;
@@ -245,6 +297,12 @@ export function ProfilesPage() {
     <div style={{ padding: 16 }}>
       <h1>Gestion de Perfiles</h1>
       <p>Crear usuarios y revisar perfiles registrados.</p>
+      {isFranchiseMode && (
+        <p style={{ color: '#1d4ed8', marginTop: 0 }}>
+          Modo franquicia: #{scopedEmpresaClienteId}. Solo puedes gestionar usuarios de tu
+          franquicia.
+        </p>
+      )}
 
       <section style={{ marginBottom: 20 }}>
         <h2>Crear Usuario</h2>
@@ -273,6 +331,9 @@ export function ProfilesPage() {
           <select
             value={form.empresaId}
             onChange={(event) => {
+              if (isFranchiseMode) {
+                return;
+              }
               const nextEmpresaId = event.target.value;
               setForm((prev) => ({
                 ...prev,
@@ -280,6 +341,7 @@ export function ProfilesPage() {
                 empresaClienteId: '',
               }));
             }}
+            disabled={isFranchiseMode}
             required
           >
             <option value="" disabled>
@@ -297,8 +359,9 @@ export function ProfilesPage() {
             onChange={(event) =>
               setForm((prev) => ({ ...prev, empresaClienteId: event.target.value }))
             }
+            disabled={isFranchiseMode}
           >
-            <option value="">Sin empresa cliente</option>
+            {!isFranchiseMode && <option value="">Sin empresa cliente</option>}
             {empresaClientesPorEmpresa.map((empresaCliente) => (
               <option
                 key={empresaCliente.empresaClienteId}

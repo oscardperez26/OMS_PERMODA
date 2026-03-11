@@ -84,7 +84,7 @@ async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 3): Promi
 
 export function CostoTransportePage() {
   const { accessToken, hasPermissions } = useAuth();
-  const canManage = hasPermissions(['catalog.manage']);
+  const canManage = hasPermissions(['config.manage']);
 
   const [costosTransporte, setCostosTransporte] = useState<CostoTransporteListItem[]>([]);
   const [empresas, setEmpresas] = useState<EmpresaOption[]>([]);

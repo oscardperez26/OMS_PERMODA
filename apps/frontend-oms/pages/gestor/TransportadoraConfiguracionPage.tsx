@@ -121,7 +121,7 @@ export function TransportadoraConfiguracionPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { accessToken, hasPermissions } = useAuth();
-  const canManage = hasPermissions(['catalog.manage']);
+  const canManage = hasPermissions(['config.manage']);
 
   const [detail, setDetail] = useState<TransportadoraConfiguracionDetail | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -387,7 +387,7 @@ export function TransportadoraConfiguracionPage() {
 
       {!canManage && (
         <p className="transportadora-config-warning">
-          Modo lectura: no tienes permisos de gestion (`catalog.manage`).
+          Modo lectura: no tienes permisos de gestion (`config.manage`).
         </p>
       )}
 

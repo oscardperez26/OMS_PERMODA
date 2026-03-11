@@ -7,8 +7,10 @@ import { AuthGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { UserRepository } from './user.repository';
+import { SecurityPermissionsModule } from '../security-permissions/security-permissions.module';
   
 @Module({
+  imports: [SecurityPermissionsModule],
   controllers: [AuthController],
   providers: [
     AuthService,

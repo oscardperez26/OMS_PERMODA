@@ -43,7 +43,7 @@ async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 3): Promi
 
 export function CiudadesPage() {
   const { accessToken, hasPermissions } = useAuth();
-  const canManage = hasPermissions(['catalog.manage']);
+  const canManage = hasPermissions(['config.manage']);
 
   const [ciudades, setCiudades] = useState<CiudadListItem[]>([]);
   const [paises, setPaises] = useState<PaisListItem[]>([]);

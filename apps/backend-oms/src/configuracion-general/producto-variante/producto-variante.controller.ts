@@ -19,27 +19,27 @@ export class ProductoVarianteController {
   ) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const variantes = await this.productoVarianteService.listVariantes();
     return { variantes };
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap() {
     return this.productoVarianteService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const variante = await this.productoVarianteService.getVarianteById(id);
     return { variante };
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateProductoVarianteDto) {
     const result = await this.productoVarianteService.createVariante(body);
     return {
@@ -49,7 +49,7 @@ export class ProductoVarianteController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateProductoVarianteDto,

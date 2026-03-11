@@ -17,27 +17,27 @@ export class InventarioController {
   constructor(private readonly inventarioService: InventarioService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const inventarios = await this.inventarioService.listInventarios();
     return { inventarios };
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap() {
     return this.inventarioService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const inventario = await this.inventarioService.getInventarioById(id);
     return { inventario };
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateInventarioDto) {
     const result = await this.inventarioService.createInventario(body);
     return {
@@ -47,7 +47,7 @@ export class InventarioController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateInventarioDto,

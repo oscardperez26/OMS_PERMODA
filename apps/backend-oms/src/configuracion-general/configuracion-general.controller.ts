@@ -9,7 +9,7 @@ export class ConfiguracionGeneralController {
   ) {}
 
   @Get('options')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   listOptions() {
     const options = this.configuracionGeneralService.listOptions();
     return { options };

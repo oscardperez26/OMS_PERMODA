@@ -17,27 +17,27 @@ export class EmpresaController {
   constructor(private readonly empresaService: EmpresaService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const empresas = await this.empresaService.listEmpresas();
     return { empresas };
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap() {
     return this.empresaService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const empresa = await this.empresaService.getEmpresaById(id);
     return { empresa };
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateEmpresaDto) {
     const result = await this.empresaService.createEmpresa(body);
     return {
@@ -47,7 +47,7 @@ export class EmpresaController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateEmpresaDto,

@@ -24,7 +24,7 @@ const INITIAL_FORM: FormState = {
 
 export function MonedasPage() {
   const { accessToken, hasPermissions } = useAuth();
-  const canManage = hasPermissions(['catalog.manage']);
+  const canManage = hasPermissions(['config.manage']);
 
   const [monedas, setMonedas] = useState<MonedaListItem[]>([]);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);

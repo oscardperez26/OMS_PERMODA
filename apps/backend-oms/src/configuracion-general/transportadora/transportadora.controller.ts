@@ -20,7 +20,7 @@ export class TransportadoraController {
   constructor(private readonly transportadoraService: TransportadoraService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const transportadoras =
       await this.transportadoraService.listTransportadoras();
@@ -28,13 +28,13 @@ export class TransportadoraController {
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap() {
     return this.transportadoraService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const transportadora =
       await this.transportadoraService.getTransportadoraById(id);
@@ -42,7 +42,7 @@ export class TransportadoraController {
   }
 
   @Get(':id/configuracion')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getConfiguracion(
     @Param('id', ParseIntPipe) id: number,
     @Query('zonaSeleccionadaId') zonaSeleccionadaId?: string,
@@ -59,7 +59,7 @@ export class TransportadoraController {
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateTransportadoraDto) {
     const result = await this.transportadoraService.createTransportadora(body);
     return {
@@ -69,7 +69,7 @@ export class TransportadoraController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateTransportadoraDto,
@@ -79,7 +79,7 @@ export class TransportadoraController {
   }
 
   @Patch(':id/configuracion')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async updateConfiguracion(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateTransportadoraConfiguracionDto,

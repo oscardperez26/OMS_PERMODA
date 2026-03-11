@@ -76,6 +76,7 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
           {
             label: "Parametros de la tienda",
             path: ROUTES.CONFIGURE_STORE_PARAMS,
+            requiredPermissions: ['config.read'],
           },
         ],
       },
@@ -93,71 +94,92 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
           {
             label: "Configuracion General",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Monedas",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_MONEDA,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Empresas",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_EMPRESA,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Empresa Cliente",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_EMPRESA_CLIENTE,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Pasarelas de Pago",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PASARELA_PAGO,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Tiendas",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TIENDA,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Bodegas",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_BODEGA,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Productos",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PRODUCTO,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Producto Variante",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PRODUCTO_VARIANTE,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Inventario",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_INVENTARIO,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Transportadoras",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Zonas de Transporte",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_ZONA_TRANSPORTE,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Zona Ciudad",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_ZONA_CIUDAD,
+            requiredPermissions: ['config.read'],
           },
           {
             label: "Costos Transporte",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_COSTO_TRANSPORTE,
+            requiredPermissions: ['config.read'],
           },
-          { label: "Gestion de Perfiles", path: ROUTES.ORDER_MANAGER_PROFILES },
+          {
+            label: "Gestion de Perfiles",
+            path: ROUTES.ORDER_MANAGER_PROFILES,
+            requiredPermissions: ['users.manage'],
+          },
           {
             label: "Gestion de Empleados",
             path: ROUTES.ORDER_MANAGER_EMPLOYEES,
+            requiredPermissions: ['users.manage'],
           },
           {
             label: "Gestion de Permisos",
             path: ROUTES.ORDER_MANAGER_PERMISSIONS,
+            requiredPermissions: ['security.manage'],
           },
           {
             label: "Configurar Acceso de Empleados",
             path: ROUTES.ORDER_MANAGER_EMPLOYEE_ACCESS,
+            requiredPermissions: ['users.manage'],
           },
         ],
       },

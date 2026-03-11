@@ -1,3 +1,5 @@
+import type { Permission } from '../auth/auth.types';
+
 export type UserListItem = {
   id: string;
   empresaId: number;
@@ -21,4 +23,19 @@ export type CreateUserInput = {
   telefono?: string;
   passwordHash: string;
   estado: number;
+};
+
+export type UsersActorContext = {
+  actorUserId: string;
+  actorEmpresaId: number | null;
+  actorEmpresaClienteId: number | null;
+  actorPermissions: Permission[];
+  isGlobalSuperAdmin: boolean;
+};
+
+export type UserScopeItem = {
+  id: string;
+  empresaId: number | null;
+  empresaClienteId: number | null;
+  perfilId: number;
 };

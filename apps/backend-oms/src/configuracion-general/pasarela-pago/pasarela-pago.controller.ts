@@ -17,27 +17,27 @@ export class PasarelaPagoController {
   constructor(private readonly pasarelaPagoService: PasarelaPagoService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const pasarelasPago = await this.pasarelaPagoService.listPasarelasPago();
     return { pasarelasPago };
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap() {
     return this.pasarelaPagoService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const pasarelaPago = await this.pasarelaPagoService.getPasarelaPagoById(id);
     return { pasarelaPago };
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreatePasarelaPagoDto) {
     const result = await this.pasarelaPagoService.createPasarelaPago(body);
     return {
@@ -47,7 +47,7 @@ export class PasarelaPagoController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdatePasarelaPagoDto,

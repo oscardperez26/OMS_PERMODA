@@ -17,21 +17,21 @@ export class MonedaController {
   constructor(private readonly monedaService: MonedaService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const monedas = await this.monedaService.listMonedas();
     return { monedas };
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const moneda = await this.monedaService.getMonedaById(id);
     return { moneda };
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateMonedaDto) {
     const result = await this.monedaService.createMoneda(body);
     return {
@@ -41,7 +41,7 @@ export class MonedaController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateMonedaDto,

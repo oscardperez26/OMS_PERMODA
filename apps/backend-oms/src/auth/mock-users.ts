@@ -20,7 +20,10 @@ export const MOCK_USERS: UserRecord[] = [
       'orders.manage',
       'catalog.read',
       'catalog.manage',
+      'config.read',
+      'config.manage',
       'users.manage',
+      'security.manage',
     ],
   },
   {
@@ -28,7 +31,7 @@ export const MOCK_USERS: UserRecord[] = [
     username: 'tienda',
     password: '1234',
     role: 'STORE_ADMIN',
-    permissions: ['orders.read', 'orders.manage', 'catalog.read'],
+    permissions: ['orders.read', 'orders.manage'],
     storeId: 'store-001',
   },
   {
@@ -36,7 +39,7 @@ export const MOCK_USERS: UserRecord[] = [
     username: 'tienda-lectura',
     password: '1234',
     role: 'STORE_READONLY',
-    permissions: ['orders.read', 'catalog.read'],
+    permissions: ['orders.read'],
     storeId: 'store-001',
   },
   {
@@ -44,7 +47,7 @@ export const MOCK_USERS: UserRecord[] = [
     username: 'tienda2',
     password: '1234',
     role: 'STORE_ADMIN',
-    permissions: ['orders.read', 'orders.manage', 'catalog.read'],
+    permissions: ['orders.read', 'orders.manage'],
     storeId: 'store-002',
   }
 ];

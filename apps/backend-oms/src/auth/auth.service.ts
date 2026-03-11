@@ -9,6 +9,7 @@ import { TokenService } from './token.service';
 import { UserRepository } from './user.repository';
 import { resolveProfileAccess } from './profile-map';
 import type { AuthenticatedUser, Portal, SafeUser } from './auth.types';
+import { SecurityPermissionsService } from '../security-permissions/security-permissions.service';
 
 type SessionData = {
   user: SafeUser;
@@ -29,6 +30,7 @@ export class AuthService {
   constructor(
     private readonly tokenService: TokenService,
     private readonly userRepository: UserRepository,
+    private readonly securityPermissionsService: SecurityPermissionsService,
   ) {}
 
   /**
@@ -68,11 +70,16 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
+    const permissions =
+      await this.securityPermissionsService.resolvePermissionsForProfile(
+        dbUser.perfilId,
+      );
+
     const safeUser: SafeUser = {
       id: dbUser.id,
       username: dbUser.email,
       role: profileAccess.role,
-      permissions: profileAccess.permissions,
+      permissions,
       storeId: dbUser.empresaId,
       empresaClienteId: dbUser.empresaClienteId,
     };

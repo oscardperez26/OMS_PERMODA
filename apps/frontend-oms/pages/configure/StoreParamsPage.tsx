@@ -47,7 +47,7 @@ async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 3): Promi
 export function StoreParamsPage() {
   const { accessToken, hasPermissions } = useAuth();
   const { reloadBranding } = useBranding();
-  const canManage = hasPermissions(['catalog.manage']);
+  const canManage = hasPermissions(['config.manage']);
 
   const [empresas, setEmpresas] = useState<EmpresaOption[]>([]);
   const [empresaClientes, setEmpresaClientes] = useState<StoreParamsEmpresaClienteItem[]>([]);

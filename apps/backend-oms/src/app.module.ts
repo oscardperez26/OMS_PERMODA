@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { ConfiguracionGeneralModule } from './configuracion-general/configuracion-general.module';
 import { OrdersModule } from './orders/orders.module';
 import { BrandingModule } from './branding/branding.module';
+import { SecurityPermissionsModule } from './security-permissions/security-permissions.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { BrandingModule } from './branding/branding.module';
     HealthModule,
     UsersModule,
     BrandingModule,
+    SecurityPermissionsModule,
     ConfiguracionGeneralModule,
     OrdersModule,
   ],

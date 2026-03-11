@@ -17,27 +17,27 @@ export class CiudadController {
   constructor(private readonly ciudadService: CiudadService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const ciudades = await this.ciudadService.listCiudades();
     return { ciudades };
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap() {
     return this.ciudadService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const ciudad = await this.ciudadService.getCiudadById(id);
     return { ciudad };
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateCiudadDto) {
     const result = await this.ciudadService.createCiudad(body);
     return {
@@ -47,7 +47,7 @@ export class CiudadController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateCiudadDto,

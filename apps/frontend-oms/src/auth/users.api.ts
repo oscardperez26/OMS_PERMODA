@@ -1,3 +1,4 @@
+import type { Permission } from './auth.types';
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 export type UserListItem = {
@@ -29,7 +30,7 @@ export type ProfileCatalogItem = {
   label: string;
   portal: 'panel' | 'tienda';
   role: 'ADMIN' | 'PANEL_READONLY' | 'STORE_ADMIN' | 'STORE_READONLY';
-  permissions: string[];
+  permissions: Permission[];
 };
 
 async function parseJsonResponse<T>(response: Response): Promise<T> {

@@ -22,7 +22,7 @@ const INITIAL_FORM: FormState = {
 
 export function PaisesPage() {
   const { accessToken, hasPermissions } = useAuth();
-  const canManage = hasPermissions(['catalog.manage']);
+  const canManage = hasPermissions(['config.manage']);
 
   const [paises, setPaises] = useState<PaisListItem[]>([]);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);

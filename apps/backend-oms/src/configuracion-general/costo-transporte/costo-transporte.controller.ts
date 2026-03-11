@@ -9,27 +9,27 @@ export class CostoTransporteController {
   constructor(private readonly costoTransporteService: CostoTransporteService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const costosTransporte = await this.costoTransporteService.listCostosTransporte();
     return { costosTransporte };
   }
 
   @Get('bootstrap')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async bootstrap() {
     return this.costoTransporteService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id') id: string) {
     const costoTransporte = await this.costoTransporteService.getCostoTransporteById(id);
     return { costoTransporte };
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreateCostoTransporteDto) {
     const result = await this.costoTransporteService.createCostoTransporte(body);
     return {
@@ -39,7 +39,7 @@ export class CostoTransporteController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id') id: string,
     @Body() body: UpdateCostoTransporteDto,

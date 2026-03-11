@@ -49,6 +49,7 @@ import { ZonaTransportePage } from '../../pages/gestor/ZonaTransportePage';
 import { ZonaCiudadPage } from '../../pages/gestor/ZonaCiudadPage';
 import { CostoTransportePage } from '../../pages/gestor/CostoTransportePage';
 import { StoreParamsPage } from '../../pages/configure/StoreParamsPage';
+import { PermissionsPage } from '../../pages/gestor/PermissionsPage';
 
 
 /**
@@ -140,7 +141,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <StoreParamsPage />
               </ProtectedRoute>
@@ -152,7 +153,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <ConfiguracionGeneralPage />
               </ProtectedRoute>
@@ -164,7 +165,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <PaisesPage />
               </ProtectedRoute>
@@ -176,7 +177,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <CiudadesPage />
               </ProtectedRoute>
@@ -188,7 +189,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <MonedasPage />
               </ProtectedRoute>
@@ -200,7 +201,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <EmpresasPage />
               </ProtectedRoute>
@@ -212,7 +213,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <EmpresaClientePage />
               </ProtectedRoute>
@@ -224,7 +225,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <PasarelaPagoPage />
               </ProtectedRoute>
@@ -236,7 +237,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <TiendaPage />
               </ProtectedRoute>
@@ -248,7 +249,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <BodegaPage />
               </ProtectedRoute>
@@ -260,7 +261,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <ProductoPage />
               </ProtectedRoute>
@@ -272,7 +273,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <ProductoVariantePage />
               </ProtectedRoute>
@@ -284,7 +285,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <InventarioPage />
               </ProtectedRoute>
@@ -296,7 +297,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <TransportadoraPage />
               </ProtectedRoute>
@@ -308,7 +309,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <TransportadoraConfiguracionPage />
               </ProtectedRoute>
@@ -320,7 +321,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <ZonaTransportePage />
               </ProtectedRoute>
@@ -332,7 +333,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <ZonaCiudadPage />
               </ProtectedRoute>
@@ -344,7 +345,7 @@ export function AppRouter() {
             element={
               <ProtectedRoute
                 loginPath="/panel/login"
-                requiredPermissions={['catalog.read']}
+                requiredPermissions={['config.read']}
               >
                 <CostoTransportePage />
               </ProtectedRoute>
@@ -359,6 +360,18 @@ export function AppRouter() {
                 requiredPermissions={['users.manage']}
               >
                 <ProfilesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_PERMISSIONS}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['security.manage']}
+              >
+                <PermissionsPage />
               </ProtectedRoute>
             }
           />

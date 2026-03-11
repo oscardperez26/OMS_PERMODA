@@ -7,9 +7,12 @@
  * - Item: opción final con ruta
  */
 
+import type { Permission } from '../../../auth/auth.types';
+
 export type SidebarItem = {
   label: string;
   path: string;
+  requiredPermissions?: Permission[];
 };
 
 export type SidebarGroup = {

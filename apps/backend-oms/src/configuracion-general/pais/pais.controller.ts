@@ -17,21 +17,21 @@ export class PaisController {
   constructor(private readonly paisService: PaisService) {}
 
   @Get()
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async list() {
     const paises = await this.paisService.listPaises();
     return { paises };
   }
 
   @Get(':id')
-  @Permissions('catalog.read')
+  @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const pais = await this.paisService.getPaisById(id);
     return { pais };
   }
 
   @Post()
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async create(@Body() body: CreatePaisDto) {
     const result = await this.paisService.createPais(body);
     return {
@@ -41,7 +41,7 @@ export class PaisController {
   }
 
   @Patch(':id')
-  @Permissions('catalog.manage')
+  @Permissions('config.manage')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdatePaisDto,

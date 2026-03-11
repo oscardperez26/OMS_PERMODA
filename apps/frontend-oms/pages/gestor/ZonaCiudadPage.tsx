@@ -51,7 +51,7 @@ async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 3): Promi
 
 export function ZonaCiudadPage() {
   const { accessToken, hasPermissions } = useAuth();
-  const canManage = hasPermissions(['catalog.manage']);
+  const canManage = hasPermissions(['config.manage']);
 
   const [zonasCiudad, setZonasCiudad] = useState<ZonaCiudadListItem[]>([]);
   const [zonasTransporte, setZonasTransporte] = useState<ZonaOption[]>([]);

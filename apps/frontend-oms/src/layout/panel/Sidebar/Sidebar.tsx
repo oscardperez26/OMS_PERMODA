@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { SIDEBAR_SECTIONS } from './SidebarMenu';
 import { getGroupsToOpenByPathname } from './sidebar.utils';
+import { useAuth } from '../../../auth/useAuth';
 
 /**
  * Sidebar
@@ -10,16 +11,36 @@ import { getGroupsToOpenByPathname } from './sidebar.utils';
  */
 export function Sidebar() {
   const location = useLocation();
+  const { hasPermissions } = useAuth();
   const [isExpanded, setIsExpanded] = useState(true);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
+  const visibleSections = useMemo(
+    () =>
+      SIDEBAR_SECTIONS.map((section) => ({
+        ...section,
+        groups: section.groups
+          .map((group) => ({
+            ...group,
+            items: group.items.filter((item) => {
+              if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
+                return true;
+              }
+              return hasPermissions(item.requiredPermissions);
+            }),
+          }))
+          .filter((group) => group.items.length > 0),
+      })).filter((section) => section.groups.length > 0),
+    [hasPermissions],
+  );
+
   const autoOpenGroups = useMemo(() => {
-    const keys = getGroupsToOpenByPathname(location.pathname);
+    const keys = getGroupsToOpenByPathname(location.pathname, visibleSections);
     return keys.reduce<Record<string, boolean>>((accumulator, key) => {
       accumulator[key] = true;
       return accumulator;
     }, {});
-  }, [location.pathname]);
+  }, [location.pathname, visibleSections]);
 
   const isGroupOpen = (groupKey: string) =>
     Boolean(autoOpenGroups[groupKey] || openGroups[groupKey]);
@@ -43,7 +64,7 @@ export function Sidebar() {
           <i className="bi bi-list fs-3 text-muted"></i>
         </button>
 
-        {SIDEBAR_SECTIONS.map((section) => (
+        {visibleSections.map((section) => (
           <div
             key={section.key}
             className="koaj-sidebar-item"
@@ -69,7 +90,7 @@ export function Sidebar() {
         </button>
       </div>
 
-      {SIDEBAR_SECTIONS.map((section) => (
+      {visibleSections.map((section) => (
         <div key={section.key} className="mb-4">
           <div className="koaj-panel-group-title d-flex align-items-center gap-2">
             {section.icon && <i className={`bi ${section.icon} fs-6`}></i>}

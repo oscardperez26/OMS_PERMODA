@@ -9,7 +9,25 @@ export type Permission =
   | 'orders.manage'
   | 'catalog.read'
   | 'catalog.manage'
-  | 'users.manage';
+  | 'config.read'
+  | 'config.manage'
+  | 'users.manage'
+  | 'security.manage';
+
+export const KNOWN_PERMISSIONS: Permission[] = [
+  'orders.read',
+  'orders.manage',
+  'catalog.read',
+  'catalog.manage',
+  'config.read',
+  'config.manage',
+  'users.manage',
+  'security.manage',
+];
+
+export function isPermission(value: string): value is Permission {
+  return KNOWN_PERMISSIONS.includes(value as Permission);
+}
 
 export type Portal = 'panel' | 'tienda';
 

@@ -33,7 +33,10 @@ const PROFILE_CATALOG: ProfileCatalogItem[] = [
       'orders.manage',
       'catalog.read',
       'catalog.manage',
+      'config.read',
+      'config.manage',
       'users.manage',
+      'security.manage',
     ],
   },
   {
@@ -41,21 +44,21 @@ const PROFILE_CATALOG: ProfileCatalogItem[] = [
     label: 'Panel Lectura',
     portal: 'panel',
     role: 'PANEL_READONLY',
-    permissions: ['orders.read', 'catalog.read'],
+    permissions: ['orders.read', 'catalog.read', 'config.read'],
   },
   {
     perfilId: 3,
     label: 'Tienda Admin',
     portal: 'tienda',
     role: 'STORE_ADMIN',
-    permissions: ['orders.read', 'orders.manage', 'catalog.read'],
+    permissions: ['orders.read', 'orders.manage'],
   },
   {
     perfilId: 4,
     label: 'Tienda Lectura',
     portal: 'tienda',
     role: 'STORE_READONLY',
-    permissions: ['orders.read', 'catalog.read'],
+    permissions: ['orders.read'],
   },
 ];
 
