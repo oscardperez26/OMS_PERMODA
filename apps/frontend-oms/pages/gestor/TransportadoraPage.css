@@ -130,6 +130,18 @@
   font-weight: 600;
 }
 
+.transportadora-actions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.transportadora-table td button.btn-secondary {
+  border-color: #c8d2de;
+  background: #fff;
+  color: #2f3f50;
+}
+
 .transportadora-empty-cell {
   text-align: center;
   color: #667688;

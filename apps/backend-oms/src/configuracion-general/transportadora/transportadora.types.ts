@@ -100,3 +100,38 @@ export type UpdateTransportadoraConfiguracionInput = {
   tarifaZona?: UpdateTransportadoraTarifaZonaInput;
   tiendaIds: number[];
 };
+
+export type TransportadoraApiAuthType = 'API_KEY';
+
+export type TransportadoraApiConfigItem = {
+  baseUrl?: string;
+  authType: TransportadoraApiAuthType;
+  timeoutMs: number;
+  createShipmentEndpoint?: string;
+  trackingEndpointTemplate?: string;
+  trackingNumberField?: string;
+  statusField?: string;
+  hasApiKey: boolean;
+  apiKeyLastRotatedAt?: string | null;
+  updatedAt?: string | null;
+};
+
+export type TransportadoraApiConfigDetail = {
+  transportadora: TransportadoraListItem;
+  apiConfig: TransportadoraApiConfigItem;
+};
+
+export type UpsertTransportadoraApiConfigInput = {
+  baseUrl: string | null;
+  authType: TransportadoraApiAuthType;
+  timeoutMs: number;
+  createShipmentEndpoint: string | null;
+  trackingEndpointTemplate: string | null;
+  trackingNumberField: string | null;
+  statusField: string | null;
+  rotateApiKey: boolean;
+  apiKeyCiphertext?: string;
+  apiKeyIv?: string;
+  apiKeyTag?: string;
+  apiKeyLastRotatedAt?: string;
+};

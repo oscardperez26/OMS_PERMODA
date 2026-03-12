@@ -97,6 +97,11 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
             requiredPermissions: ['config.read'],
           },
           {
+            label: "Logistica",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_LOGISTICA,
+            requiredPermissions: ['config.read'],
+          },
+          {
             label: "Monedas",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_MONEDA,
             requiredPermissions: ['config.read'],
@@ -139,26 +144,6 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
           {
             label: "Inventario",
             path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_INVENTARIO,
-            requiredPermissions: ['config.read'],
-          },
-          {
-            label: "Transportadoras",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA,
-            requiredPermissions: ['config.read'],
-          },
-          {
-            label: "Zonas de Transporte",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_ZONA_TRANSPORTE,
-            requiredPermissions: ['config.read'],
-          },
-          {
-            label: "Zona Ciudad",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_ZONA_CIUDAD,
-            requiredPermissions: ['config.read'],
-          },
-          {
-            label: "Costos Transporte",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_COSTO_TRANSPORTE,
             requiredPermissions: ['config.read'],
           },
           {

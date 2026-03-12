@@ -25,3 +25,73 @@ Ejemplo:
 GET /orders?reference=PO&status=ASIGNADO
 
 /orders requiere Authorization Bearer Token
+
+## Configuracion General - Logistica
+
+### Dashboard logistica
+- `GET /configuracion-general/logistica/bootstrap`
+  - Permiso: `config.read`
+  - Retorna:
+    - `transportadorasTotal`
+    - `zonasTransporteTotal`
+    - `zonaCiudadRelacionesTotal`
+    - `costosTransporteTotal`
+    - `lastUpdatedAt`
+
+### Transportadora API config (V2)
+- `GET /configuracion-general/transportadora/:id/api-config`
+  - Permiso: `config.read`
+  - Devuelve transportadora + apiConfig.
+  - Nunca devuelve token en claro.
+- `PATCH /configuracion-general/transportadora/:id/api-config`
+  - Permiso: `config.manage`
+  - Permite editar:
+    - `baseUrl`
+    - `authType` (solo `API_KEY`)
+    - `timeoutMs`
+    - `createShipmentEndpoint`
+    - `trackingEndpointTemplate`
+    - `trackingNumberField`
+    - `statusField`
+    - `apiKeyPlaintext` (opcional para rotacion)
+
+Ejemplo GET:
+
+```json
+{
+  "transportadora": {
+    "transportadoraId": 1,
+    "empresaId": 1,
+    "codigo": "SERVIENTREGA",
+    "nombre": "Servientrega",
+    "activo": true
+  },
+  "apiConfig": {
+    "baseUrl": "https://api.proveedor.com",
+    "authType": "API_KEY",
+    "timeoutMs": 15000,
+    "createShipmentEndpoint": "/shipments",
+    "trackingEndpointTemplate": "/track/{trackingNumber}",
+    "trackingNumberField": "tracking_number",
+    "statusField": "status",
+    "hasApiKey": true,
+    "apiKeyLastRotatedAt": "2026-03-12T20:00:00.000Z",
+    "updatedAt": "2026-03-12T20:00:00.000Z"
+  }
+}
+```
+
+Ejemplo PATCH:
+
+```json
+{
+  "baseUrl": "https://api.proveedor.com",
+  "authType": "API_KEY",
+  "timeoutMs": 15000,
+  "createShipmentEndpoint": "/shipments",
+  "trackingEndpointTemplate": "/track/{trackingNumber}",
+  "trackingNumberField": "tracking_number",
+  "statusField": "status",
+  "apiKeyPlaintext": "nuevo-token-opcional"
+}
+```

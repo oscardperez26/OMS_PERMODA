@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfiguracionGeneralController } from './configuracion-general.controller';
+import { ConfiguracionGeneralRepository } from './configuracion-general.repository';
 import { ConfiguracionGeneralService } from './configuracion-general.service';
 import { CiudadModule } from './ciudad/ciudad.module';
 import { CostoTransporteModule } from './costo-transporte/costo-transporte.module';
@@ -36,7 +37,7 @@ import { ZonaTransporteModule } from './zona-transporte/zona-transporte.module';
     CostoTransporteModule,
   ],
   controllers: [ConfiguracionGeneralController],
-  providers: [ConfiguracionGeneralService],
+  providers: [ConfiguracionGeneralService, ConfiguracionGeneralRepository],
   exports: [ConfiguracionGeneralService],
 })
 export class ConfiguracionGeneralModule {}

@@ -78,6 +78,47 @@ export type TransportadoraConfiguracionDetail = {
   tarifaZona: TransportadoraConfiguracionTarifaZona | null;
 };
 
+export type TransportadoraApiPageViewModel = {
+  transportadoraId: number;
+  empresaId: number;
+  codigo: string;
+  nombre: string;
+  trackingUrlTemplate?: string;
+  activo: boolean;
+  servicio?: string;
+  permiteExpress: boolean;
+  moduloCode?: string;
+};
+
+export type TransportadoraApiConfigItem = {
+  baseUrl?: string;
+  authType: 'API_KEY';
+  timeoutMs: number;
+  createShipmentEndpoint?: string;
+  trackingEndpointTemplate?: string;
+  trackingNumberField?: string;
+  statusField?: string;
+  hasApiKey: boolean;
+  apiKeyLastRotatedAt?: string | null;
+  updatedAt?: string | null;
+};
+
+export type TransportadoraApiConfigDetail = {
+  transportadora: TransportadoraApiPageViewModel;
+  apiConfig: TransportadoraApiConfigItem;
+};
+
+export type UpdateTransportadoraApiConfigRequest = {
+  baseUrl?: string | null;
+  authType?: 'API_KEY';
+  timeoutMs?: number;
+  createShipmentEndpoint?: string | null;
+  trackingEndpointTemplate?: string | null;
+  trackingNumberField?: string | null;
+  statusField?: string | null;
+  apiKeyPlaintext?: string;
+};
+
 export type UpdateTransportadoraConfiguracionRequest = {
   empresaId: number;
   codigo: string;
@@ -145,6 +186,66 @@ export async function getTransportadorasBootstrap(
   );
 
   return parseJsonResponse<TransportadoraBootstrapResponse>(response);
+}
+
+export async function getTransportadoraById(
+  accessToken: string,
+  transportadoraId: number,
+): Promise<TransportadoraApiPageViewModel> {
+  const response = await fetch(
+    `${API_URL}/configuracion-general/transportadora/${transportadoraId}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  const payload = await parseJsonResponse<{
+    transportadora: TransportadoraApiPageViewModel;
+  }>(response);
+  return payload.transportadora;
+}
+
+export async function getTransportadoraApiConfig(
+  accessToken: string,
+  transportadoraId: number,
+): Promise<TransportadoraApiConfigDetail> {
+  const response = await fetch(
+    `${API_URL}/configuracion-general/transportadora/${transportadoraId}/api-config`,
+    {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  return parseJsonResponse<TransportadoraApiConfigDetail>(response);
+}
+
+export async function updateTransportadoraApiConfig(
+  accessToken: string,
+  transportadoraId: number,
+  request: UpdateTransportadoraApiConfigRequest,
+): Promise<{ success: boolean }> {
+  const response = await fetch(
+    `${API_URL}/configuracion-general/transportadora/${transportadoraId}/api-config`,
+    {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(request),
+    },
+  );
+
+  return parseJsonResponse<{ success: boolean }>(response);
 }
 
 export async function createTransportadora(

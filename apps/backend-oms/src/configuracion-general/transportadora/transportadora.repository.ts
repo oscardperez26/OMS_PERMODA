@@ -3,6 +3,7 @@ import * as sql from 'mssql';
 import { DatabaseService } from '../../database/database.service';
 import type {
   CreateTransportadoraInput,
+  TransportadoraApiConfigItem,
   TransportadoraBootstrapData,
   TransportadoraConfigItem,
   TransportadoraEmpresaListItem,
@@ -10,6 +11,7 @@ import type {
   TransportadoraTarifaZonaItem,
   TransportadoraTiendaItem,
   TransportadoraZonaItem,
+  UpsertTransportadoraApiConfigInput,
   UpdateTransportadoraConfiguracionInput,
   UpdateTransportadoraInput,
 } from './transportadora.types';
@@ -65,6 +67,19 @@ type TarifaZonaRow = {
   DiasMin: number | null;
   DiasMax: number | null;
   Activo: boolean;
+};
+
+type TransportadoraApiConfigRow = {
+  BaseUrl: string | null;
+  AuthType: string;
+  ApiKeyCiphertext: string | null;
+  TimeoutMs: number;
+  CreateShipmentEndpoint: string | null;
+  TrackingEndpointTemplate: string | null;
+  TrackingNumberField: string | null;
+  StatusField: string | null;
+  ApiKeyLastRotatedAt: Date | null;
+  UpdatedAt: Date | null;
 };
 
 type TransportadoraConfiguracionBase = {
@@ -181,6 +196,42 @@ export class TransportadoraRepository {
     }
 
     return this.mapTransportadoraRow(row);
+  }
+
+  async findApiConfigByTransportadoraId(
+    transportadoraId: number,
+  ): Promise<TransportadoraApiConfigItem | null> {
+    const result = await this.databaseService.execute<
+      sql.IResult<TransportadoraApiConfigRow>
+    >(
+      (pool) =>
+        pool
+          .request()
+          .input('transportadoraId', sql.Int, transportadoraId)
+          .query<TransportadoraApiConfigRow>(`
+            SELECT
+              [BaseUrl],
+              [AuthType],
+              [ApiKeyCiphertext],
+              [TimeoutMs],
+              [CreateShipmentEndpoint],
+              [TrackingEndpointTemplate],
+              [TrackingNumberField],
+              [StatusField],
+              [ApiKeyLastRotatedAt],
+              [UpdatedAt]
+            FROM [oms].[TransportadoraApiConfig]
+            WHERE [TransportadoraId] = @transportadoraId
+          `),
+      'transportadora.findApiConfigByTransportadoraId',
+    );
+
+    const row = result.recordset[0];
+    if (!row) {
+      return null;
+    }
+
+    return this.mapTransportadoraApiConfigRow(row);
   }
 
   async findConfiguracionBaseById(
@@ -542,6 +593,109 @@ export class TransportadoraRepository {
     );
   }
 
+  async upsertApiConfig(
+    transportadoraId: number,
+    input: UpsertTransportadoraApiConfigInput,
+  ): Promise<void> {
+    await this.databaseService.execute<sql.IResult<unknown>>(
+      (pool) =>
+        pool
+          .request()
+          .input('transportadoraId', sql.Int, transportadoraId)
+          .input('baseUrl', sql.NVarChar(500), input.baseUrl)
+          .input('authType', sql.NVarChar(30), input.authType)
+          .input('timeoutMs', sql.Int, input.timeoutMs)
+          .input(
+            'createShipmentEndpoint',
+            sql.NVarChar(300),
+            input.createShipmentEndpoint,
+          )
+          .input(
+            'trackingEndpointTemplate',
+            sql.NVarChar(300),
+            input.trackingEndpointTemplate,
+          )
+          .input(
+            'trackingNumberField',
+            sql.NVarChar(120),
+            input.trackingNumberField,
+          )
+          .input('statusField', sql.NVarChar(120), input.statusField)
+          .input('rotateApiKey', sql.Bit, input.rotateApiKey)
+          .input(
+            'apiKeyCiphertext',
+            sql.NVarChar(sql.MAX),
+            input.apiKeyCiphertext ?? null,
+          )
+          .input('apiKeyIv', sql.NVarChar(64), input.apiKeyIv ?? null)
+          .input('apiKeyTag', sql.NVarChar(64), input.apiKeyTag ?? null)
+          .input(
+            'apiKeyLastRotatedAt',
+            sql.DateTime2(0),
+            input.apiKeyLastRotatedAt ?? null,
+          ).query(`
+            IF EXISTS (
+              SELECT 1
+              FROM [oms].[TransportadoraApiConfig]
+              WHERE [TransportadoraId] = @transportadoraId
+            )
+            BEGIN
+              UPDATE [oms].[TransportadoraApiConfig]
+              SET
+                [BaseUrl] = @baseUrl,
+                [AuthType] = @authType,
+                [TimeoutMs] = @timeoutMs,
+                [CreateShipmentEndpoint] = @createShipmentEndpoint,
+                [TrackingEndpointTemplate] = @trackingEndpointTemplate,
+                [TrackingNumberField] = @trackingNumberField,
+                [StatusField] = @statusField,
+                [ApiKeyCiphertext] = CASE WHEN @rotateApiKey = 1 THEN @apiKeyCiphertext ELSE [ApiKeyCiphertext] END,
+                [ApiKeyIv] = CASE WHEN @rotateApiKey = 1 THEN @apiKeyIv ELSE [ApiKeyIv] END,
+                [ApiKeyTag] = CASE WHEN @rotateApiKey = 1 THEN @apiKeyTag ELSE [ApiKeyTag] END,
+                [ApiKeyLastRotatedAt] = CASE WHEN @rotateApiKey = 1 THEN @apiKeyLastRotatedAt ELSE [ApiKeyLastRotatedAt] END,
+                [UpdatedAt] = SYSUTCDATETIME()
+              WHERE [TransportadoraId] = @transportadoraId;
+            END
+            ELSE
+            BEGIN
+              INSERT INTO [oms].[TransportadoraApiConfig]
+              (
+                [TransportadoraId],
+                [BaseUrl],
+                [AuthType],
+                [ApiKeyCiphertext],
+                [ApiKeyIv],
+                [ApiKeyTag],
+                [TimeoutMs],
+                [CreateShipmentEndpoint],
+                [TrackingEndpointTemplate],
+                [TrackingNumberField],
+                [StatusField],
+                [ApiKeyLastRotatedAt],
+                [UpdatedAt]
+              )
+              VALUES
+              (
+                @transportadoraId,
+                @baseUrl,
+                @authType,
+                CASE WHEN @rotateApiKey = 1 THEN @apiKeyCiphertext ELSE NULL END,
+                CASE WHEN @rotateApiKey = 1 THEN @apiKeyIv ELSE NULL END,
+                CASE WHEN @rotateApiKey = 1 THEN @apiKeyTag ELSE NULL END,
+                @timeoutMs,
+                @createShipmentEndpoint,
+                @trackingEndpointTemplate,
+                @trackingNumberField,
+                @statusField,
+                CASE WHEN @rotateApiKey = 1 THEN @apiKeyLastRotatedAt ELSE NULL END,
+                NULL
+              );
+            END
+          `),
+      'transportadora.upsertApiConfig',
+    );
+  }
+
   async updateConfiguracion(
     transportadoraId: number,
     input: UpdateTransportadoraConfiguracionInput,
@@ -788,6 +942,23 @@ export class TransportadoraRepository {
       servicio: row.Servicio ?? undefined,
       permiteExpress: row.PermiteExpress ?? false,
       moduloCode: row.ModuloCode ?? undefined,
+    };
+  }
+
+  private mapTransportadoraApiConfigRow(
+    row: TransportadoraApiConfigRow,
+  ): TransportadoraApiConfigItem {
+    return {
+      baseUrl: row.BaseUrl ?? undefined,
+      authType: 'API_KEY',
+      timeoutMs: row.TimeoutMs,
+      createShipmentEndpoint: row.CreateShipmentEndpoint ?? undefined,
+      trackingEndpointTemplate: row.TrackingEndpointTemplate ?? undefined,
+      trackingNumberField: row.TrackingNumberField ?? undefined,
+      statusField: row.StatusField ?? undefined,
+      hasApiKey: Boolean(row.ApiKeyCiphertext),
+      apiKeyLastRotatedAt: row.ApiKeyLastRotatedAt?.toISOString() ?? null,
+      updatedAt: row.UpdatedAt?.toISOString() ?? null,
     };
   }
 

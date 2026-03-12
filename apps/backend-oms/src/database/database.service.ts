@@ -53,7 +53,7 @@ export class DatabaseService implements OnModuleDestroy {
           }
         }
 
-        await this.resetPool();
+        await this.resetPool(pool ?? undefined);
         await this.delay(100 * attempt);
       }
     }
@@ -172,10 +172,16 @@ export class DatabaseService implements OnModuleDestroy {
 
     if (currentPool && (!expectedPool || currentPool === expectedPool)) {
       this.pool = null;
-      try {
-        await currentPool.close();
-      } catch {
-        // Ignore close failures for already broken pools.
+      if (expectedPool) {
+        // Under transient errors, avoid hard-closing immediately to prevent
+        // aborting concurrent in-flight requests that still reference this pool.
+        this.queueStalePoolClose(currentPool);
+      } else {
+        try {
+          await currentPool.close();
+        } catch {
+          // Ignore close failures for already broken pools.
+        }
       }
     }
 
@@ -209,6 +215,14 @@ export class DatabaseService implements OnModuleDestroy {
       this.pool = null;
     }
 
+    if (this.stalePools.has(pool)) {
+      return;
+    }
+
+    this.queueStalePoolClose(pool);
+  }
+
+  private queueStalePoolClose(pool: sql.ConnectionPool): void {
     if (this.stalePools.has(pool)) {
       return;
     }

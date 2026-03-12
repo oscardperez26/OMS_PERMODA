@@ -53,6 +53,8 @@ export class SecurityPermissionsRepository {
   }
 
   async listPermissionCatalog(): Promise<PermisoRow[]> {
+    // Solo se exponen permisos activos para evitar asignaciones accidentales
+    // sobre permisos deshabilitados en el catálogo.
     const result = await this.databaseService.execute<sql.IResult<PermisoRow>>(
       (pool) =>
         pool.request().query<PermisoRow>(`
@@ -64,6 +66,7 @@ export class SecurityPermissionsRepository {
             [Accion],
             [Activo]
           FROM [oms].[Permiso]
+          WHERE [Activo] = 1
           ORDER BY [Modulo] ASC, [Accion] ASC, [Codigo] ASC
         `),
       'securityPermissions.listPermissionCatalog',
@@ -84,6 +87,7 @@ export class SecurityPermissionsRepository {
           FROM [oms].[PerfilPermiso] pp
           INNER JOIN [oms].[Permiso] p
             ON p.[PermisoId] = pp.[PermisoId]
+          WHERE p.[Activo] = 1
           ORDER BY pp.[PerfilId] ASC, p.[Codigo] ASC
         `),
       'securityPermissions.listProfilePermissionCodes',
@@ -106,6 +110,7 @@ export class SecurityPermissionsRepository {
               INNER JOIN [oms].[Permiso] p
                 ON p.[PermisoId] = pp.[PermisoId]
               WHERE pp.[PerfilId] = @perfilId
+                AND p.[Activo] = 1
               ORDER BY p.[Codigo] ASC
             `),
         'securityPermissions.listPermissionCodesByProfileId',
@@ -162,6 +167,7 @@ export class SecurityPermissionsRepository {
             [Activo]
           FROM [oms].[Permiso]
           WHERE [Codigo] IN (${inClause})
+            AND [Activo] = 1
         `);
       },
       'securityPermissions.findPermissionIdsByCodes',

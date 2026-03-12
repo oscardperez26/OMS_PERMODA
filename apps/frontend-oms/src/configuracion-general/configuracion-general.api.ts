@@ -11,6 +11,14 @@ export type DashboardOption = {
   enabled: boolean;
 };
 
+export type LogisticaBootstrapResponse = {
+  transportadorasTotal: number;
+  zonasTransporteTotal: number;
+  zonaCiudadRelacionesTotal: number;
+  costosTransporteTotal: number;
+  lastUpdatedAt: string;
+};
+
 async function parseJsonResponse<T>(response: Response): Promise<T> {
   const payload = (await response.json().catch(() => null)) as
     | { message?: string | string[] }
@@ -41,4 +49,18 @@ export async function listDashboardOptions(
 
   const payload = await parseJsonResponse<{ options: DashboardOption[] }>(response);
   return payload.options;
+}
+
+export async function getLogisticaBootstrap(
+  accessToken: string,
+): Promise<LogisticaBootstrapResponse> {
+  const response = await fetch(`${API_URL}/configuracion-general/logistica/bootstrap`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return parseJsonResponse<LogisticaBootstrapResponse>(response);
 }

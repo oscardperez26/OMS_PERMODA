@@ -6,10 +6,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { TransportadoraRepository } from './transportadora.repository';
+import { TransportadoraApiCryptoService } from './transportadora-api-crypto.service';
 import type {
+  TransportadoraApiConfigDetail,
+  TransportadoraApiAuthType,
   TransportadoraBootstrapData,
   TransportadoraConfiguracionDetail,
   TransportadoraListItem,
+  UpsertTransportadoraApiConfigInput,
   UpdateTransportadoraConfiguracionInput,
   UpdateTransportadoraTarifaZonaInput,
 } from './transportadora.types';
@@ -51,6 +55,17 @@ type UpdateTransportadoraConfiguracionParams = {
   tiendaIds?: number[];
 };
 
+type UpdateTransportadoraApiConfigParams = {
+  baseUrl?: string | null;
+  authType?: TransportadoraApiAuthType;
+  timeoutMs?: number;
+  createShipmentEndpoint?: string | null;
+  trackingEndpointTemplate?: string | null;
+  trackingNumberField?: string | null;
+  statusField?: string | null;
+  apiKeyPlaintext?: string | null;
+};
+
 const SERVICIO_PERMITIDO_MAP = new Map<string, string>([
   ['domicilio', 'Domicilio'],
   ['tienda', 'Tienda'],
@@ -64,6 +79,7 @@ export class TransportadoraService {
 
   constructor(
     private readonly transportadoraRepository: TransportadoraRepository,
+    private readonly transportadoraApiCryptoService: TransportadoraApiCryptoService,
   ) {}
 
   async listTransportadoras(): Promise<TransportadoraListItem[]> {
@@ -83,6 +99,32 @@ export class TransportadoraService {
       throw new NotFoundException('Transportadora no existe');
     }
     return transportadora;
+  }
+
+  async getTransportadoraApiConfigById(
+    transportadoraId: number,
+  ): Promise<TransportadoraApiConfigDetail> {
+    const transportadora =
+      await this.transportadoraRepository.findById(transportadoraId);
+    if (!transportadora) {
+      throw new NotFoundException('Transportadora no existe');
+    }
+
+    const apiConfig =
+      await this.transportadoraRepository.findApiConfigByTransportadoraId(
+        transportadoraId,
+      );
+
+    return {
+      transportadora,
+      apiConfig: apiConfig ?? {
+        authType: 'API_KEY',
+        timeoutMs: 15000,
+        hasApiKey: false,
+        apiKeyLastRotatedAt: null,
+        updatedAt: null,
+      },
+    };
   }
 
   async getTransportadoraConfiguracionById(
@@ -412,6 +454,116 @@ export class TransportadoraService {
     }
   }
 
+  async updateTransportadoraApiConfig(
+    transportadoraId: number,
+    params: UpdateTransportadoraApiConfigParams,
+  ): Promise<void> {
+    const hasAnyField =
+      params.baseUrl !== undefined ||
+      params.authType !== undefined ||
+      params.timeoutMs !== undefined ||
+      params.createShipmentEndpoint !== undefined ||
+      params.trackingEndpointTemplate !== undefined ||
+      params.trackingNumberField !== undefined ||
+      params.statusField !== undefined ||
+      params.apiKeyPlaintext !== undefined;
+
+    if (!hasAnyField) {
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
+    }
+
+    const transportadora =
+      await this.transportadoraRepository.findById(transportadoraId);
+    if (!transportadora) {
+      throw new NotFoundException('Transportadora no existe');
+    }
+
+    const current =
+      await this.transportadoraRepository.findApiConfigByTransportadoraId(
+        transportadoraId,
+      );
+
+    const nextBaseUrl =
+      params.baseUrl !== undefined
+        ? this.normalizeOptionalHttpsUrl(params.baseUrl, 'baseUrl', 500)
+        : (current?.baseUrl ?? null);
+    const nextAuthType =
+      params.authType !== undefined
+        ? this.normalizeAuthType(params.authType)
+        : (current?.authType ?? 'API_KEY');
+    const nextTimeoutMs =
+      params.timeoutMs !== undefined
+        ? this.normalizeTimeoutMs(params.timeoutMs)
+        : (current?.timeoutMs ?? 15000);
+    const nextCreateShipmentEndpoint =
+      params.createShipmentEndpoint !== undefined
+        ? this.normalizeOptionalEndpoint(
+            params.createShipmentEndpoint,
+            'createShipmentEndpoint',
+            300,
+          )
+        : (current?.createShipmentEndpoint ?? null);
+    const nextTrackingEndpointTemplate =
+      params.trackingEndpointTemplate !== undefined
+        ? this.normalizeOptionalEndpoint(
+            params.trackingEndpointTemplate,
+            'trackingEndpointTemplate',
+            300,
+          )
+        : (current?.trackingEndpointTemplate ?? null);
+    const nextTrackingNumberField =
+      params.trackingNumberField !== undefined
+        ? this.normalizeOptionalNonEmptyText(
+            params.trackingNumberField,
+            'trackingNumberField',
+            120,
+          )
+        : (current?.trackingNumberField ?? null);
+    const nextStatusField =
+      params.statusField !== undefined
+        ? this.normalizeOptionalNonEmptyText(
+            params.statusField,
+            'statusField',
+            120,
+          )
+        : (current?.statusField ?? null);
+
+    const nextApiKeyPlaintext = params.apiKeyPlaintext?.trim();
+    const shouldRotateApiKey = Boolean(nextApiKeyPlaintext);
+    const nowIso = new Date().toISOString();
+
+    let input: UpsertTransportadoraApiConfigInput = {
+      baseUrl: nextBaseUrl,
+      authType: nextAuthType,
+      timeoutMs: nextTimeoutMs,
+      createShipmentEndpoint: nextCreateShipmentEndpoint,
+      trackingEndpointTemplate: nextTrackingEndpointTemplate,
+      trackingNumberField: nextTrackingNumberField,
+      statusField: nextStatusField,
+      rotateApiKey: shouldRotateApiKey,
+    };
+
+    if (shouldRotateApiKey && nextApiKeyPlaintext) {
+      const encrypted =
+        this.transportadoraApiCryptoService.encryptApiKey(nextApiKeyPlaintext);
+
+      input = {
+        ...input,
+        apiKeyCiphertext: encrypted.ciphertext,
+        apiKeyIv: encrypted.iv,
+        apiKeyTag: encrypted.tag,
+        apiKeyLastRotatedAt: nowIso,
+      };
+    }
+
+    await this.transportadoraRepository.upsertApiConfig(transportadoraId, input);
+    this.logger.log(
+      `API config actualizada para transportadora ${transportadora.transportadoraId}`,
+    );
+  }
+
   private resolveZonaSeleccionadaId(
     zonaIdsDisponibles: number[],
     requestedZonaSeleccionadaId?: number,
@@ -566,6 +718,82 @@ export class TransportadoraService {
       );
     }
     return normalized;
+  }
+
+  private normalizeOptionalHttpsUrl(
+    value: string | null | undefined,
+    fieldName: string,
+    maxLength: number,
+  ): string | null {
+    const normalized = this.normalizeOptionalText(value, fieldName, maxLength);
+    if (!normalized) {
+      return null;
+    }
+
+    let url: URL;
+    try {
+      url = new URL(normalized);
+    } catch {
+      throw new BadRequestException(`El campo ${fieldName} no es una URL valida`);
+    }
+
+    if (url.protocol !== 'https:') {
+      throw new BadRequestException(
+        `El campo ${fieldName} debe usar protocolo https`,
+      );
+    }
+
+    return normalized;
+  }
+
+  private normalizeOptionalEndpoint(
+    value: string | null | undefined,
+    fieldName: string,
+    maxLength: number,
+  ): string | null {
+    const normalized = this.normalizeOptionalText(value, fieldName, maxLength);
+    if (!normalized) {
+      return null;
+    }
+    if (!normalized.startsWith('/')) {
+      throw new BadRequestException(
+        `El campo ${fieldName} debe iniciar con "/"`,
+      );
+    }
+    return normalized;
+  }
+
+  private normalizeOptionalNonEmptyText(
+    value: string | null | undefined,
+    fieldName: string,
+    maxLength: number,
+  ): string | null {
+    const normalized = this.normalizeOptionalText(value, fieldName, maxLength);
+    if (!normalized) {
+      return null;
+    }
+    if (normalized.length === 0) {
+      throw new BadRequestException(`El campo ${fieldName} no puede estar vacio`);
+    }
+    return normalized;
+  }
+
+  private normalizeAuthType(value: string): TransportadoraApiAuthType {
+    if (value !== 'API_KEY') {
+      throw new BadRequestException(
+        'El campo authType solo permite el valor API_KEY',
+      );
+    }
+    return value;
+  }
+
+  private normalizeTimeoutMs(value: number): number {
+    if (!Number.isInteger(value) || value < 1000 || value > 60000) {
+      throw new BadRequestException(
+        'El campo timeoutMs debe estar entre 1000 y 60000',
+      );
+    }
+    return value;
   }
 
   private normalizeServicio(value: string | null | undefined): string | null {

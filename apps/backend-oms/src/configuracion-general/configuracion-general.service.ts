@@ -1,11 +1,26 @@
 import { Injectable } from '@nestjs/common';
+import { ConfiguracionGeneralRepository } from './configuracion-general.repository';
 import type { DashboardOption } from './configuracion-general.types';
+import type { LogisticaBootstrap } from './configuracion-general.types';
 
 @Injectable()
 export class ConfiguracionGeneralService {
+  constructor(
+    private readonly configuracionGeneralRepository: ConfiguracionGeneralRepository,
+  ) {}
+
   // Catalogo central de opciones para construir el dashboard en frontend.
   listOptions(): DashboardOption[] {
     return [
+      {
+        id: 'logistica',
+        label: 'Logistica',
+        description:
+          'Modulo padre para configurar transportadoras, zonas y costos de envio',
+        frontendPath: '/panel/order-manager/configuracion-general/logistica',
+        permission: 'config.read',
+        enabled: true,
+      },
       {
         id: 'bodega',
         label: 'Bodegas',
@@ -101,41 +116,6 @@ export class ConfiguracionGeneralService {
         enabled: true,
       },
       {
-        id: 'transportadora',
-        label: 'Transportadoras',
-        description: 'Catalogo de transportadoras por empresa',
-        frontendPath:
-          '/panel/order-manager/configuracion-general/transportadora',
-        permission: 'config.read',
-        enabled: true,
-      },
-      {
-        id: 'zona-transporte',
-        label: 'Zonas de Transporte',
-        description: 'Zonas logisticas por empresa y pais',
-        frontendPath:
-          '/panel/order-manager/configuracion-general/zona-transporte',
-        permission: 'config.read',
-        enabled: true,
-      },
-      {
-        id: 'zona-ciudad',
-        label: 'Zona Ciudad',
-        description: 'Relacion entre zonas de transporte y ciudades',
-        frontendPath: '/panel/order-manager/configuracion-general/zona-ciudad',
-        permission: 'config.read',
-        enabled: true,
-      },
-      {
-        id: 'costo-transporte',
-        label: 'Costos de Transporte',
-        description: 'Rangos y costos de transporte por combinacion operativa',
-        frontendPath:
-          '/panel/order-manager/configuracion-general/costo-transporte',
-        permission: 'config.read',
-        enabled: true,
-      },
-      {
         id: 'profiles',
         label: 'Perfiles',
         description: 'Visualizacion y gestion de perfiles del sistema',
@@ -144,5 +124,10 @@ export class ConfiguracionGeneralService {
         enabled: true,
       },
     ];
+  }
+
+  // Bootstrap para el dashboard padre de logistica.
+  async getLogisticaBootstrap(): Promise<LogisticaBootstrap> {
+    return this.configuracionGeneralRepository.getLogisticaBootstrap();
   }
 }

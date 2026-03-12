@@ -257,10 +257,13 @@ export class UsersRepository {
   }
 
   // Mantiene firma actual (string) pero evita CAST sobre la columna indexada.
-  async updateStatus(userId: string, estado: 0 | 1): Promise<void> {
+  // Devuelve true si el UPDATE afectó una fila para evitar falsos positivos.
+  async updateStatus(userId: string, estado: 0 | 1): Promise<boolean> {
     const estadoTexto = estado === 1 ? 'ACTIVO' : 'INACTIVO';
 
-    await this.databaseService.execute(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ affected: number }>
+    >(
       (pool) =>
         pool
           .request()
@@ -270,17 +273,24 @@ export class UsersRepository {
             SET [Estado] = @estado,
                 [UpdatedAt] = GETDATE()
             WHERE [UsuarioId] = TRY_CONVERT(INT, @userId)
+
+            SELECT @@ROWCOUNT AS [affected]
           `),
       'users.updateStatus',
     );
+
+    return (result.recordset[0]?.affected ?? 0) > 0;
   }
 
   // Mantiene firma actual (string) pero evita CAST sobre la columna indexada.
+  // Devuelve true si el UPDATE afectó una fila para evitar falsos positivos.
   async updatePasswordHash(
     userId: string,
     passwordHash: string,
-  ): Promise<void> {
-    await this.databaseService.execute(
+  ): Promise<boolean> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ affected: number }>
+    >(
       (pool) =>
         pool
           .request()
@@ -290,9 +300,13 @@ export class UsersRepository {
             SET [PasswordHash] = @passwordHash,
                 [UpdatedAt] = GETDATE()
             WHERE [UsuarioId] = TRY_CONVERT(INT, @userId)
+
+            SELECT @@ROWCOUNT AS [affected]
           `),
       'users.updatePasswordHash',
     );
+
+    return (result.recordset[0]?.affected ?? 0) > 0;
   }
 
   private mapUserListItem(row: UsuarioRow): UserListItem {

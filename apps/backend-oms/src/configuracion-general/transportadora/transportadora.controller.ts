@@ -9,8 +9,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { Permissions } from '../../auth/auth.decorators';
+import { TransportadoraApiConfigResponseDto } from './dto/transportadora-api-config-response.dto';
 import { CreateTransportadoraDto } from './dto/create-transportadora.dto';
 import { TransportadoraConfiguracionResponseDto } from './dto/transportadora-configuracion-response.dto';
+import { UpdateTransportadoraApiConfigDto } from './dto/update-transportadora-api-config.dto';
 import { UpdateTransportadoraConfiguracionDto } from './dto/update-transportadora-configuracion.dto';
 import { UpdateTransportadoraDto } from './dto/update-transportadora.dto';
 import { TransportadoraService } from './transportadora.service';
@@ -39,6 +41,14 @@ export class TransportadoraController {
     const transportadora =
       await this.transportadoraService.getTransportadoraById(id);
     return { transportadora };
+  }
+
+  @Get(':id/api-config')
+  @Permissions('config.read')
+  async getApiConfig(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<TransportadoraApiConfigResponseDto> {
+    return this.transportadoraService.getTransportadoraApiConfigById(id);
   }
 
   @Get(':id/configuracion')
@@ -88,6 +98,16 @@ export class TransportadoraController {
       id,
       body,
     );
+    return { success: true };
+  }
+
+  @Patch(':id/api-config')
+  @Permissions('config.manage')
+  async updateApiConfig(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateTransportadoraApiConfigDto,
+  ): Promise<{ success: true }> {
+    await this.transportadoraService.updateTransportadoraApiConfig(id, body);
     return { success: true };
   }
 }

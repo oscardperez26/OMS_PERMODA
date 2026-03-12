@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { useAuth } from '../../src/auth/useAuth';
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useAuth } from "../../src/auth/useAuth";
 import {
   createZonaTransporte,
   getZonasTransporteBootstrap,
   updateZonaTransporte,
   type ZonaTransporteListItem,
-} from '../../src/configuracion-general/zona-transporte.api';
-import './ZonaTransportePage.css';
+} from "../../src/configuracion-general/zona-transporte.api";
+import "./ZonaTransportePage.css";
+import { Link } from "react-router-dom";
 
 type EmpresaOption = {
   empresaId: number;
@@ -29,14 +30,17 @@ type FormState = {
 };
 
 const INITIAL_FORM: FormState = {
-  empresaId: '',
-  codigo: '',
-  nombre: '',
-  paisId: '',
+  empresaId: "",
+  codigo: "",
+  nombre: "",
+  paisId: "",
   activo: true,
 };
 
-async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 3): Promise<T> {
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxAttempts = 3,
+): Promise<T> {
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
@@ -56,28 +60,32 @@ async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 3): Promi
 
 export function ZonaTransportePage() {
   const { accessToken, hasPermissions } = useAuth();
-  const canManage = hasPermissions(['config.manage']);
+  const canManage = hasPermissions(["config.manage"]);
 
-  const [zonasTransporte, setZonasTransporte] = useState<ZonaTransporteListItem[]>([]);
+  const [zonasTransporte, setZonasTransporte] = useState<
+    ZonaTransporteListItem[]
+  >([]);
   const [empresas, setEmpresas] = useState<EmpresaOption[]>([]);
   const [paises, setPaises] = useState<PaisOption[]>([]);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
-  const [editingZonaTransporteId, setEditingZonaTransporteId] = useState<number | null>(
-    null,
-  );
+  const [editingZonaTransporteId, setEditingZonaTransporteId] = useState<
+    number | null
+  >(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   async function loadData() {
     if (!accessToken) {
-      setError('Sesion no disponible');
+      setError("Sesion no disponible");
       setIsLoading(false);
       return;
     }
 
     try {
-      const bootstrap = await withRetry(() => getZonasTransporteBootstrap(accessToken));
+      const bootstrap = await withRetry(() =>
+        getZonasTransporteBootstrap(accessToken),
+      );
       setZonasTransporte(bootstrap.zonasTransporte);
       setEmpresas(
         [...bootstrap.empresas].sort((a, b) => {
@@ -91,12 +99,12 @@ export function ZonaTransportePage() {
           return byName !== 0 ? byName : a.paisId - b.paisId;
         }),
       );
-      setError('');
+      setError("");
     } catch (requestError) {
       const message =
         requestError instanceof Error
           ? requestError.message
-          : 'No se pudo cargar zonas de transporte';
+          : "No se pudo cargar zonas de transporte";
       setError(message);
     } finally {
       setIsLoading(false);
@@ -112,7 +120,10 @@ export function ZonaTransportePage() {
     if (form.empresaId || empresas.length === 0) {
       return;
     }
-    setForm((previous) => ({ ...previous, empresaId: String(empresas[0].empresaId) }));
+    setForm((previous) => ({
+      ...previous,
+      empresaId: String(empresas[0].empresaId),
+    }));
   }, [empresas, form.empresaId]);
 
   const empresaMap = useMemo(() => {
@@ -135,7 +146,9 @@ export function ZonaTransportePage() {
     () =>
       [...zonasTransporte].sort((a, b) => {
         const byNombre = a.nombre.localeCompare(b.nombre);
-        return byNombre !== 0 ? byNombre : a.zonaTransporteId - b.zonaTransporteId;
+        return byNombre !== 0
+          ? byNombre
+          : a.zonaTransporteId - b.zonaTransporteId;
       }),
     [zonasTransporte],
   );
@@ -144,11 +157,11 @@ export function ZonaTransportePage() {
     event.preventDefault();
 
     if (!accessToken) {
-      setError('Sesion no disponible');
+      setError("Sesion no disponible");
       return;
     }
     if (!canManage) {
-      setError('No tienes permisos para gestionar catalogos');
+      setError("No tienes permisos para gestionar catalogos");
       return;
     }
 
@@ -159,20 +172,20 @@ export function ZonaTransportePage() {
     const paisId = paisIdRaw ? Number(paisIdRaw) : undefined;
 
     if (!Number.isInteger(empresaId) || empresaId <= 0) {
-      setError('Empresa es obligatoria');
+      setError("Empresa es obligatoria");
       return;
     }
     if (!codigo || !nombre) {
-      setError('Codigo y nombre son obligatorios');
+      setError("Codigo y nombre son obligatorios");
       return;
     }
     if (paisId !== undefined && (!Number.isInteger(paisId) || paisId <= 0)) {
-      setError('Pais debe ser un entero mayor a 0');
+      setError("Pais debe ser un entero mayor a 0");
       return;
     }
 
     setIsSubmitting(true);
-    setError('');
+    setError("");
 
     try {
       if (editingZonaTransporteId) {
@@ -203,7 +216,7 @@ export function ZonaTransportePage() {
       const message =
         requestError instanceof Error
           ? requestError.message
-          : 'No se pudo guardar zona de transporte';
+          : "No se pudo guardar zona de transporte";
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -216,27 +229,27 @@ export function ZonaTransportePage() {
       empresaId: String(zonaTransporte.empresaId),
       codigo: zonaTransporte.codigo,
       nombre: zonaTransporte.nombre,
-      paisId: zonaTransporte.paisId ? String(zonaTransporte.paisId) : '',
+      paisId: zonaTransporte.paisId ? String(zonaTransporte.paisId) : "",
       activo: zonaTransporte.activo,
     });
-    setError('');
+    setError("");
   }
 
   function cancelEdit() {
     setEditingZonaTransporteId(null);
     setForm((previous) => ({
       ...INITIAL_FORM,
-      empresaId: previous.empresaId || String(empresas[0]?.empresaId ?? ''),
+      empresaId: previous.empresaId || String(empresas[0]?.empresaId ?? ""),
     }));
-    setError('');
+    setError("");
   }
 
   function formatDate(value?: string | null): string {
     if (!value) {
-      return '-';
+      return "-";
     }
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('es-CO');
+    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("es-CO");
   }
 
   return (
@@ -250,19 +263,25 @@ export function ZonaTransportePage() {
 
       {canManage && (
         <article className="zona-transporte-card">
-          <h2>{editingZonaTransporteId ? 'Editar zona' : 'Crear zona'}</h2>
+          <h2>{editingZonaTransporteId ? "Editar zona" : "Crear zona"}</h2>
           <form className="zona-transporte-form" onSubmit={handleSubmit}>
             <label>
               Empresa
               <select
                 value={form.empresaId}
                 onChange={(event) =>
-                  setForm((previous) => ({ ...previous, empresaId: event.target.value }))
+                  setForm((previous) => ({
+                    ...previous,
+                    empresaId: event.target.value,
+                  }))
                 }
                 required
               >
                 {empresas.map((empresa) => (
-                  <option key={empresa.empresaId} value={String(empresa.empresaId)}>
+                  <option
+                    key={empresa.empresaId}
+                    value={String(empresa.empresaId)}
+                  >
                     {empresa.nombre} ({empresa.codigo})
                   </option>
                 ))}
@@ -275,7 +294,10 @@ export function ZonaTransportePage() {
                 type="text"
                 value={form.codigo}
                 onChange={(event) =>
-                  setForm((previous) => ({ ...previous, codigo: event.target.value }))
+                  setForm((previous) => ({
+                    ...previous,
+                    codigo: event.target.value,
+                  }))
                 }
                 maxLength={60}
                 required
@@ -288,7 +310,10 @@ export function ZonaTransportePage() {
                 type="text"
                 value={form.nombre}
                 onChange={(event) =>
-                  setForm((previous) => ({ ...previous, nombre: event.target.value }))
+                  setForm((previous) => ({
+                    ...previous,
+                    nombre: event.target.value,
+                  }))
                 }
                 maxLength={180}
                 required
@@ -300,7 +325,10 @@ export function ZonaTransportePage() {
               <select
                 value={form.paisId}
                 onChange={(event) =>
-                  setForm((previous) => ({ ...previous, paisId: event.target.value }))
+                  setForm((previous) => ({
+                    ...previous,
+                    paisId: event.target.value,
+                  }))
                 }
               >
                 <option value="">Sin pais</option>
@@ -317,7 +345,10 @@ export function ZonaTransportePage() {
                 type="checkbox"
                 checked={form.activo}
                 onChange={(event) =>
-                  setForm((previous) => ({ ...previous, activo: event.target.checked }))
+                  setForm((previous) => ({
+                    ...previous,
+                    activo: event.target.checked,
+                  }))
                 }
               />
               Activo
@@ -326,14 +357,18 @@ export function ZonaTransportePage() {
             <div className="zona-transporte-form-actions">
               <button type="submit" disabled={isSubmitting}>
                 {isSubmitting
-                  ? 'Guardando...'
+                  ? "Guardando..."
                   : editingZonaTransporteId
-                    ? 'Actualizar'
-                    : 'Crear'}
+                    ? "Actualizar"
+                    : "Crear"}
               </button>
 
               {editingZonaTransporteId && (
-                <button type="button" className="btn-secondary" onClick={cancelEdit}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={cancelEdit}
+                >
                   Cancelar
                 </button>
               )}
@@ -365,7 +400,10 @@ export function ZonaTransportePage() {
               <tbody>
                 {sortedZonas.length === 0 ? (
                   <tr>
-                    <td colSpan={canManage ? 9 : 8} className="zona-transporte-empty-cell">
+                    <td
+                      colSpan={canManage ? 9 : 8}
+                      className="zona-transporte-empty-cell"
+                    >
                       Sin registros
                     </td>
                   </tr>
@@ -388,17 +426,20 @@ export function ZonaTransportePage() {
                         <td>{zonaTransporte.nombre}</td>
                         <td>
                           {zonaTransporte.paisId === undefined
-                            ? '-'
+                            ? "-"
                             : pais
                               ? `${pais.nombre} (${pais.codigoISO2})`
                               : `PaisId ${zonaTransporte.paisId}`}
                         </td>
-                        <td>{zonaTransporte.activo ? 'Si' : 'No'}</td>
+                        <td>{zonaTransporte.activo ? "Si" : "No"}</td>
                         <td>{formatDate(zonaTransporte.createdAt)}</td>
                         <td>{formatDate(zonaTransporte.updatedAt)}</td>
                         {canManage && (
                           <td>
-                            <button type="button" onClick={() => startEdit(zonaTransporte)}>
+                            <button
+                              type="button"
+                              onClick={() => startEdit(zonaTransporte)}
+                            >
                               Editar
                             </button>
                           </td>
@@ -412,6 +453,10 @@ export function ZonaTransportePage() {
           </div>
         )}
       </article>
+              <Link to="/panel/order-manager/configuracion-general/logistica" className="transportadora-back-link">
+                volver 
+              </Link>
     </section>
+    
   );
 }

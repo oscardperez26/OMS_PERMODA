@@ -45,11 +45,13 @@ import { ProductoVariantePage } from '../../pages/gestor/ProductoVariantePage';
 import { InventarioPage } from '../../pages/gestor/InventarioPage';
 import { TransportadoraPage } from '../../pages/gestor/TransportadoraPage';
 import { TransportadoraConfiguracionPage } from '../../pages/gestor/TransportadoraConfiguracionPage';
+import { TransportadoraApiPage } from '../../pages/gestor/TransportadoraApiPage';
 import { ZonaTransportePage } from '../../pages/gestor/ZonaTransportePage';
 import { ZonaCiudadPage } from '../../pages/gestor/ZonaCiudadPage';
 import { CostoTransportePage } from '../../pages/gestor/CostoTransportePage';
 import { StoreParamsPage } from '../../pages/configure/StoreParamsPage';
 import { PermissionsPage } from '../../pages/gestor/PermissionsPage';
+import { LogisticaPage } from '../../pages/gestor/LogisticaPage';
 
 
 /**
@@ -156,6 +158,18 @@ export function AppRouter() {
                 requiredPermissions={['config.read']}
               >
                 <ConfiguracionGeneralPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_LOGISTICA}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['config.read']}
+              >
+                <LogisticaPage />
               </ProtectedRoute>
             }
           />
@@ -360,6 +374,18 @@ export function AppRouter() {
                 requiredPermissions={['users.manage']}
               >
                 <ProfilesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA_API}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['config.read']}
+              >
+                <TransportadoraApiPage />
               </ProtectedRoute>
             }
           />

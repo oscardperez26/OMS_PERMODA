@@ -121,7 +121,11 @@ export class UsersService {
     actor: UsersActorContext,
   ): Promise<void> {
     await this.assertCanManageTargetUser(actor, userId);
-    await this.usersRepository.updateStatus(userId, estado);
+    // Evita responder success cuando el target no existe (especialmente en flujo super admin).
+    const updated = await this.usersRepository.updateStatus(userId, estado);
+    if (!updated) {
+      throw new NotFoundException('Usuario no existe');
+    }
   }
 
   async resetPassword(
@@ -134,7 +138,14 @@ export class UsersService {
       newTemporaryPassword,
       this.saltRounds,
     );
-    await this.usersRepository.updatePasswordHash(userId, passwordHash);
+    // Evita responder success cuando el target no existe (especialmente en flujo super admin).
+    const updated = await this.usersRepository.updatePasswordHash(
+      userId,
+      passwordHash,
+    );
+    if (!updated) {
+      throw new NotFoundException('Usuario no existe');
+    }
   }
 
   private async applyScopeForCreate(

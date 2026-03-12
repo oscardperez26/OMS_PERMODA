@@ -29,23 +29,28 @@ export class UserRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
   // Login lookup by email.
+  // Se usa databaseService.execute para heredar retry/recovery ante ECONNRESET.
   async findByEmail(email: string): Promise<AuthDbUser | null> {
-    const pool = await this.databaseService.getPool();
-
-    const result = await pool.request().input('email', sql.NVarChar(180), email)
-      .query<UsuarioRow>(`
-        SELECT TOP (1)
-          [UsuarioId],
-          [EmpresaId],
-          [EmpresaClienteId],
-          [PerfilId],
-          [Nombre],
-          [Email],
-          [PasswordHash],
-          [Estado]
-        FROM [oms].[Usuario]
-        WHERE [Email] = @email
-      `);
+    const result = await this.databaseService.execute<sql.IResult<UsuarioRow>>(
+      (pool) =>
+        pool
+          .request()
+          .input('email', sql.NVarChar(180), email)
+          .query<UsuarioRow>(`
+            SELECT TOP (1)
+              [UsuarioId],
+              [EmpresaId],
+              [EmpresaClienteId],
+              [PerfilId],
+              [Nombre],
+              [Email],
+              [PasswordHash],
+              [Estado]
+            FROM [oms].[Usuario]
+            WHERE [Email] = @email
+          `),
+      'authUser.findByEmail',
+    );
 
     const row = result.recordset[0];
     if (!row || !row.PasswordHash) {
@@ -56,27 +61,33 @@ export class UserRepository {
   }
 
   // User lookup by numeric id from token subject.
+  // Se conserva lookup por ID entero para evitar comparaciones string en SQL.
   async findById(userId: string): Promise<AuthDbUser | null> {
     const parsedUserId = this.parseUserId(userId);
     if (parsedUserId == null) {
       return null;
     }
 
-    const pool = await this.databaseService.getPool();
-    const result = await pool.request().input('userId', sql.Int, parsedUserId)
-      .query<UsuarioRow>(`
-        SELECT TOP (1)
-          [UsuarioId],
-          [EmpresaId],
-          [EmpresaClienteId],
-          [PerfilId],
-          [Nombre],
-          [Email],
-          [PasswordHash],
-          [Estado]
-        FROM [oms].[Usuario]
-        WHERE [UsuarioId] = @userId
-      `);
+    const result = await this.databaseService.execute<sql.IResult<UsuarioRow>>(
+      (pool) =>
+        pool
+          .request()
+          .input('userId', sql.Int, parsedUserId)
+          .query<UsuarioRow>(`
+            SELECT TOP (1)
+              [UsuarioId],
+              [EmpresaId],
+              [EmpresaClienteId],
+              [PerfilId],
+              [Nombre],
+              [Email],
+              [PasswordHash],
+              [Estado]
+            FROM [oms].[Usuario]
+            WHERE [UsuarioId] = @userId
+          `),
+      'authUser.findById',
+    );
 
     const row = result.recordset[0];
     if (!row || !row.PasswordHash) {
@@ -92,13 +103,20 @@ export class UserRepository {
       return null;
     }
 
-    const pool = await this.databaseService.getPool();
-    const result = await pool.request().input('userId', sql.Int, parsedUserId)
-      .query<{ PasswordHash: string | null }>(`
-        SELECT TOP (1) [PasswordHash]
-        FROM [oms].[Usuario]
-        WHERE [UsuarioId] = @userId
-      `);
+    const result = await this.databaseService.execute<
+      sql.IResult<{ PasswordHash: string | null }>
+    >(
+      (pool) =>
+        pool
+          .request()
+          .input('userId', sql.Int, parsedUserId)
+          .query<{ PasswordHash: string | null }>(`
+            SELECT TOP (1) [PasswordHash]
+            FROM [oms].[Usuario]
+            WHERE [UsuarioId] = @userId
+          `),
+      'authUser.getPasswordHashByUserId',
+    );
 
     return result.recordset[0]?.PasswordHash ?? null;
   }
@@ -112,16 +130,19 @@ export class UserRepository {
       return;
     }
 
-    const pool = await this.databaseService.getPool();
-    await pool
-      .request()
-      .input('userId', sql.Int, parsedUserId)
-      .input('passwordHash', sql.NVarChar(255), passwordHash).query(`
-        UPDATE [oms].[Usuario]
-        SET [PasswordHash] = @passwordHash,
-            [UpdatedAt] = GETDATE()
-        WHERE [UsuarioId] = @userId
-      `);
+    await this.databaseService.execute(
+      (pool) =>
+        pool
+          .request()
+          .input('userId', sql.Int, parsedUserId)
+          .input('passwordHash', sql.NVarChar(255), passwordHash).query(`
+            UPDATE [oms].[Usuario]
+            SET [PasswordHash] = @passwordHash,
+                [UpdatedAt] = GETDATE()
+            WHERE [UsuarioId] = @userId
+          `),
+      'authUser.updatePasswordHash',
+    );
   }
 
   private mapRow(row: UsuarioRow): AuthDbUser {

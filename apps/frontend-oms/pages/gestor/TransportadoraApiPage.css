@@ -1,0 +1,141 @@
+.transportadora-api-page {
+  display: grid;
+  gap: 16px;
+  padding: 8px;
+}
+
+.transportadora-api-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.transportadora-api-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #21303f;
+}
+
+.transportadora-api-header p {
+  margin: 6px 0 0;
+  color: #556476;
+}
+
+.transportadora-api-warning {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #f6e1a8;
+  background: #fff8e4;
+  color: #6d5413;
+}
+
+.transportadora-api-info {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbe0ff;
+  background: #edf5ff;
+  color: #1f4f8f;
+}
+
+.transportadora-api-error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #f3c3c7;
+  border-radius: 10px;
+  background: #fef0f1;
+  color: #8f1824;
+}
+
+.transportadora-api-success {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #b6e3cb;
+  border-radius: 10px;
+  background: #edf9f2;
+  color: #0f6c3d;
+}
+
+.transportadora-api-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #d7dee6;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+}
+
+.transportadora-api-card h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #253444;
+}
+
+.transportadora-api-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.transportadora-api-grid label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #3f4d5d;
+}
+
+.transportadora-api-grid input,
+.transportadora-api-grid select {
+  border: 1px solid #cfd8e3;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.transportadora-api-grid input:disabled,
+.transportadora-api-grid select:disabled {
+  background: #f6f8fb;
+  color: #536274;
+}
+
+.transportadora-api-loading {
+  margin: 0;
+  color: #516173;
+}
+
+.transportadora-api-page .btn-secondary {
+  border: 1px solid #c8d2de;
+  border-radius: 8px;
+  background: #fff;
+  color: #2f3f50;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.transportadora-api-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.transportadora-api-actions .btn-primary {
+  border: 1px solid #2c6bdd;
+  border-radius: 8px;
+  background: #2c6bdd;
+  color: #fff;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 1040px) {
+  .transportadora-api-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .transportadora-api-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -8,3 +8,11 @@ export type DashboardOption = {
   permission: Permission;
   enabled: boolean;
 };
+
+export type LogisticaBootstrap = {
+  transportadorasTotal: number;
+  zonasTransporteTotal: number;
+  zonaCiudadRelacionesTotal: number;
+  costosTransporteTotal: number;
+  lastUpdatedAt: string;
+};

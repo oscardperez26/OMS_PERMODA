@@ -41,6 +41,8 @@ export const ROUTES = {
   ORDER_MANAGER_PERMISSIONS: '/panel/order-manager/permissions',
   ORDER_MANAGER_EMPLOYEE_ACCESS: '/panel/order-manager/employee-access',
   ORDER_MANAGER_GENERAL_CONFIG: '/panel/order-manager/configuracion-general',
+  ORDER_MANAGER_GENERAL_CONFIG_LOGISTICA:
+    '/panel/order-manager/configuracion-general/logistica',
   ORDER_MANAGER_GENERAL_CONFIG_PAIS:
     '/panel/order-manager/configuracion-general/pais',
   ORDER_MANAGER_GENERAL_CONFIG_CIUDAD:
@@ -67,6 +69,8 @@ export const ROUTES = {
     '/panel/order-manager/configuracion-general/transportadora',
   ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA_CONFIG:
     '/panel/order-manager/configuracion-general/transportadora/:id/configuracion',
+  ORDER_MANAGER_GENERAL_CONFIG_TRANSPORTADORA_API:
+    '/panel/order-manager/configuracion-general/transportadora/:id/api',
   ORDER_MANAGER_GENERAL_CONFIG_ZONA_TRANSPORTE:
     '/panel/order-manager/configuracion-general/zona-transporte',
   ORDER_MANAGER_GENERAL_CONFIG_ZONA_CIUDAD:
@@ -77,4 +81,8 @@ export const ROUTES = {
 
 export function buildTransportadoraConfiguracionRoute(transportadoraId: number): string {
   return `/panel/order-manager/configuracion-general/transportadora/${transportadoraId}/configuracion`;
+}
+
+export function buildTransportadoraApiRoute(transportadoraId: number): string {
+  return `/panel/order-manager/configuracion-general/transportadora/${transportadoraId}/api`;
 }

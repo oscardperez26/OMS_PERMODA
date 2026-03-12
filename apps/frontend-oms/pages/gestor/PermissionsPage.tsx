@@ -159,7 +159,6 @@ export function PermissionsPage() {
   async function saveAll() {
     for (const profile of dirtyProfiles) {
       // Evita disparar guardados en paralelo para mantener feedback predecible.
-      // eslint-disable-next-line no-await-in-loop
       await saveProfile(profile.perfilId);
     }
   }

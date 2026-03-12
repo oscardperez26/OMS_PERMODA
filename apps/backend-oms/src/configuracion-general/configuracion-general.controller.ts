@@ -14,4 +14,10 @@ export class ConfiguracionGeneralController {
     const options = this.configuracionGeneralService.listOptions();
     return { options };
   }
+
+  @Get('logistica/bootstrap')
+  @Permissions('config.read')
+  async getLogisticaBootstrap() {
+    return this.configuracionGeneralService.getLogisticaBootstrap();
+  }
 }

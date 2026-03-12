@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../src/auth/useAuth';
 import {
   createTransportadora,
   getTransportadorasBootstrap,
   type TransportadoraListItem,
 } from '../../src/configuracion-general/transportadora.api';
-import { buildTransportadoraConfiguracionRoute } from '../../src/routes/routes';
+import {
+  buildTransportadoraApiRoute,
+  buildTransportadoraConfiguracionRoute,
+} from '../../src/routes/routes';
 import './TransportadoraPage.css';
 
 type EmpresaOption = {
@@ -52,6 +55,7 @@ async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 3): Promi
 export function TransportadoraPage() {
   const navigate = useNavigate();
   const { accessToken, hasPermissions } = useAuth();
+  const canRead = hasPermissions(['config.read']);
   const canManage = hasPermissions(['config.manage']);
 
   const [transportadoras, setTransportadoras] = useState<TransportadoraListItem[]>([]);
@@ -288,13 +292,13 @@ export function TransportadoraPage() {
                   <th>Activo</th>
                   <th>Creado</th>
                   <th>Actualizado</th>
-                  {canManage && <th>Acciones</th>}
+                  {canRead && <th>Acciones</th>}
                 </tr>
               </thead>
               <tbody>
                 {sortedTransportadoras.length === 0 ? (
                   <tr>
-                    <td colSpan={canManage ? 9 : 8} className="transportadora-empty-cell">
+                    <td colSpan={canRead ? 9 : 8} className="transportadora-empty-cell">
                       Sin registros
                     </td>
                   </tr>
@@ -315,20 +319,35 @@ export function TransportadoraPage() {
                         <td>{transportadora.activo ? 'Si' : 'No'}</td>
                         <td>{formatDate(transportadora.createdAt)}</td>
                         <td>{formatDate(transportadora.updatedAt)}</td>
-                        {canManage && (
+                        {canRead && (
                           <td>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                navigate(
-                                  buildTransportadoraConfiguracionRoute(
-                                    transportadora.transportadoraId,
-                                  ),
-                                )
-                              }
-                            >
-                              Editar
-                            </button>
+                            <div className="transportadora-actions">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  navigate(
+                                    buildTransportadoraConfiguracionRoute(
+                                      transportadora.transportadoraId,
+                                    ),
+                                  )
+                                }
+                              >
+                                Editar
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={() =>
+                                  navigate(
+                                    buildTransportadoraApiRoute(
+                                      transportadora.transportadoraId,
+                                    ),
+                                  )
+                                }
+                              >
+                                API
+                              </button>
+                            </div>
                           </td>
                         )}
                       </tr>
@@ -340,6 +359,9 @@ export function TransportadoraPage() {
           </div>
         )}
       </article>
+              <Link to="/panel/order-manager/configuracion-general/logistica" className="transportadora-back-link">
+                volver 
+              </Link>
     </section>
   );
 }

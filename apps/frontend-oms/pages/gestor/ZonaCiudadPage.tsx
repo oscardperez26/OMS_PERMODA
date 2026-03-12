@@ -7,6 +7,7 @@ import {
   type ZonaCiudadListItem,
 } from '../../src/configuracion-general/zona-ciudad.api';
 import './ZonaCiudadPage.css';
+import { Link } from 'react-router-dom';
 
 type ZonaOption = {
   zonaTransporteId: number;
@@ -334,6 +335,11 @@ export function ZonaCiudadPage() {
           </div>
         )}
       </article>
+    
+              <Link to="/panel/order-manager/configuracion-general/logistica" className="transportadora-back-link">
+                volver 
+              </Link>
+
     </section>
   );
 }

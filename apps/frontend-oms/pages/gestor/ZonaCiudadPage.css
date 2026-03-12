@@ -128,3 +128,19 @@
     grid-template-columns: 1fr;
   }
 }
+.transportadora-back-link {
+    text-decoration: none;
+    border: 1px solid #c8d2de;
+    border-radius: 8px;
+    background: #fff;
+    color: #2f3f50;
+    padding: 8px 12px;
+    font-weight: 600;
+    height: 42px;
+    width: 82px;
+    text-align: center;
+    border: 1px solid #1d5fd4;
+    border-radius: 8px;
+    background: #1d5fd4;
+    color: #fff;
+}

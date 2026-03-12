@@ -7,6 +7,7 @@ import {
   type CostoTransporteListItem,
 } from '../../src/configuracion-general/costo-transporte.api';
 import './CostoTransportePage.css';
+import { Link } from 'react-router-dom';
 
 type EmpresaOption = {
   empresaId: number;
@@ -749,6 +750,9 @@ export function CostoTransportePage() {
           </div>
         )}
       </article>
+                    <Link to="/panel/order-manager/configuracion-general/logistica" className="transportadora-back-link">
+                      volver 
+                    </Link>
     </section>
   );
 }
