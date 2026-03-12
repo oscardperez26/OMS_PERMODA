@@ -62,7 +62,10 @@ export class ProductoVarianteService {
     params: CreateProductoVarianteParams,
   ): Promise<{ varianteId: number }> {
     const empresaId = this.normalizeRequiredId(params.empresaId, 'empresaId');
-    const productoId = this.normalizeRequiredId(params.productoId, 'productoId');
+    const productoId = this.normalizeRequiredId(
+      params.productoId,
+      'productoId',
+    );
     const sku = this.normalizeSku(params.sku);
     const ean = this.normalizeOptionalText(params.ean, 'ean', 120);
     const nombre = this.normalizeOptionalText(params.nombre, 'nombre', 255);
@@ -72,12 +75,15 @@ export class ProductoVarianteService {
     const altoCm = this.normalizeOptionalDecimal(params.altoCm, 'altoCm');
     const activo = this.normalizeBoolean(params.activo, true);
 
-    const duplicated = await this.productoVarianteRepository.existsByEmpresaAndSku(
-      empresaId,
-      sku,
-    );
+    const duplicated =
+      await this.productoVarianteRepository.existsByEmpresaAndSku(
+        empresaId,
+        sku,
+      );
     if (duplicated) {
-      throw new ConflictException('Ya existe una variante con ese SKU en la empresa');
+      throw new ConflictException(
+        'Ya existe una variante con ese SKU en la empresa',
+      );
     }
 
     await this.validateForeignKeys(empresaId, productoId);
@@ -97,7 +103,9 @@ export class ProductoVarianteService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe una variante con ese SKU en la empresa');
+        throw new ConflictException(
+          'Ya existe una variante con ese SKU en la empresa',
+        );
       }
       throw error;
     }
@@ -120,7 +128,9 @@ export class ProductoVarianteService {
       params.activo !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.productoVarianteRepository.findById(varianteId);
@@ -136,41 +146,47 @@ export class ProductoVarianteService {
       params.productoId !== undefined
         ? this.normalizeRequiredId(params.productoId, 'productoId')
         : current.productoId;
-    const nextSku = params.sku !== undefined ? this.normalizeSku(params.sku) : current.sku;
+    const nextSku =
+      params.sku !== undefined ? this.normalizeSku(params.sku) : current.sku;
     const nextEan =
       params.ean !== undefined
         ? this.normalizeOptionalText(params.ean, 'ean', 120)
-        : current.ean ?? null;
+        : (current.ean ?? null);
     const nextNombre =
       params.nombre !== undefined
         ? this.normalizeOptionalText(params.nombre, 'nombre', 255)
-        : current.nombre ?? null;
+        : (current.nombre ?? null);
     const nextPesoKg =
       params.pesoKg !== undefined
         ? this.normalizeOptionalDecimal(params.pesoKg, 'pesoKg')
-        : current.pesoKg ?? null;
+        : (current.pesoKg ?? null);
     const nextLargoCm =
       params.largoCm !== undefined
         ? this.normalizeOptionalDecimal(params.largoCm, 'largoCm')
-        : current.largoCm ?? null;
+        : (current.largoCm ?? null);
     const nextAnchoCm =
       params.anchoCm !== undefined
         ? this.normalizeOptionalDecimal(params.anchoCm, 'anchoCm')
-        : current.anchoCm ?? null;
+        : (current.anchoCm ?? null);
     const nextAltoCm =
       params.altoCm !== undefined
         ? this.normalizeOptionalDecimal(params.altoCm, 'altoCm')
-        : current.altoCm ?? null;
+        : (current.altoCm ?? null);
     const nextActivo =
-      params.activo !== undefined ? this.normalizeBoolean(params.activo) : current.activo;
+      params.activo !== undefined
+        ? this.normalizeBoolean(params.activo)
+        : current.activo;
 
-    const duplicated = await this.productoVarianteRepository.existsByEmpresaAndSku(
-      nextEmpresaId,
-      nextSku,
-      varianteId,
-    );
+    const duplicated =
+      await this.productoVarianteRepository.existsByEmpresaAndSku(
+        nextEmpresaId,
+        nextSku,
+        varianteId,
+      );
     if (duplicated) {
-      throw new ConflictException('Ya existe una variante con ese SKU en la empresa');
+      throw new ConflictException(
+        'Ya existe una variante con ese SKU en la empresa',
+      );
     }
 
     await this.validateForeignKeys(nextEmpresaId, nextProductoId);
@@ -190,7 +206,9 @@ export class ProductoVarianteService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe una variante con ese SKU en la empresa');
+        throw new ConflictException(
+          'Ya existe una variante con ese SKU en la empresa',
+        );
       }
       throw error;
     }
@@ -200,7 +218,8 @@ export class ProductoVarianteService {
     empresaId: number,
     productoId: number,
   ): Promise<void> {
-    const empresaExists = await this.productoVarianteRepository.existsEmpresaById(empresaId);
+    const empresaExists =
+      await this.productoVarianteRepository.existsEmpresaById(empresaId);
     if (!empresaExists) {
       throw new BadRequestException('EmpresaId no existe en la base de datos');
     }
@@ -223,7 +242,9 @@ export class ProductoVarianteService {
       throw new BadRequestException('El campo sku no puede estar vacio');
     }
     if (normalized.length > 120) {
-      throw new BadRequestException('El campo sku no puede exceder 120 caracteres');
+      throw new BadRequestException(
+        'El campo sku no puede exceder 120 caracteres',
+      );
     }
     return normalized;
   }
@@ -253,19 +274,26 @@ export class ProductoVarianteService {
       return null;
     }
     if (!Number.isFinite(value) || value < 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un numero >= 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un numero >= 0`,
+      );
     }
     return value;
   }
 
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
 
-  private normalizeBoolean(value: boolean | undefined, fallback?: boolean): boolean {
+  private normalizeBoolean(
+    value: boolean | undefined,
+    fallback?: boolean,
+  ): boolean {
     if (value === undefined) {
       if (fallback === undefined) {
         throw new BadRequestException('Valor booleano no enviado');

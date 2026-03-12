@@ -156,10 +156,7 @@ export class BodegaRepository {
   async findById(bodegaId: number): Promise<BodegaListItem | null> {
     const result = await this.databaseService.execute<sql.IResult<BodegaRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('bodegaId', sql.Int, bodegaId)
-          .query<BodegaRow>(`
+        pool.request().input('bodegaId', sql.Int, bodegaId).query<BodegaRow>(`
             SELECT
               [BodegaId],
               [EmpresaId],
@@ -192,14 +189,17 @@ export class BodegaRepository {
     codigo: string,
     excludeBodegaId?: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('empresaId', sql.Int, empresaId)
           .input('codigo', sql.NVarChar(60), codigo)
-          .input('excludeBodegaId', sql.Int, excludeBodegaId ?? null)
-          .query<{ count: number }>(`
+          .input('excludeBodegaId', sql.Int, excludeBodegaId ?? null).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Bodega]
             WHERE [EmpresaId] = @empresaId
@@ -213,12 +213,13 @@ export class BodegaRepository {
   }
 
   async existsEmpresaById(empresaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+        pool.request().input('empresaId', sql.Int, empresaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Empresa]
             WHERE [EmpresaId] = @empresaId
@@ -229,14 +230,18 @@ export class BodegaRepository {
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
-  async existsTiendaByIdAndEmpresaId(tiendaId: number, empresaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+  async existsTiendaByIdAndEmpresaId(
+    tiendaId: number,
+    empresaId: number,
+  ): Promise<boolean> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('tiendaId', sql.Int, tiendaId)
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+          .input('empresaId', sql.Int, empresaId).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Tienda]
             WHERE [TiendaId] = @tiendaId
@@ -249,12 +254,13 @@ export class BodegaRepository {
   }
 
   async existsPaisById(paisId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('paisId', sql.Int, paisId)
-          .query<{ count: number }>(`
+        pool.request().input('paisId', sql.Int, paisId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Pais]
             WHERE [PaisId] = @paisId
@@ -266,12 +272,13 @@ export class BodegaRepository {
   }
 
   async existsCiudadById(ciudadId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('ciudadId', sql.Int, ciudadId)
-          .query<{ count: number }>(`
+        pool.request().input('ciudadId', sql.Int, ciudadId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Ciudad]
             WHERE [CiudadId] = @ciudadId
@@ -282,14 +289,18 @@ export class BodegaRepository {
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
-  async existsCiudadByIdAndPaisId(ciudadId: number, paisId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+  async existsCiudadByIdAndPaisId(
+    ciudadId: number,
+    paisId: number,
+  ): Promise<boolean> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('ciudadId', sql.Int, ciudadId)
-          .input('paisId', sql.Int, paisId)
-          .query<{ count: number }>(`
+          .input('paisId', sql.Int, paisId).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Ciudad]
             WHERE [CiudadId] = @ciudadId
@@ -302,7 +313,9 @@ export class BodegaRepository {
   }
 
   async create(input: CreateBodegaInput): Promise<{ bodegaId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<BodegaIdentityRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<BodegaIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -314,8 +327,7 @@ export class BodegaRepository {
           .input('PaisId', sql.Int, input.paisId)
           .input('CiudadId', sql.Int, input.ciudadId)
           .input('Direccion', sql.NVarChar(255), input.direccion)
-          .input('Activo', sql.Bit, input.activo)
-          .query<BodegaIdentityRow>(`
+          .input('Activo', sql.Bit, input.activo).query<BodegaIdentityRow>(`
             INSERT INTO [oms].[Bodega]
             (
               [EmpresaId],
@@ -364,8 +376,7 @@ export class BodegaRepository {
           .input('paisId', sql.Int, input.paisId)
           .input('ciudadId', sql.Int, input.ciudadId)
           .input('direccion', sql.NVarChar(255), input.direccion)
-          .input('activo', sql.Bit, input.activo)
-          .query(`
+          .input('activo', sql.Bit, input.activo).query(`
             UPDATE [oms].[Bodega]
             SET
               [EmpresaId] = @empresaId,

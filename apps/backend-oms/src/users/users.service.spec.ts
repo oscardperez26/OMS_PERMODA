@@ -53,7 +53,9 @@ describe('UsersService (scope security)', () => {
   });
 
   it('lists scoped users for franquicia admin', async () => {
-    repository.listByEmpresaClienteId = jest.fn().mockResolvedValue([{ id: '2' }]);
+    repository.listByEmpresaClienteId = jest
+      .fn()
+      .mockResolvedValue([{ id: '2' }]);
     const result = await service.listUsers(franchiseActor);
     expect(repository.listByEmpresaClienteId).toHaveBeenCalledWith(7);
     expect(result).toHaveLength(1);

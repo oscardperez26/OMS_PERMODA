@@ -56,7 +56,10 @@ export class EmpresaClienteController {
 
   @Post()
   @Permissions('config.manage')
-  async create(@Body() body: CreateEmpresaClienteDto, @Req() req: RequestWithUser) {
+  async create(
+    @Body() body: CreateEmpresaClienteDto,
+    @Req() req: RequestWithUser,
+  ) {
     if (this.parseScopedEmpresaClienteId(req.user) !== null) {
       throw new ForbiddenException(
         'No tienes permisos para crear nuevas franquicias',

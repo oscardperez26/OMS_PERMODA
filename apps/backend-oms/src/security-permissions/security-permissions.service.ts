@@ -1,9 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { listProfileCatalog, resolveProfileAccess } from '../auth/profile-map';
-import {
-  isPermission,
-  type Permission,
-} from '../auth/auth.types';
+import { isPermission, type Permission } from '../auth/auth.types';
 import { SecurityPermissionsRepository } from './security-permissions.repository';
 import type {
   SecurityPermissionCatalogItem,

@@ -35,7 +35,9 @@ export class PasarelaPagoRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async list(): Promise<PasarelaPagoListItem[]> {
-    const result = await this.databaseService.execute<sql.IResult<PasarelaPagoRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<PasarelaPagoRow>
+    >(
       (pool) =>
         pool.request().query<PasarelaPagoRow>(`
           SELECT
@@ -92,11 +94,11 @@ export class PasarelaPagoRepository {
   }
 
   async findById(pasarelaPagoId: number): Promise<PasarelaPagoListItem | null> {
-    const result = await this.databaseService.execute<sql.IResult<PasarelaPagoRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<PasarelaPagoRow>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('pasarelaPagoId', sql.Int, pasarelaPagoId)
+        pool.request().input('pasarelaPagoId', sql.Int, pasarelaPagoId)
           .query<PasarelaPagoRow>(`
             SELECT
               [PasarelaPagoId],
@@ -126,14 +128,19 @@ export class PasarelaPagoRepository {
     codigo: string,
     excludePasarelaPagoId?: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('empresaId', sql.Int, empresaId)
           .input('codigo', sql.NVarChar(60), codigo)
-          .input('excludePasarelaPagoId', sql.Int, excludePasarelaPagoId ?? null)
-          .query<{ count: number }>(`
+          .input(
+            'excludePasarelaPagoId',
+            sql.Int,
+            excludePasarelaPagoId ?? null,
+          ).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[PasarelaPago]
             WHERE [EmpresaId] = @empresaId
@@ -147,12 +154,13 @@ export class PasarelaPagoRepository {
   }
 
   async existsEmpresaById(empresaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+        pool.request().input('empresaId', sql.Int, empresaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Empresa]
             WHERE [EmpresaId] = @empresaId
@@ -163,8 +171,12 @@ export class PasarelaPagoRepository {
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
-  async create(input: CreatePasarelaPagoInput): Promise<{ pasarelaPagoId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<PasarelaPagoIdentityRow>>(
+  async create(
+    input: CreatePasarelaPagoInput,
+  ): Promise<{ pasarelaPagoId: number }> {
+    const result = await this.databaseService.execute<
+      sql.IResult<PasarelaPagoIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -200,7 +212,10 @@ export class PasarelaPagoRepository {
     return { pasarelaPagoId: result.recordset[0].PasarelaPagoId };
   }
 
-  async update(pasarelaPagoId: number, input: UpdatePasarelaPagoInput): Promise<void> {
+  async update(
+    pasarelaPagoId: number,
+    input: UpdatePasarelaPagoInput,
+  ): Promise<void> {
     await this.databaseService.execute<sql.IResult<unknown>>(
       (pool) =>
         pool
@@ -210,8 +225,7 @@ export class PasarelaPagoRepository {
           .input('codigo', sql.NVarChar(60), input.codigo)
           .input('nombre', sql.NVarChar(180), input.nombre)
           .input('activo', sql.Bit, input.activo)
-          .input('configJson', sql.NVarChar(sql.MAX), input.configJson)
-          .query(`
+          .input('configJson', sql.NVarChar(sql.MAX), input.configJson).query(`
             UPDATE [oms].[PasarelaPago]
             SET
               [EmpresaId] = @empresaId,

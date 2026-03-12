@@ -37,7 +37,9 @@ export class MonedaService {
     return moneda;
   }
 
-  async createMoneda(params: CreateMonedaParams): Promise<{ monedaId: number }> {
+  async createMoneda(
+    params: CreateMonedaParams,
+  ): Promise<{ monedaId: number }> {
     const codigo = this.normalizeCodigo(params.codigo);
     const exists = await this.monedaRepository.existsByCodigo(codigo);
     if (exists) {
@@ -52,7 +54,10 @@ export class MonedaService {
     });
   }
 
-  async updateMoneda(monedaId: number, params: UpdateMonedaParams): Promise<void> {
+  async updateMoneda(
+    monedaId: number,
+    params: UpdateMonedaParams,
+  ): Promise<void> {
     const hasAnyField =
       params.codigo !== undefined ||
       params.simbolo !== undefined ||
@@ -60,7 +65,9 @@ export class MonedaService {
       params.decimales !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.monedaRepository.findById(monedaId);
@@ -75,7 +82,7 @@ export class MonedaService {
     const nextSimbolo =
       params.simbolo !== undefined
         ? this.normalizeOptionalSimbolo(params.simbolo)
-        : current.simbolo ?? null;
+        : (current.simbolo ?? null);
     const nextNombre =
       params.nombre !== undefined
         ? this.normalizeRequiredNombre(params.nombre)
@@ -104,7 +111,9 @@ export class MonedaService {
   private normalizeCodigo(value: string): string {
     const normalized = value.trim().toUpperCase();
     if (normalized.length !== 3) {
-      throw new BadRequestException('El campo codigo debe tener exactamente 3 caracteres');
+      throw new BadRequestException(
+        'El campo codigo debe tener exactamente 3 caracteres',
+      );
     }
     return normalized;
   }
@@ -115,7 +124,9 @@ export class MonedaService {
       throw new BadRequestException('El campo nombre no puede estar vacio');
     }
     if (normalized.length > 60) {
-      throw new BadRequestException('El campo nombre no puede exceder 60 caracteres');
+      throw new BadRequestException(
+        'El campo nombre no puede exceder 60 caracteres',
+      );
     }
     return normalized;
   }
@@ -126,18 +137,25 @@ export class MonedaService {
       return null;
     }
     if (normalized.length > 10) {
-      throw new BadRequestException('El campo simbolo no puede exceder 10 caracteres');
+      throw new BadRequestException(
+        'El campo simbolo no puede exceder 10 caracteres',
+      );
     }
     return normalized;
   }
 
-  private normalizeDecimales(value: number | undefined, fallback?: number): number {
+  private normalizeDecimales(
+    value: number | undefined,
+    fallback?: number,
+  ): number {
     const normalized = value ?? fallback;
     if (normalized === undefined) {
       throw new BadRequestException('El campo decimales es requerido');
     }
     if (!Number.isInteger(normalized) || normalized < 0 || normalized > 255) {
-      throw new BadRequestException('El campo decimales debe ser un entero entre 0 y 255');
+      throw new BadRequestException(
+        'El campo decimales debe ser un entero entre 0 y 255',
+      );
     }
     return normalized;
   }

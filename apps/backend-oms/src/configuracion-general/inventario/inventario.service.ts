@@ -5,7 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InventarioRepository } from './inventario.repository';
-import type { InventarioBootstrapData, InventarioListItem } from './inventario.types';
+import type {
+  InventarioBootstrapData,
+  InventarioListItem,
+} from './inventario.types';
 
 type CreateInventarioParams = {
   empresaId: number;
@@ -48,17 +51,24 @@ export class InventarioService {
   ): Promise<{ inventarioId: number }> {
     const empresaId = this.normalizeRequiredId(params.empresaId, 'empresaId');
     const bodegaId = this.normalizeRequiredId(params.bodegaId, 'bodegaId');
-    const varianteId = this.normalizeRequiredId(params.varianteId, 'varianteId');
+    const varianteId = this.normalizeRequiredId(
+      params.varianteId,
+      'varianteId',
+    );
     const stockTotal = this.normalizeStock(params.stockTotal, 'stockTotal');
-    const stockReservado = this.normalizeStock(params.stockReservado ?? 0, 'stockReservado');
+    const stockReservado = this.normalizeStock(
+      params.stockReservado ?? 0,
+      'stockReservado',
+    );
 
     this.validateStockConsistency(stockTotal, stockReservado);
     await this.validateForeignKeys(empresaId, bodegaId, varianteId);
 
-    const duplicated = await this.inventarioRepository.existsByBodegaAndVariante(
-      bodegaId,
-      varianteId,
-    );
+    const duplicated =
+      await this.inventarioRepository.existsByBodegaAndVariante(
+        bodegaId,
+        varianteId,
+      );
     if (duplicated) {
       throw new ConflictException(
         'Ya existe un registro de inventario para la combinacion bodega/variante',
@@ -95,7 +105,9 @@ export class InventarioService {
       params.stockReservado !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.inventarioRepository.findById(inventarioId);
@@ -127,11 +139,12 @@ export class InventarioService {
     this.validateStockConsistency(nextStockTotal, nextStockReservado);
     await this.validateForeignKeys(nextEmpresaId, nextBodegaId, nextVarianteId);
 
-    const duplicated = await this.inventarioRepository.existsByBodegaAndVariante(
-      nextBodegaId,
-      nextVarianteId,
-      inventarioId,
-    );
+    const duplicated =
+      await this.inventarioRepository.existsByBodegaAndVariante(
+        nextBodegaId,
+        nextVarianteId,
+        inventarioId,
+      );
     if (duplicated) {
       throw new ConflictException(
         'Ya existe un registro de inventario para la combinacion bodega/variante',
@@ -161,25 +174,28 @@ export class InventarioService {
     bodegaId: number,
     varianteId: number,
   ): Promise<void> {
-    const empresaExists = await this.inventarioRepository.existsEmpresaById(empresaId);
+    const empresaExists =
+      await this.inventarioRepository.existsEmpresaById(empresaId);
     if (!empresaExists) {
       throw new BadRequestException('EmpresaId no existe en la base de datos');
     }
 
-    const bodegaExists = await this.inventarioRepository.existsBodegaByIdAndEmpresaId(
-      bodegaId,
-      empresaId,
-    );
+    const bodegaExists =
+      await this.inventarioRepository.existsBodegaByIdAndEmpresaId(
+        bodegaId,
+        empresaId,
+      );
     if (!bodegaExists) {
       throw new BadRequestException(
         'BodegaId no existe o no pertenece a la empresa seleccionada',
       );
     }
 
-    const varianteExists = await this.inventarioRepository.existsVarianteByIdAndEmpresaId(
-      varianteId,
-      empresaId,
-    );
+    const varianteExists =
+      await this.inventarioRepository.existsVarianteByIdAndEmpresaId(
+        varianteId,
+        empresaId,
+      );
     if (!varianteExists) {
       throw new BadRequestException(
         'VarianteId no existe o no pertenece a la empresa seleccionada',
@@ -187,22 +203,31 @@ export class InventarioService {
     }
   }
 
-  private validateStockConsistency(stockTotal: number, stockReservado: number): void {
+  private validateStockConsistency(
+    stockTotal: number,
+    stockReservado: number,
+  ): void {
     if (stockReservado > stockTotal) {
-      throw new BadRequestException('stockReservado no puede ser mayor que stockTotal');
+      throw new BadRequestException(
+        'stockReservado no puede ser mayor que stockTotal',
+      );
     }
   }
 
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
 
   private normalizeStock(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value < 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero >= 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero >= 0`,
+      );
     }
     return value;
   }

@@ -6,12 +6,15 @@ import { CostoTransporteService } from './costo-transporte.service';
 
 @Controller('configuracion-general/costo-transporte')
 export class CostoTransporteController {
-  constructor(private readonly costoTransporteService: CostoTransporteService) {}
+  constructor(
+    private readonly costoTransporteService: CostoTransporteService,
+  ) {}
 
   @Get()
   @Permissions('config.read')
   async list() {
-    const costosTransporte = await this.costoTransporteService.listCostosTransporte();
+    const costosTransporte =
+      await this.costoTransporteService.listCostosTransporte();
     return { costosTransporte };
   }
 
@@ -24,14 +27,16 @@ export class CostoTransporteController {
   @Get(':id')
   @Permissions('config.read')
   async getById(@Param('id') id: string) {
-    const costoTransporte = await this.costoTransporteService.getCostoTransporteById(id);
+    const costoTransporte =
+      await this.costoTransporteService.getCostoTransporteById(id);
     return { costoTransporte };
   }
 
   @Post()
   @Permissions('config.manage')
   async create(@Body() body: CreateCostoTransporteDto) {
-    const result = await this.costoTransporteService.createCostoTransporte(body);
+    const result =
+      await this.costoTransporteService.createCostoTransporte(body);
     return {
       success: true,
       costoTransporteId: result.costoTransporteId,

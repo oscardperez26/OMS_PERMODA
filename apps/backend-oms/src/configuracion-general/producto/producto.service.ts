@@ -49,18 +49,22 @@ export class ProductoService {
     const nombre = this.normalizeRequiredText(params.nombre, 'nombre', 255);
     const activo = this.normalizeBoolean(params.activo, true);
 
-    const empresaExists = await this.productoRepository.existsEmpresaById(empresaId);
+    const empresaExists =
+      await this.productoRepository.existsEmpresaById(empresaId);
     if (!empresaExists) {
       throw new BadRequestException('EmpresaId no existe en la base de datos');
     }
 
     if (skuBase) {
-      const duplicated = await this.productoRepository.existsByEmpresaAndSkuBase(
-        empresaId,
-        skuBase,
-      );
+      const duplicated =
+        await this.productoRepository.existsByEmpresaAndSkuBase(
+          empresaId,
+          skuBase,
+        );
       if (duplicated) {
-        throw new ConflictException('Ya existe un producto con ese SKU base en la empresa');
+        throw new ConflictException(
+          'Ya existe un producto con ese SKU base en la empresa',
+        );
       }
     }
 
@@ -73,7 +77,9 @@ export class ProductoService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe un producto con ese SKU base en la empresa');
+        throw new ConflictException(
+          'Ya existe un producto con ese SKU base en la empresa',
+        );
       }
       throw error;
     }
@@ -90,7 +96,9 @@ export class ProductoService {
       params.activo !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.productoRepository.findById(productoId);
@@ -105,27 +113,33 @@ export class ProductoService {
     const nextSkuBase =
       params.skuBase !== undefined
         ? this.normalizeOptionalSkuBase(params.skuBase)
-        : current.skuBase ?? null;
+        : (current.skuBase ?? null);
     const nextNombre =
       params.nombre !== undefined
         ? this.normalizeRequiredText(params.nombre, 'nombre', 255)
         : current.nombre;
     const nextActivo =
-      params.activo !== undefined ? this.normalizeBoolean(params.activo) : current.activo;
+      params.activo !== undefined
+        ? this.normalizeBoolean(params.activo)
+        : current.activo;
 
-    const empresaExists = await this.productoRepository.existsEmpresaById(nextEmpresaId);
+    const empresaExists =
+      await this.productoRepository.existsEmpresaById(nextEmpresaId);
     if (!empresaExists) {
       throw new BadRequestException('EmpresaId no existe en la base de datos');
     }
 
     if (nextSkuBase) {
-      const duplicated = await this.productoRepository.existsByEmpresaAndSkuBase(
-        nextEmpresaId,
-        nextSkuBase,
-        productoId,
-      );
+      const duplicated =
+        await this.productoRepository.existsByEmpresaAndSkuBase(
+          nextEmpresaId,
+          nextSkuBase,
+          productoId,
+        );
       if (duplicated) {
-        throw new ConflictException('Ya existe un producto con ese SKU base en la empresa');
+        throw new ConflictException(
+          'Ya existe un producto con ese SKU base en la empresa',
+        );
       }
     }
 
@@ -138,7 +152,9 @@ export class ProductoService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe un producto con ese SKU base en la empresa');
+        throw new ConflictException(
+          'Ya existe un producto con ese SKU base en la empresa',
+        );
       }
       throw error;
     }
@@ -146,7 +162,9 @@ export class ProductoService {
 
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
@@ -157,7 +175,9 @@ export class ProductoService {
       return null;
     }
     if (normalized.length > 120) {
-      throw new BadRequestException('El campo skuBase no puede exceder 120 caracteres');
+      throw new BadRequestException(
+        'El campo skuBase no puede exceder 120 caracteres',
+      );
     }
     return normalized;
   }
@@ -169,7 +189,9 @@ export class ProductoService {
   ): string {
     const normalized = value.trim();
     if (!normalized) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacio`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacio`,
+      );
     }
     if (normalized.length > maxLength) {
       throw new BadRequestException(
@@ -179,7 +201,10 @@ export class ProductoService {
     return normalized;
   }
 
-  private normalizeBoolean(value: boolean | undefined, fallback?: boolean): boolean {
+  private normalizeBoolean(
+    value: boolean | undefined,
+    fallback?: boolean,
+  ): boolean {
     if (value === undefined) {
       if (fallback === undefined) {
         throw new BadRequestException('Valor booleano no enviado');

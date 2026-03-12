@@ -51,7 +51,9 @@ export class EmpresaService {
     return empresa;
   }
 
-  async createEmpresa(params: CreateEmpresaParams): Promise<{ empresaId: number }> {
+  async createEmpresa(
+    params: CreateEmpresaParams,
+  ): Promise<{ empresaId: number }> {
     const codigo = this.normalizeCodigo(params.codigo);
     const nombre = this.normalizeRequiredText(params.nombre, 'nombre', 240);
     const paisId = this.normalizeRequiredId(params.paisId, 'paisId');
@@ -78,7 +80,10 @@ export class EmpresaService {
     });
   }
 
-  async updateEmpresa(empresaId: number, params: UpdateEmpresaParams): Promise<void> {
+  async updateEmpresa(
+    empresaId: number,
+    params: UpdateEmpresaParams,
+  ): Promise<void> {
     const hasAnyField =
       params.codigo !== undefined ||
       params.nombre !== undefined ||
@@ -91,7 +96,9 @@ export class EmpresaService {
       params.monedaId !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.empresaRepository.findById(empresaId);
@@ -118,23 +125,23 @@ export class EmpresaService {
     const nextCiudadId =
       params.ciudadId !== undefined
         ? this.normalizeOptionalId(params.ciudadId, 'ciudadId')
-        : current.ciudadId ?? null;
+        : (current.ciudadId ?? null);
     const nextNit =
       params.nit !== undefined
         ? this.normalizeOptionalText(params.nit, 'nit', 50)
-        : current.nit ?? null;
+        : (current.nit ?? null);
     const nextEmail =
       params.email !== undefined
         ? this.normalizeOptionalText(params.email, 'email', 180, true)
-        : current.email ?? null;
+        : (current.email ?? null);
     const nextTelefono =
       params.telefono !== undefined
         ? this.normalizeOptionalText(params.telefono, 'telefono', 50)
-        : current.telefono ?? null;
+        : (current.telefono ?? null);
     const nextDireccion =
       params.direccion !== undefined
         ? this.normalizeOptionalText(params.direccion, 'direccion', 300)
-        : current.direccion ?? null;
+        : (current.direccion ?? null);
 
     const isDuplicate = await this.empresaRepository.existsByCodigo(
       nextCodigo,
@@ -181,12 +188,12 @@ export class EmpresaService {
       return;
     }
 
-    const ciudadBelongsToPais = await this.empresaRepository.existsCiudadByIdAndPaisId(
-      ciudadId,
-      paisId,
-    );
+    const ciudadBelongsToPais =
+      await this.empresaRepository.existsCiudadByIdAndPaisId(ciudadId, paisId);
     if (!ciudadBelongsToPais) {
-      throw new BadRequestException('CiudadId no pertenece al pais seleccionado');
+      throw new BadRequestException(
+        'CiudadId no pertenece al pais seleccionado',
+      );
     }
   }
 
@@ -196,7 +203,9 @@ export class EmpresaService {
       throw new BadRequestException('El campo codigo no puede estar vacio');
     }
     if (normalized.length > 50) {
-      throw new BadRequestException('El campo codigo no puede exceder 50 caracteres');
+      throw new BadRequestException(
+        'El campo codigo no puede exceder 50 caracteres',
+      );
     }
     return normalized;
   }
@@ -208,7 +217,9 @@ export class EmpresaService {
   ): string {
     const normalized = value.trim();
     if (!normalized) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacio`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacio`,
+      );
     }
     if (normalized.length > maxLength) {
       throw new BadRequestException(
@@ -238,7 +249,9 @@ export class EmpresaService {
 
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
@@ -251,7 +264,9 @@ export class EmpresaService {
       return null;
     }
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import * as sql from 'mssql';
 import { DatabaseService } from '../../database/database.service';
-import type { CreatePaisInput, PaisListItem, UpdatePaisInput } from './pais.types';
+import type {
+  CreatePaisInput,
+  PaisListItem,
+  UpdatePaisInput,
+} from './pais.types';
 
 type PaisRow = {
   PaisId: number;
@@ -51,10 +55,7 @@ export class PaisRepository {
   async findById(paisId: number): Promise<PaisListItem | null> {
     const result = await this.databaseService.execute<sql.IResult<PaisRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('paisId', sql.Int, paisId)
-          .query<PaisRow>(`
+        pool.request().input('paisId', sql.Int, paisId).query<PaisRow>(`
             SELECT
               [PaisId],
               [CodigoISO2],
@@ -88,13 +89,16 @@ export class PaisRepository {
     codigoISO2: string,
     excludePaisId?: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('codigoISO2', sql.Char(2), codigoISO2)
-          .input('excludePaisId', sql.Int, excludePaisId ?? null)
-          .query<{ count: number }>(`
+          .input('excludePaisId', sql.Int, excludePaisId ?? null).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Pais]
             WHERE [CodigoISO2] = @codigoISO2
@@ -108,7 +112,9 @@ export class PaisRepository {
 
   // Inserta respetando tipos reales: char(2), char(3), nvarchar(240).
   async create(input: CreatePaisInput): Promise<{ paisId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<PaisIdentityRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<PaisIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -146,8 +152,7 @@ export class PaisRepository {
           .input('paisId', sql.Int, paisId)
           .input('codigoISO2', sql.Char(2), input.codigoISO2)
           .input('codigoISO3', sql.Char(3), input.codigoISO3)
-          .input('nombre', sql.NVarChar(240), input.nombre)
-          .query(`
+          .input('nombre', sql.NVarChar(240), input.nombre).query(`
             UPDATE [oms].[Pais]
             SET
               [CodigoISO2] = @codigoISO2,

@@ -26,7 +26,10 @@ export class DatabaseService implements OnModuleDestroy {
         return await operation(pool);
       } catch (error) {
         lastError = error;
-        if (!this.isRecoverableConnectionError(error) || attempt === maxAttempts) {
+        if (
+          !this.isRecoverableConnectionError(error) ||
+          attempt === maxAttempts
+        ) {
           throw error;
         }
 
@@ -112,14 +115,20 @@ export class DatabaseService implements OnModuleDestroy {
   private buildConfig(): sql.config {
     const instanceName = this.config.get<string>('DB_INSTANCE');
     const dbPort = this.config.get<string>('DB_PORT');
-    const requestTimeout = this.getNumberConfig('DB_REQUEST_TIMEOUT_MS', 20_000);
+    const requestTimeout = this.getNumberConfig(
+      'DB_REQUEST_TIMEOUT_MS',
+      20_000,
+    );
     const connectionTimeout = this.getNumberConfig(
       'DB_CONNECTION_TIMEOUT_MS',
       15_000,
     );
     const poolMax = this.getNumberConfig('DB_POOL_MAX', 10);
     const poolMin = this.getNumberConfig('DB_POOL_MIN', 1);
-    const poolIdleTimeoutMillis = this.getNumberConfig('DB_POOL_IDLE_MS', 60_000);
+    const poolIdleTimeoutMillis = this.getNumberConfig(
+      'DB_POOL_IDLE_MS',
+      60_000,
+    );
 
     const dbConfig: sql.config = {
       user: this.config.get<string>('DB_USER'),
@@ -259,7 +268,9 @@ export class DatabaseService implements OnModuleDestroy {
   }
 
   async healthCheck() {
-    const result = await this.execute<sql.IResult<{ ok: number; databaseName: string }>>(
+    const result = await this.execute<
+      sql.IResult<{ ok: number; databaseName: string }>
+    >(
       (pool) =>
         pool.request().query(`
           SELECT 1 AS ok, DB_NAME() AS databaseName

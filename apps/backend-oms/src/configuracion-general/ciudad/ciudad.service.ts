@@ -41,8 +41,12 @@ export class CiudadService {
     return ciudad;
   }
 
-  async createCiudad(params: CreateCiudadParams): Promise<{ ciudadId: number }> {
-    const paisExists = await this.ciudadRepository.existsPaisById(params.paisId);
+  async createCiudad(
+    params: CreateCiudadParams,
+  ): Promise<{ ciudadId: number }> {
+    const paisExists = await this.ciudadRepository.existsPaisById(
+      params.paisId,
+    );
     if (!paisExists) {
       throw new BadRequestException('PaisId no existe en la base de datos');
     }
@@ -66,7 +70,10 @@ export class CiudadService {
     });
   }
 
-  async updateCiudad(ciudadId: number, params: UpdateCiudadParams): Promise<void> {
+  async updateCiudad(
+    ciudadId: number,
+    params: UpdateCiudadParams,
+  ): Promise<void> {
     const hasAnyField =
       params.paisId !== undefined ||
       params.nombre !== undefined ||
@@ -74,7 +81,9 @@ export class CiudadService {
       params.codigo !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.ciudadRepository.findById(ciudadId);
@@ -90,11 +99,11 @@ export class CiudadService {
     const nextDepartamento =
       params.departamento !== undefined
         ? this.normalizeOptionalText(params.departamento)
-        : current.departamento ?? null;
+        : (current.departamento ?? null);
     const nextCodigo =
       params.codigo !== undefined
         ? this.normalizeOptionalText(params.codigo)
-        : current.codigo ?? null;
+        : (current.codigo ?? null);
 
     const paisExists = await this.ciudadRepository.existsPaisById(nextPaisId);
     if (!paisExists) {
@@ -123,7 +132,9 @@ export class CiudadService {
   private normalizeRequiredText(value: string, fieldName: string): string {
     const normalized = value.trim();
     if (!normalized) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacio`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacio`,
+      );
     }
     return normalized;
   }

@@ -43,15 +43,18 @@ describe('SecurityPermissionsService', () => {
         Activo: true,
       },
     ]);
-    repository.listProfilePermissionCodes = jest.fn().mockResolvedValue([
-      { PerfilId: 1, Codigo: 'orders.read' },
-    ]);
+    repository.listProfilePermissionCodes = jest
+      .fn()
+      .mockResolvedValue([{ PerfilId: 1, Codigo: 'orders.read' }]);
 
     const result = await service.getBootstrap();
 
     expect(result.assignments).toEqual([
       { perfilId: 1, permissions: ['orders.read'] },
-      { perfilId: 2, permissions: ['orders.read', 'catalog.read', 'config.read'] },
+      {
+        perfilId: 2,
+        permissions: ['orders.read', 'catalog.read', 'config.read'],
+      },
     ]);
   });
 

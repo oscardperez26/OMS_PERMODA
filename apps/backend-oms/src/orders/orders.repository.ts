@@ -162,7 +162,9 @@ export class OrdersRepository {
     estadoCodigo: string,
     paisNombre: string,
   ): Promise<OrdersSyncContext> {
-    const contextResult = await this.databaseService.execute<sql.IResult<unknown>>(
+    const contextResult = await this.databaseService.execute<
+      sql.IResult<unknown>
+    >(
       (pool) =>
         pool
           .request()
@@ -171,8 +173,7 @@ export class OrdersRepository {
           .input('monedaCodigo', sql.Char(3), monedaCodigo)
           .input('estadoEntidad', sql.NVarChar(30), estadoEntidad)
           .input('estadoCodigo', sql.NVarChar(60), estadoCodigo)
-          .input('paisNombre', sql.NVarChar(120), paisNombre)
-          .query(`
+          .input('paisNombre', sql.NVarChar(120), paisNombre).query(`
             SELECT
               CAST(
                 CASE WHEN EXISTS(
@@ -251,9 +252,7 @@ export class OrdersRepository {
   async existsByNumeroPedido(numeroPedido: string): Promise<boolean> {
     const result = await this.databaseService.execute<sql.IResult<CountRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('numeroPedido', sql.NVarChar(60), numeroPedido)
+        pool.request().input('numeroPedido', sql.NVarChar(60), numeroPedido)
           .query<CountRow>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Pedido]
@@ -268,9 +267,7 @@ export class OrdersRepository {
   async existsByNumeroExterno(numeroExterno: string): Promise<boolean> {
     const result = await this.databaseService.execute<sql.IResult<CountRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('numeroExterno', sql.NVarChar(80), numeroExterno)
+        pool.request().input('numeroExterno', sql.NVarChar(80), numeroExterno)
           .query<CountRow>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Pedido]
@@ -286,48 +283,60 @@ export class OrdersRepository {
     numeroPedidos: string[];
     numeroExternos: string[];
   }): Promise<{ numeroPedidos: string[]; numeroExternos: string[] }> {
-    const normalizedNumeroPedidos = [...new Set(input.numeroPedidos.map((item) => item.trim()).filter(Boolean))];
-    const normalizedNumeroExternos = [...new Set(input.numeroExternos.map((item) => item.trim()).filter(Boolean))];
+    const normalizedNumeroPedidos = [
+      ...new Set(
+        input.numeroPedidos.map((item) => item.trim()).filter(Boolean),
+      ),
+    ];
+    const normalizedNumeroExternos = [
+      ...new Set(
+        input.numeroExternos.map((item) => item.trim()).filter(Boolean),
+      ),
+    ];
 
-    if (normalizedNumeroPedidos.length === 0 && normalizedNumeroExternos.length === 0) {
+    if (
+      normalizedNumeroPedidos.length === 0 &&
+      normalizedNumeroExternos.length === 0
+    ) {
       return { numeroPedidos: [], numeroExternos: [] };
     }
 
-    const result = await this.databaseService.execute<sql.IResult<ExistingPedidoKeyRow>>(
-      (pool) => {
-        const request = pool.request();
-        const whereParts: string[] = [];
+    const result = await this.databaseService.execute<
+      sql.IResult<ExistingPedidoKeyRow>
+    >((pool) => {
+      const request = pool.request();
+      const whereParts: string[] = [];
 
-        if (normalizedNumeroPedidos.length > 0) {
-          const numeroPedidoParams: string[] = [];
-          normalizedNumeroPedidos.forEach((value, index) => {
-            const paramName = `numeroPedido${index}`;
-            request.input(paramName, sql.NVarChar(60), value);
-            numeroPedidoParams.push(`@${paramName}`);
-          });
-          whereParts.push(`[NumeroPedido] IN (${numeroPedidoParams.join(', ')})`);
-        }
+      if (normalizedNumeroPedidos.length > 0) {
+        const numeroPedidoParams: string[] = [];
+        normalizedNumeroPedidos.forEach((value, index) => {
+          const paramName = `numeroPedido${index}`;
+          request.input(paramName, sql.NVarChar(60), value);
+          numeroPedidoParams.push(`@${paramName}`);
+        });
+        whereParts.push(`[NumeroPedido] IN (${numeroPedidoParams.join(', ')})`);
+      }
 
-        if (normalizedNumeroExternos.length > 0) {
-          const numeroExternoParams: string[] = [];
-          normalizedNumeroExternos.forEach((value, index) => {
-            const paramName = `numeroExterno${index}`;
-            request.input(paramName, sql.NVarChar(80), value);
-            numeroExternoParams.push(`@${paramName}`);
-          });
-          whereParts.push(`[NumeroExterno] IN (${numeroExternoParams.join(', ')})`);
-        }
+      if (normalizedNumeroExternos.length > 0) {
+        const numeroExternoParams: string[] = [];
+        normalizedNumeroExternos.forEach((value, index) => {
+          const paramName = `numeroExterno${index}`;
+          request.input(paramName, sql.NVarChar(80), value);
+          numeroExternoParams.push(`@${paramName}`);
+        });
+        whereParts.push(
+          `[NumeroExterno] IN (${numeroExternoParams.join(', ')})`,
+        );
+      }
 
-        return request.query<ExistingPedidoKeyRow>(`
+      return request.query<ExistingPedidoKeyRow>(`
           SELECT
             [NumeroPedido],
             [NumeroExterno]
           FROM [oms].[Pedido]
           WHERE ${whereParts.join(' OR ')}
         `);
-      },
-      'orders.findExistingPedidoKeys',
-    );
+    }, 'orders.findExistingPedidoKeys');
 
     const numeroPedidos = result.recordset
       .map((row) => row.NumeroPedido?.trim() ?? '')
@@ -343,7 +352,9 @@ export class OrdersRepository {
   }
 
   async createPedido(input: CreatePedidoInput): Promise<{ pedidoId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<PedidoIdentityRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<PedidoIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -361,7 +372,11 @@ export class OrdersRepository {
           .input('ClienteTelefono', sql.NVarChar(50), input.clienteTelefono)
           .input('ShippingPaisId', sql.Int, input.shippingPaisId)
           .input('ShippingCiudadId', sql.Int, input.shippingCiudadId)
-          .input('ShippingDireccion', sql.NVarChar(255), input.shippingDireccion)
+          .input(
+            'ShippingDireccion',
+            sql.NVarChar(255),
+            input.shippingDireccion,
+          )
           .input('ShippingBarrio', sql.NVarChar(120), input.shippingBarrio)
           .input('ShippingZip', sql.NVarChar(20), input.shippingZip)
           .input('Subtotal', sql.Decimal(18, 2), input.subtotal)
@@ -503,11 +518,11 @@ export class OrdersRepository {
   }
 
   async findPedidoDetailById(pedidoId: number): Promise<PedidoDetail | null> {
-    const result = await this.databaseService.execute<sql.IResult<PedidoDetailRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<PedidoDetailRow>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('pedidoId', sql.Int, pedidoId)
+        pool.request().input('pedidoId', sql.Int, pedidoId)
           .query<PedidoDetailRow>(`
             SELECT
               p.[PedidoId],
@@ -601,7 +616,10 @@ export class OrdersRepository {
         tiendaId: row.TiendaOrigenId,
         codigo: row.TiendaOrigenCodigo,
         nombre: row.TiendaOrigenNombre,
-        activa: row.TiendaOrigenActiva === null ? null : this.normalizeBoolean(row.TiendaOrigenActiva),
+        activa:
+          row.TiendaOrigenActiva === null
+            ? null
+            : this.normalizeBoolean(row.TiendaOrigenActiva),
       },
       empresaId: row.EmpresaId,
       createdAt: row.CreatedAt.toISOString(),
@@ -617,7 +635,9 @@ export class OrdersRepository {
       return null;
     }
 
-    const result = await this.databaseService.execute<sql.IResult<TiendaScopeRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<TiendaScopeRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -659,15 +679,14 @@ export class OrdersRepository {
     };
   }
 
-  async findZonaByCiudadId(
-    ciudadId: number,
-  ): Promise<{ zonaTransporteId: number; codigo: string; nombre: string } | null> {
+  async findZonaByCiudadId(ciudadId: number): Promise<{
+    zonaTransporteId: number;
+    codigo: string;
+    nombre: string;
+  } | null> {
     const result = await this.databaseService.execute<sql.IResult<ZonaRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('ciudadId', sql.Int, ciudadId)
-          .query<ZonaRow>(`
+        pool.request().input('ciudadId', sql.Int, ciudadId).query<ZonaRow>(`
             SELECT TOP 1
               zt.[ZonaTransporteId],
               zt.[Codigo],
@@ -696,14 +715,18 @@ export class OrdersRepository {
   async listTiendasByCodes(
     empresaId: number,
     storeCodes: string[],
-  ): Promise<Array<{ tiendaId: number; codigo: string; nombre: string; activa: boolean }>> {
-    const normalizedCodes = [...new Set(storeCodes.map((code) => code.trim()).filter(Boolean))];
+  ): Promise<
+    Array<{ tiendaId: number; codigo: string; nombre: string; activa: boolean }>
+  > {
+    const normalizedCodes = [
+      ...new Set(storeCodes.map((code) => code.trim()).filter(Boolean)),
+    ];
     if (normalizedCodes.length === 0) {
       return [];
     }
 
-    return this.databaseService.execute<sql.IResult<TiendaRow>>(
-      (pool) => {
+    return this.databaseService
+      .execute<sql.IResult<TiendaRow>>((pool) => {
         const request = pool.request().input('empresaId', sql.Int, empresaId);
         const params: string[] = [];
 
@@ -723,25 +746,33 @@ export class OrdersRepository {
           WHERE [EmpresaId] = @empresaId
             AND [Codigo] IN (${params.join(', ')})
         `);
-      },
-      'orders.listTiendasByCodes',
-    ).then((result) =>
-      result.recordset.map((row) => ({
-        tiendaId: row.TiendaId,
-        codigo: row.Codigo,
-        nombre: row.Nombre,
-        activa: this.normalizeBoolean(row.Activo),
-      })),
-    );
+      }, 'orders.listTiendasByCodes')
+      .then((result) =>
+        result.recordset.map((row) => ({
+          tiendaId: row.TiendaId,
+          codigo: row.Codigo,
+          nombre: row.Nombre,
+          activa: this.normalizeBoolean(row.Activo),
+        })),
+      );
   }
 
   async listActiveBodegasByTiendaIds(
     empresaId: number,
     tiendaIds: number[],
-  ): Promise<Array<{ bodegaId: number; tiendaId: number; codigo: string; nombre: string }>> {
+  ): Promise<
+    Array<{
+      bodegaId: number;
+      tiendaId: number;
+      codigo: string;
+      nombre: string;
+    }>
+  > {
     const normalizedTiendaIds = [
       ...new Set(
-        tiendaIds.filter((value): value is number => Number.isInteger(value) && value > 0),
+        tiendaIds.filter(
+          (value): value is number => Number.isInteger(value) && value > 0,
+        ),
       ),
     ];
     if (normalizedTiendaIds.length === 0) {
@@ -798,49 +829,56 @@ export class OrdersRepository {
         ),
       ),
     ];
-    const skus = [...new Set((input.skus ?? []).map((item) => item.trim()).filter(Boolean))];
-    const eans = [...new Set((input.eans ?? []).map((item) => item.trim()).filter(Boolean))];
+    const skus = [
+      ...new Set((input.skus ?? []).map((item) => item.trim()).filter(Boolean)),
+    ];
+    const eans = [
+      ...new Set((input.eans ?? []).map((item) => item.trim()).filter(Boolean)),
+    ];
 
     if (varianteIds.length === 0 && skus.length === 0 && eans.length === 0) {
       return [];
     }
 
-    const result = await this.databaseService.execute<sql.IResult<VarianteLookupRow>>(
-      (pool) => {
-        const request = pool.request().input('empresaId', sql.Int, input.empresaId);
-        const whereParts: string[] = [];
+    const result = await this.databaseService.execute<
+      sql.IResult<VarianteLookupRow>
+    >((pool) => {
+      const request = pool
+        .request()
+        .input('empresaId', sql.Int, input.empresaId);
+      const whereParts: string[] = [];
 
-        if (varianteIds.length > 0) {
-          const params: string[] = [];
-          varianteIds.forEach((id, index) => {
-            const param = `varianteId${index}`;
-            request.input(param, sql.BigInt, id);
-            params.push(`@${param}`);
-          });
-          whereParts.push(`[VarianteId] IN (${params.join(', ')})`);
-        }
+      if (varianteIds.length > 0) {
+        const params: string[] = [];
+        varianteIds.forEach((id, index) => {
+          const param = `varianteId${index}`;
+          request.input(param, sql.BigInt, id);
+          params.push(`@${param}`);
+        });
+        whereParts.push(`[VarianteId] IN (${params.join(', ')})`);
+      }
 
-        if (skus.length > 0) {
-          const params: string[] = [];
-          skus.forEach((sku, index) => {
-            const param = `sku${index}`;
-            request.input(param, sql.NVarChar(120), sku);
-            params.push(`UPPER(@${param})`);
-          });
-          whereParts.push(`UPPER([SKU]) IN (${params.join(', ')})`);
-        }
+      if (skus.length > 0) {
+        const params: string[] = [];
+        skus.forEach((sku, index) => {
+          const param = `sku${index}`;
+          request.input(param, sql.NVarChar(120), sku);
+          params.push(`UPPER(@${param})`);
+        });
+        whereParts.push(`UPPER([SKU]) IN (${params.join(', ')})`);
+      }
 
-        if (eans.length > 0) {
-          const params: string[] = [];
-          eans.forEach((ean, index) => {
-            const param = `ean${index}`;
-            request.input(param, sql.NVarChar(120), ean);
-            params.push(`@${param}`);
-          });
-          whereParts.push(`[EAN] IN (${params.join(', ')})`);
-        }
+      if (eans.length > 0) {
+        const params: string[] = [];
+        eans.forEach((ean, index) => {
+          const param = `ean${index}`;
+          request.input(param, sql.NVarChar(120), ean);
+          params.push(`@${param}`);
+        });
+        whereParts.push(`[EAN] IN (${params.join(', ')})`);
+      }
 
-        return request.query<VarianteLookupRow>(`
+      return request.query<VarianteLookupRow>(`
           SELECT
             [VarianteId],
             [SKU],
@@ -850,9 +888,7 @@ export class OrdersRepository {
             AND [Activo] = 1
             AND (${whereParts.join(' OR ')})
         `);
-      },
-      'orders.findVariantesBySignals',
-    );
+    }, 'orders.findVariantesBySignals');
 
     return result.recordset.map((row) => ({
       varianteId: Number(row.VarianteId),
@@ -865,10 +901,14 @@ export class OrdersRepository {
     empresaId: number;
     bodegaIds: number[];
     varianteIds: number[];
-  }): Promise<Array<{ bodegaId: number; varianteId: number; stockDisponible: number }>> {
+  }): Promise<
+    Array<{ bodegaId: number; varianteId: number; stockDisponible: number }>
+  > {
     const bodegaIds = [
       ...new Set(
-        input.bodegaIds.filter((value): value is number => Number.isInteger(value) && value > 0),
+        input.bodegaIds.filter(
+          (value): value is number => Number.isInteger(value) && value > 0,
+        ),
       ),
     ];
     const varianteIds = [
@@ -883,25 +923,28 @@ export class OrdersRepository {
       return [];
     }
 
-    const result = await this.databaseService.execute<sql.IResult<InventarioDisponibilidadRow>>(
-      (pool) => {
-        const request = pool.request().input('empresaId', sql.Int, input.empresaId);
-        const bodegaParams: string[] = [];
-        const varianteParams: string[] = [];
+    const result = await this.databaseService.execute<
+      sql.IResult<InventarioDisponibilidadRow>
+    >((pool) => {
+      const request = pool
+        .request()
+        .input('empresaId', sql.Int, input.empresaId);
+      const bodegaParams: string[] = [];
+      const varianteParams: string[] = [];
 
-        bodegaIds.forEach((id, index) => {
-          const param = `bodegaId${index}`;
-          request.input(param, sql.Int, id);
-          bodegaParams.push(`@${param}`);
-        });
+      bodegaIds.forEach((id, index) => {
+        const param = `bodegaId${index}`;
+        request.input(param, sql.Int, id);
+        bodegaParams.push(`@${param}`);
+      });
 
-        varianteIds.forEach((id, index) => {
-          const param = `varianteId${index}`;
-          request.input(param, sql.BigInt, id);
-          varianteParams.push(`@${param}`);
-        });
+      varianteIds.forEach((id, index) => {
+        const param = `varianteId${index}`;
+        request.input(param, sql.BigInt, id);
+        varianteParams.push(`@${param}`);
+      });
 
-        return request.query<InventarioDisponibilidadRow>(`
+      return request.query<InventarioDisponibilidadRow>(`
           SELECT
             [BodegaId],
             [VarianteId],
@@ -912,14 +955,15 @@ export class OrdersRepository {
             AND [BodegaId] IN (${bodegaParams.join(', ')})
             AND [VarianteId] IN (${varianteParams.join(', ')})
         `);
-      },
-      'orders.listInventarioDisponibilidad',
-    );
+    }, 'orders.listInventarioDisponibilidad');
 
     return result.recordset.map((row) => ({
       bodegaId: row.BodegaId,
       varianteId: Number(row.VarianteId),
-      stockDisponible: Math.max(0, Number(row.StockTotal) - Number(row.StockReservado)),
+      stockDisponible: Math.max(
+        0,
+        Number(row.StockTotal) - Number(row.StockReservado),
+      ),
     }));
   }
 
@@ -1012,8 +1056,7 @@ export class OrdersRepository {
         pool
           .request()
           .input('entidad', sql.NVarChar(30), entidad)
-          .input('codigo', sql.NVarChar(60), codigo)
-          .query<EstadoRow>(`
+          .input('codigo', sql.NVarChar(60), codigo).query<EstadoRow>(`
             SELECT TOP 1
               [EstadoId],
               [Codigo],
@@ -1044,10 +1087,7 @@ export class OrdersRepository {
   ): Promise<{ estadoId: number; codigo: string; nombre: string } | null> {
     const result = await this.databaseService.execute<sql.IResult<EstadoRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('estadoId', sql.Int, estadoId)
-          .query<EstadoRow>(`
+        pool.request().input('estadoId', sql.Int, estadoId).query<EstadoRow>(`
             SELECT TOP 1
               [EstadoId],
               [Codigo],
@@ -1077,18 +1117,16 @@ export class OrdersRepository {
     estadoId: number;
     estadoAnteriorId: number | null;
   }): Promise<void> {
-    await this.databaseService.execute(
-      async (pool) => {
-        const transaction = new sql.Transaction(pool);
-        await transaction.begin();
+    await this.databaseService.execute(async (pool) => {
+      const transaction = new sql.Transaction(pool);
+      await transaction.begin();
 
-        try {
-          await transaction
-            .request()
-            .input('pedidoId', sql.Int, input.pedidoId)
-            .input('tiendaOrigenId', sql.Int, input.tiendaOrigenId)
-            .input('estadoId', sql.Int, input.estadoId)
-            .query(`
+      try {
+        await transaction
+          .request()
+          .input('pedidoId', sql.Int, input.pedidoId)
+          .input('tiendaOrigenId', sql.Int, input.tiendaOrigenId)
+          .input('estadoId', sql.Int, input.estadoId).query(`
               UPDATE [oms].[Pedido]
               SET
                 [TiendaOrigenId] = @tiendaOrigenId,
@@ -1097,12 +1135,11 @@ export class OrdersRepository {
               WHERE [PedidoId] = @pedidoId
             `);
 
-          await transaction
-            .request()
-            .input('pedidoId', sql.Int, input.pedidoId)
-            .input('estadoId', sql.Int, input.estadoId)
-            .input('estadoAnteriorId', sql.Int, input.estadoAnteriorId)
-            .query(`
+        await transaction
+          .request()
+          .input('pedidoId', sql.Int, input.pedidoId)
+          .input('estadoId', sql.Int, input.estadoId)
+          .input('estadoAnteriorId', sql.Int, input.estadoAnteriorId).query(`
               DECLARE @historialObjectId INT = OBJECT_ID('[oms].[PedidoEstadoHistorial]');
               IF @historialObjectId IS NULL
               BEGIN
@@ -1194,18 +1231,16 @@ export class OrdersRepository {
                 @estadoAnteriorId = @estadoAnteriorId;
             `);
 
-          await transaction.commit();
-        } catch (error) {
-          try {
-            await transaction.rollback();
-          } catch {
-            // Ignore rollback errors when transaction is already closed.
-          }
-          throw error;
+        await transaction.commit();
+      } catch (error) {
+        try {
+          await transaction.rollback();
+        } catch {
+          // Ignore rollback errors when transaction is already closed.
         }
-      },
-      'orders.applyAssignmentUpdateAndHistory',
-    );
+        throw error;
+      }
+    }, 'orders.applyAssignmentUpdateAndHistory');
   }
 
   async insertAssignmentCarrierLog(input: {
@@ -1232,8 +1267,7 @@ export class OrdersRepository {
           )
           .input('dataJson', sql.NVarChar(sql.MAX), input.payloadJson)
           .input('ip', sql.NVarChar(90), null)
-          .input('userAgent', sql.NVarChar(510), null)
-          .query(`
+          .input('userAgent', sql.NVarChar(510), null).query(`
             DECLARE @logObjectId INT = OBJECT_ID('[oms].[Log]');
             IF @logObjectId IS NULL
             BEGIN
@@ -1371,10 +1405,7 @@ export class OrdersRepository {
 
     const result = await this.databaseService.execute<sql.IResult<CiudadRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('paisId', sql.Int, paisId)
-          .query<CiudadRow>(`
+        pool.request().input('paisId', sql.Int, paisId).query<CiudadRow>(`
             SELECT
               [CiudadId],
               [Nombre]

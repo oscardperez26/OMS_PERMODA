@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import * as sql from 'mssql';
 import { DatabaseService } from '../database/database.service';
-import type { CreateUserInput, UserListItem, UserScopeItem } from './users.types';
+import type {
+  CreateUserInput,
+  UserListItem,
+  UserScopeItem,
+} from './users.types';
 
 type UsuarioRow = {
   UsuarioId: number;
@@ -52,9 +56,7 @@ export class UsersRepository {
   ): Promise<UserListItem[]> {
     const result = await this.databaseService.execute<sql.IResult<UsuarioRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('empresaClienteId', sql.Int, empresaClienteId)
+        pool.request().input('empresaClienteId', sql.Int, empresaClienteId)
           .query<UsuarioRow>(`
             SELECT
               [UsuarioId],
@@ -88,15 +90,12 @@ export class UsersRepository {
       }>
     >(
       (pool) =>
-        pool
-          .request()
-          .input('userId', sql.NVarChar(50), userId)
-          .query<{
-            UsuarioId: number;
-            EmpresaId: number | null;
-            EmpresaClienteId: number | null;
-            PerfilId: number;
-          }>(`
+        pool.request().input('userId', sql.NVarChar(50), userId).query<{
+          UsuarioId: number;
+          EmpresaId: number | null;
+          EmpresaClienteId: number | null;
+          PerfilId: number;
+        }>(`
             SELECT TOP (1)
               [UsuarioId],
               [EmpresaId],

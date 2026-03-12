@@ -1,4 +1,13 @@
-import { IsInt, IsOptional, IsString, Length, Max, MaxLength, Min, MinLength } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class UpdateMonedaDto {
   @IsOptional()

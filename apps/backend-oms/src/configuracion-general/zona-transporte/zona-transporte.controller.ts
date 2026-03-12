@@ -19,7 +19,8 @@ export class ZonaTransporteController {
   @Get()
   @Permissions('config.read')
   async list() {
-    const zonasTransporte = await this.zonaTransporteService.listZonasTransporte();
+    const zonasTransporte =
+      await this.zonaTransporteService.listZonasTransporte();
     return { zonasTransporte };
   }
 
@@ -32,7 +33,8 @@ export class ZonaTransporteController {
   @Get(':id')
   @Permissions('config.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
-    const zonaTransporte = await this.zonaTransporteService.getZonaTransporteById(id);
+    const zonaTransporte =
+      await this.zonaTransporteService.getZonaTransporteById(id);
     return { zonaTransporte };
   }
 

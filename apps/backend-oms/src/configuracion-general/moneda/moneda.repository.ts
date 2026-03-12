@@ -57,10 +57,7 @@ export class MonedaRepository {
   async findById(monedaId: number): Promise<MonedaListItem | null> {
     const result = await this.databaseService.execute<sql.IResult<MonedaRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('monedaId', sql.Int, monedaId)
-          .query<MonedaRow>(`
+        pool.request().input('monedaId', sql.Int, monedaId).query<MonedaRow>(`
             SELECT
               [MonedaId],
               [Codigo],
@@ -91,14 +88,20 @@ export class MonedaRepository {
     };
   }
 
-  async existsByCodigo(codigo: string, excludeMonedaId?: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+  async existsByCodigo(
+    codigo: string,
+    excludeMonedaId?: number,
+  ): Promise<boolean> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('codigo', sql.Char(3), codigo)
-          .input('excludeMonedaId', sql.Int, excludeMonedaId ?? null)
-          .query<{ count: number }>(`
+          .input('excludeMonedaId', sql.Int, excludeMonedaId ?? null).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Moneda]
             WHERE [Codigo] = @codigo
@@ -111,7 +114,9 @@ export class MonedaRepository {
   }
 
   async create(input: CreateMonedaInput): Promise<{ monedaId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<MonedaIdentityRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<MonedaIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -153,8 +158,7 @@ export class MonedaRepository {
           .input('codigo', sql.Char(3), input.codigo)
           .input('simbolo', sql.NVarChar(10), input.simbolo)
           .input('nombre', sql.NVarChar(60), input.nombre)
-          .input('decimales', sql.TinyInt, input.decimales)
-          .query(`
+          .input('decimales', sql.TinyInt, input.decimales).query(`
             UPDATE [oms].[Moneda]
             SET
               [Codigo] = @codigo,

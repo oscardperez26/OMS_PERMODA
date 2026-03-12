@@ -98,10 +98,9 @@ export class SecurityPermissionsRepository {
         sql.IResult<{ Codigo: string }>
       >(
         (pool) =>
-          pool
-            .request()
-            .input('perfilId', sql.Int, perfilId)
-            .query<{ Codigo: string }>(`
+          pool.request().input('perfilId', sql.Int, perfilId).query<{
+            Codigo: string;
+          }>(`
               SELECT p.[Codigo]
               FROM [oms].[PerfilPermiso] pp
               INNER JOIN [oms].[Permiso] p
@@ -139,9 +138,9 @@ export class SecurityPermissionsRepository {
   async findPermissionIdsByCodes(
     codes: string[],
   ): Promise<PermissionLookupItem[]> {
-    const normalizedCodes = [...new Set(codes.map((item) => item.trim()))].filter(
-      (item) => item.length > 0,
-    );
+    const normalizedCodes = [
+      ...new Set(codes.map((item) => item.trim())),
+    ].filter((item) => item.length > 0);
 
     if (normalizedCodes.length === 0) {
       return [];
@@ -187,8 +186,7 @@ export class SecurityPermissionsRepository {
       await transaction.begin();
 
       try {
-        await new sql.Request(transaction)
-          .input('perfilId', sql.Int, perfilId)
+        await new sql.Request(transaction).input('perfilId', sql.Int, perfilId)
           .query(`
             DELETE FROM [oms].[PerfilPermiso]
             WHERE [PerfilId] = @perfilId
@@ -200,7 +198,11 @@ export class SecurityPermissionsRepository {
             sql.Int,
             perfilId,
           );
-          const valueParams = this.bindValues(request, 'permisoId', normalizedIds);
+          const valueParams = this.bindValues(
+            request,
+            'permisoId',
+            normalizedIds,
+          );
           const valuesClause = valueParams
             .map((paramName) => `(@perfilId, @${paramName}, SYSUTCDATETIME())`)
             .join(', ');

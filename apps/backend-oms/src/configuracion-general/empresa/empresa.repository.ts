@@ -140,9 +140,7 @@ export class EmpresaRepository {
   async findById(empresaId: number): Promise<EmpresaListItem | null> {
     const result = await this.databaseService.execute<sql.IResult<EmpresaRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('empresaId', sql.Int, empresaId)
+        pool.request().input('empresaId', sql.Int, empresaId)
           .query<EmpresaRow>(`
             SELECT
               [EmpresaId],
@@ -172,14 +170,20 @@ export class EmpresaRepository {
     return this.mapEmpresaRow(row);
   }
 
-  async existsByCodigo(codigo: string, excludeEmpresaId?: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+  async existsByCodigo(
+    codigo: string,
+    excludeEmpresaId?: number,
+  ): Promise<boolean> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('codigo', sql.NVarChar(50), codigo)
-          .input('excludeEmpresaId', sql.Int, excludeEmpresaId ?? null)
-          .query<{ count: number }>(`
+          .input('excludeEmpresaId', sql.Int, excludeEmpresaId ?? null).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Empresa]
             WHERE [Codigo] = @codigo
@@ -192,12 +196,13 @@ export class EmpresaRepository {
   }
 
   async existsPaisById(paisId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('paisId', sql.Int, paisId)
-          .query<{ count: number }>(`
+        pool.request().input('paisId', sql.Int, paisId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Pais]
             WHERE [PaisId] = @paisId
@@ -209,12 +214,13 @@ export class EmpresaRepository {
   }
 
   async existsMonedaById(monedaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('monedaId', sql.Int, monedaId)
-          .query<{ count: number }>(`
+        pool.request().input('monedaId', sql.Int, monedaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Moneda]
             WHERE [MonedaId] = @monedaId
@@ -225,14 +231,18 @@ export class EmpresaRepository {
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
-  async existsCiudadByIdAndPaisId(ciudadId: number, paisId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+  async existsCiudadByIdAndPaisId(
+    ciudadId: number,
+    paisId: number,
+  ): Promise<boolean> {
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('ciudadId', sql.Int, ciudadId)
-          .input('paisId', sql.Int, paisId)
-          .query<{ count: number }>(`
+          .input('paisId', sql.Int, paisId).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Ciudad]
             WHERE [CiudadId] = @ciudadId
@@ -245,7 +255,9 @@ export class EmpresaRepository {
   }
 
   async create(input: CreateEmpresaInput): Promise<{ empresaId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<EmpresaIdentityRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<EmpresaIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -307,8 +319,7 @@ export class EmpresaRepository {
           .input('paisId', sql.Int, input.paisId)
           .input('ciudadId', sql.Int, input.ciudadId)
           .input('direccion', sql.NVarChar(300), input.direccion)
-          .input('monedaId', sql.Int, input.monedaId)
-          .query(`
+          .input('monedaId', sql.Int, input.monedaId).query(`
             UPDATE [oms].[Empresa]
             SET
               [Codigo] = @codigo,

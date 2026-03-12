@@ -76,7 +76,9 @@ export class CostoTransporteRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async list(): Promise<CostoTransporteListItem[]> {
-    const result = await this.databaseService.execute<sql.IResult<CostoTransporteRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<CostoTransporteRow>
+    >(
       (pool) =>
         pool.request().query<CostoTransporteRow>(`
           SELECT
@@ -173,24 +175,31 @@ export class CostoTransporteRepository {
     const costosRows = (result.recordsets?.[0] ?? []) as CostoTransporteRow[];
     const empresasRows = (result.recordsets?.[1] ?? []) as EmpresaRow[];
     const zonasRows = (result.recordsets?.[2] ?? []) as ZonaRow[];
-    const transportadorasRows = (result.recordsets?.[3] ?? []) as TransportadoraRow[];
+    const transportadorasRows = (result.recordsets?.[3] ??
+      []) as TransportadoraRow[];
     const monedasRows = (result.recordsets?.[4] ?? []) as MonedaRow[];
 
     return {
-      costosTransporte: costosRows.map((row) => this.mapCostoTransporteRow(row)),
+      costosTransporte: costosRows.map((row) =>
+        this.mapCostoTransporteRow(row),
+      ),
       empresas: empresasRows.map((row) => this.mapEmpresaRow(row)),
       zonasTransporte: zonasRows.map((row) => this.mapZonaRow(row)),
-      transportadoras: transportadorasRows.map((row) => this.mapTransportadoraRow(row)),
+      transportadoras: transportadorasRows.map((row) =>
+        this.mapTransportadoraRow(row),
+      ),
       monedas: monedasRows.map((row) => this.mapMonedaRow(row)),
     };
   }
 
-  async findById(costoTransporteId: string): Promise<CostoTransporteListItem | null> {
-    const result = await this.databaseService.execute<sql.IResult<CostoTransporteRow>>(
+  async findById(
+    costoTransporteId: string,
+  ): Promise<CostoTransporteListItem | null> {
+    const result = await this.databaseService.execute<
+      sql.IResult<CostoTransporteRow>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('costoTransporteId', sql.BigInt, costoTransporteId)
+        pool.request().input('costoTransporteId', sql.BigInt, costoTransporteId)
           .query<CostoTransporteRow>(`
             SELECT
               [CostoTransporteId],
@@ -226,7 +235,9 @@ export class CostoTransporteRepository {
     input: CreateCostoTransporteInput,
     excludeCostoTransporteId?: string,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
@@ -240,8 +251,11 @@ export class CostoTransporteRepository {
           .input('valorMax', sql.Decimal(18, 2), input.valorMax)
           .input('diasMin', sql.Int, input.diasMin)
           .input('diasMax', sql.Int, input.diasMax)
-          .input('excludeCostoTransporteId', sql.BigInt, excludeCostoTransporteId ?? null)
-          .query<{ count: number }>(`
+          .input(
+            'excludeCostoTransporteId',
+            sql.BigInt,
+            excludeCostoTransporteId ?? null,
+          ).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[CostoTransporte]
             WHERE [EmpresaId] = @empresaId
@@ -272,7 +286,9 @@ export class CostoTransporteRepository {
     monedaId: number,
     excludeCostoTransporteId?: string,
   ): Promise<CostoTransporteRangeCandidate[]> {
-    const result = await this.databaseService.execute<sql.IResult<CostoTransporteRangeRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<CostoTransporteRangeRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -280,8 +296,11 @@ export class CostoTransporteRepository {
           .input('zonaTransporteId', sql.Int, zonaTransporteId)
           .input('transportadoraId', sql.Int, transportadoraId)
           .input('monedaId', sql.Int, monedaId)
-          .input('excludeCostoTransporteId', sql.BigInt, excludeCostoTransporteId ?? null)
-          .query<CostoTransporteRangeRow>(`
+          .input(
+            'excludeCostoTransporteId',
+            sql.BigInt,
+            excludeCostoTransporteId ?? null,
+          ).query<CostoTransporteRangeRow>(`
             SELECT
               [CostoTransporteId],
               [PesoMinKg],
@@ -316,12 +335,13 @@ export class CostoTransporteRepository {
   }
 
   async existsEmpresaById(empresaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+        pool.request().input('empresaId', sql.Int, empresaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Empresa]
             WHERE [EmpresaId] = @empresaId
@@ -333,11 +353,11 @@ export class CostoTransporteRepository {
   }
 
   async existsZonaTransporteById(zonaTransporteId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('zonaTransporteId', sql.Int, zonaTransporteId)
+        pool.request().input('zonaTransporteId', sql.Int, zonaTransporteId)
           .query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[ZonaTransporte]
@@ -353,13 +373,14 @@ export class CostoTransporteRepository {
     zonaTransporteId: number,
     empresaId: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('zonaTransporteId', sql.Int, zonaTransporteId)
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+          .input('empresaId', sql.Int, empresaId).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[ZonaTransporte]
             WHERE [ZonaTransporteId] = @zonaTransporteId
@@ -372,11 +393,11 @@ export class CostoTransporteRepository {
   }
 
   async existsTransportadoraById(transportadoraId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('transportadoraId', sql.Int, transportadoraId)
+        pool.request().input('transportadoraId', sql.Int, transportadoraId)
           .query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Transportadora]
@@ -392,13 +413,14 @@ export class CostoTransporteRepository {
     transportadoraId: number,
     empresaId: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('transportadoraId', sql.Int, transportadoraId)
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+          .input('empresaId', sql.Int, empresaId).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Transportadora]
             WHERE [TransportadoraId] = @transportadoraId
@@ -411,12 +433,13 @@ export class CostoTransporteRepository {
   }
 
   async existsMonedaById(monedaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('monedaId', sql.Int, monedaId)
-          .query<{ count: number }>(`
+        pool.request().input('monedaId', sql.Int, monedaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Moneda]
             WHERE [MonedaId] = @monedaId
@@ -430,7 +453,9 @@ export class CostoTransporteRepository {
   async create(
     input: CreateCostoTransporteInput,
   ): Promise<{ costoTransporteId: string }> {
-    const result = await this.databaseService.execute<sql.IResult<CostoTransporteIdentityRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<CostoTransporteIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -484,7 +509,9 @@ export class CostoTransporteRepository {
       'costo-transporte.create',
     );
 
-    return { costoTransporteId: this.toStringId(result.recordset[0].CostoTransporteId) };
+    return {
+      costoTransporteId: this.toStringId(result.recordset[0].CostoTransporteId),
+    };
   }
 
   async update(
@@ -507,8 +534,7 @@ export class CostoTransporteRepository {
           .input('costo', sql.Decimal(18, 2), input.costo)
           .input('diasMin', sql.Int, input.diasMin)
           .input('diasMax', sql.Int, input.diasMax)
-          .input('activo', sql.Bit, input.activo)
-          .query(`
+          .input('activo', sql.Bit, input.activo).query(`
             UPDATE [oms].[CostoTransporte]
             SET
               [EmpresaId] = @empresaId,
@@ -530,7 +556,9 @@ export class CostoTransporteRepository {
     );
   }
 
-  private mapCostoTransporteRow(row: CostoTransporteRow): CostoTransporteListItem {
+  private mapCostoTransporteRow(
+    row: CostoTransporteRow,
+  ): CostoTransporteListItem {
     return {
       costoTransporteId: this.toStringId(row.CostoTransporteId),
       empresaId: row.EmpresaId,

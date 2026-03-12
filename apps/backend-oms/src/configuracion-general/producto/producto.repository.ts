@@ -91,9 +91,7 @@ export class ProductoRepository {
   async findById(productoId: number): Promise<ProductoListItem | null> {
     const result = await this.databaseService.execute<sql.IResult<ProductoRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('productoId', sql.Int, productoId)
+        pool.request().input('productoId', sql.Int, productoId)
           .query<ProductoRow>(`
             SELECT
               [ProductoId],
@@ -122,7 +120,9 @@ export class ProductoRepository {
     skuBase: string,
     excludeProductoId?: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
@@ -143,12 +143,13 @@ export class ProductoRepository {
   }
 
   async existsEmpresaById(empresaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+        pool.request().input('empresaId', sql.Int, empresaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Empresa]
             WHERE [EmpresaId] = @empresaId
@@ -160,15 +161,16 @@ export class ProductoRepository {
   }
 
   async create(input: CreateProductoInput): Promise<{ productoId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<ProductoIdentityRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<ProductoIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
           .input('EmpresaId', sql.Int, input.empresaId)
           .input('SKUBase', sql.NVarChar(120), input.skuBase)
           .input('Nombre', sql.NVarChar(255), input.nombre)
-          .input('Activo', sql.Bit, input.activo)
-          .query<ProductoIdentityRow>(`
+          .input('Activo', sql.Bit, input.activo).query<ProductoIdentityRow>(`
             INSERT INTO [oms].[Producto]
             (
               [EmpresaId],
@@ -202,8 +204,7 @@ export class ProductoRepository {
           .input('empresaId', sql.Int, input.empresaId)
           .input('skuBase', sql.NVarChar(120), input.skuBase)
           .input('nombre', sql.NVarChar(255), input.nombre)
-          .input('activo', sql.Bit, input.activo)
-          .query(`
+          .input('activo', sql.Bit, input.activo).query(`
             UPDATE [oms].[Producto]
             SET
               [EmpresaId] = @empresaId,

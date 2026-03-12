@@ -28,7 +28,9 @@ type UpdateZonaTransporteParams = {
 
 @Injectable()
 export class ZonaTransporteService {
-  constructor(private readonly zonaTransporteRepository: ZonaTransporteRepository) {}
+  constructor(
+    private readonly zonaTransporteRepository: ZonaTransporteRepository,
+  ) {}
 
   async listZonasTransporte(): Promise<ZonaTransporteListItem[]> {
     return this.zonaTransporteRepository.list();
@@ -38,8 +40,11 @@ export class ZonaTransporteService {
     return this.zonaTransporteRepository.listBootstrapData();
   }
 
-  async getZonaTransporteById(zonaTransporteId: number): Promise<ZonaTransporteListItem> {
-    const zonaTransporte = await this.zonaTransporteRepository.findById(zonaTransporteId);
+  async getZonaTransporteById(
+    zonaTransporteId: number,
+  ): Promise<ZonaTransporteListItem> {
+    const zonaTransporte =
+      await this.zonaTransporteRepository.findById(zonaTransporteId);
     if (!zonaTransporte) {
       throw new NotFoundException('Zona de transporte no existe');
     }
@@ -55,12 +60,15 @@ export class ZonaTransporteService {
     const paisId = this.normalizeOptionalId(params.paisId, 'paisId');
     const activo = this.normalizeBoolean(params.activo, true);
 
-    const duplicated = await this.zonaTransporteRepository.existsByEmpresaAndCodigo(
-      empresaId,
-      codigo,
-    );
+    const duplicated =
+      await this.zonaTransporteRepository.existsByEmpresaAndCodigo(
+        empresaId,
+        codigo,
+      );
     if (duplicated) {
-      throw new ConflictException('Ya existe una zona con ese codigo en la empresa');
+      throw new ConflictException(
+        'Ya existe una zona con ese codigo en la empresa',
+      );
     }
 
     await this.validateForeignKeys(empresaId, paisId);
@@ -75,7 +83,9 @@ export class ZonaTransporteService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe una zona con ese codigo en la empresa');
+        throw new ConflictException(
+          'Ya existe una zona con ese codigo en la empresa',
+        );
       }
       throw error;
     }
@@ -93,10 +103,13 @@ export class ZonaTransporteService {
       params.activo !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
-    const current = await this.zonaTransporteRepository.findById(zonaTransporteId);
+    const current =
+      await this.zonaTransporteRepository.findById(zonaTransporteId);
     if (!current) {
       throw new NotFoundException('Zona de transporte no existe');
     }
@@ -106,7 +119,9 @@ export class ZonaTransporteService {
         ? this.normalizeRequiredId(params.empresaId, 'empresaId')
         : current.empresaId;
     const nextCodigo =
-      params.codigo !== undefined ? this.normalizeCodigo(params.codigo) : current.codigo;
+      params.codigo !== undefined
+        ? this.normalizeCodigo(params.codigo)
+        : current.codigo;
     const nextNombre =
       params.nombre !== undefined
         ? this.normalizeRequiredText(params.nombre, 'nombre', 180)
@@ -114,17 +129,22 @@ export class ZonaTransporteService {
     const nextPaisId =
       params.paisId !== undefined
         ? this.normalizeOptionalId(params.paisId, 'paisId')
-        : current.paisId ?? null;
+        : (current.paisId ?? null);
     const nextActivo =
-      params.activo !== undefined ? this.normalizeBoolean(params.activo) : current.activo;
+      params.activo !== undefined
+        ? this.normalizeBoolean(params.activo)
+        : current.activo;
 
-    const duplicated = await this.zonaTransporteRepository.existsByEmpresaAndCodigo(
-      nextEmpresaId,
-      nextCodigo,
-      zonaTransporteId,
-    );
+    const duplicated =
+      await this.zonaTransporteRepository.existsByEmpresaAndCodigo(
+        nextEmpresaId,
+        nextCodigo,
+        zonaTransporteId,
+      );
     if (duplicated) {
-      throw new ConflictException('Ya existe una zona con ese codigo en la empresa');
+      throw new ConflictException(
+        'Ya existe una zona con ese codigo en la empresa',
+      );
     }
 
     await this.validateForeignKeys(nextEmpresaId, nextPaisId);
@@ -139,7 +159,9 @@ export class ZonaTransporteService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe una zona con ese codigo en la empresa');
+        throw new ConflictException(
+          'Ya existe una zona con ese codigo en la empresa',
+        );
       }
       throw error;
     }
@@ -149,7 +171,8 @@ export class ZonaTransporteService {
     empresaId: number,
     paisId: number | null,
   ): Promise<void> {
-    const empresaExists = await this.zonaTransporteRepository.existsEmpresaById(empresaId);
+    const empresaExists =
+      await this.zonaTransporteRepository.existsEmpresaById(empresaId);
     if (!empresaExists) {
       throw new BadRequestException('EmpresaId no existe en la base de datos');
     }
@@ -158,7 +181,8 @@ export class ZonaTransporteService {
       return;
     }
 
-    const paisExists = await this.zonaTransporteRepository.existsPaisById(paisId);
+    const paisExists =
+      await this.zonaTransporteRepository.existsPaisById(paisId);
     if (!paisExists) {
       throw new BadRequestException('PaisId no existe en la base de datos');
     }
@@ -170,7 +194,9 @@ export class ZonaTransporteService {
       throw new BadRequestException('El campo codigo no puede estar vacio');
     }
     if (normalized.length > 60) {
-      throw new BadRequestException('El campo codigo no puede exceder 60 caracteres');
+      throw new BadRequestException(
+        'El campo codigo no puede exceder 60 caracteres',
+      );
     }
     return normalized;
   }
@@ -182,7 +208,9 @@ export class ZonaTransporteService {
   ): string {
     const normalized = value.trim();
     if (!normalized) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacio`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacio`,
+      );
     }
     if (normalized.length > maxLength) {
       throw new BadRequestException(
@@ -194,7 +222,9 @@ export class ZonaTransporteService {
 
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
@@ -207,12 +237,17 @@ export class ZonaTransporteService {
       return null;
     }
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
 
-  private normalizeBoolean(value: boolean | undefined, fallback?: boolean): boolean {
+  private normalizeBoolean(
+    value: boolean | undefined,
+    fallback?: boolean,
+  ): boolean {
     if (value === undefined) {
       if (fallback === undefined) {
         throw new BadRequestException('Valor booleano no enviado');

@@ -73,7 +73,10 @@ export class OrdersService {
     const rows = await this.ordersRepository.listPedidos(
       storeScope ? { tiendaOrigenId: storeScope.tiendaId } : undefined,
     );
-    const storeRows = this.filterAndPrioritizeStoreRows(rows, Boolean(storeScope));
+    const storeRows = this.filterAndPrioritizeStoreRows(
+      rows,
+      Boolean(storeScope),
+    );
 
     return storeRows.map((row) => ({
       pedidoId: row.pedidoId,
@@ -168,7 +171,8 @@ export class OrdersService {
     );
     const estadoOperativo = estadoResolution.estado;
 
-    const persistedStore = detail.tiendaOrigen.tiendaId !== preview.tiendaSugerida.tiendaId;
+    const persistedStore =
+      detail.tiendaOrigen.tiendaId !== preview.tiendaSugerida.tiendaId;
     const persistedStatus = detail.estado.estadoId !== estadoOperativo.estadoId;
 
     try {
@@ -184,7 +188,10 @@ export class OrdersService {
       );
     }
 
-    const advertencias = [...preview.advertencias, ...estadoResolution.warnings];
+    const advertencias = [
+      ...preview.advertencias,
+      ...estadoResolution.warnings,
+    ];
     let carrierLogged = false;
 
     try {
@@ -228,7 +235,8 @@ export class OrdersService {
         tiendaAplicadaId: preview.tiendaSugerida.tiendaId,
         estadoAnteriorId: detail.estado.estadoId,
         estadoAplicadoId: estadoOperativo.estadoId,
-        transportadoraSugeridaId: preview.transportadoraSugerida.transportadoraId,
+        transportadoraSugeridaId:
+          preview.transportadoraSugerida.transportadoraId,
         costoSugerido: preview.costoSugerido.costo,
       },
       advertencias,
@@ -245,341 +253,420 @@ export class OrdersService {
     this.syncInProgress = true;
     try {
       try {
-      const source = await this.fetchKoajPsOrders(limit);
-      const allOrders = source.orders ?? [];
-      const orders = allOrders.slice(0, limit ?? allOrders.length);
+        const source = await this.fetchKoajPsOrders(limit);
+        const allOrders = source.orders ?? [];
+        const orders = allOrders.slice(0, limit ?? allOrders.length);
 
-      const empresaId = this.getNumberConfig('KOAJ_EMPRESA_ID', 1);
-      const tiendaCodigo = this.getStringConfig('KOAJ_DEFAULT_TIENDA_CODIGO', '081');
-      const defaultCanalCodigo = this.getStringConfig('KOAJ_DEFAULT_CANAL_CODIGO', 'ECOM');
-      const monedaCodigo = this.getStringConfig('KOAJ_DEFAULT_MONEDA_CODIGO', 'COP');
-      const paisNombre = this.getStringConfig('KOAJ_DEFAULT_PAIS_NOMBRE', 'Colombia');
-      const fallbackCityName = this.getStringConfig('KOAJ_DEFAULT_CIUDAD_NOMBRE', 'BOGOTA');
-      const estadoEntidad = this.getStringConfig('KOAJ_ESTADO_ENTIDAD', 'PEDIDO');
-      const estadoCodigo = this.getStringConfig('KOAJ_ESTADO_CODIGO', 'NUEVO');
+        const empresaId = this.getNumberConfig('KOAJ_EMPRESA_ID', 1);
+        const tiendaCodigo = this.getStringConfig(
+          'KOAJ_DEFAULT_TIENDA_CODIGO',
+          '081',
+        );
+        const defaultCanalCodigo = this.getStringConfig(
+          'KOAJ_DEFAULT_CANAL_CODIGO',
+          'ECOM',
+        );
+        const monedaCodigo = this.getStringConfig(
+          'KOAJ_DEFAULT_MONEDA_CODIGO',
+          'COP',
+        );
+        const paisNombre = this.getStringConfig(
+          'KOAJ_DEFAULT_PAIS_NOMBRE',
+          'Colombia',
+        );
+        const fallbackCityName = this.getStringConfig(
+          'KOAJ_DEFAULT_CIUDAD_NOMBRE',
+          'BOGOTA',
+        );
+        const estadoEntidad = this.getStringConfig(
+          'KOAJ_ESTADO_ENTIDAD',
+          'PEDIDO',
+        );
+        const estadoCodigo = this.getStringConfig(
+          'KOAJ_ESTADO_CODIGO',
+          'NUEVO',
+        );
 
-      const context = await this.ordersRepository.getSyncContext(
-        empresaId,
-        tiendaCodigo,
-        monedaCodigo,
-        estadoEntidad,
-        estadoCodigo,
-        paisNombre,
-      );
+        const context = await this.ordersRepository.getSyncContext(
+          empresaId,
+          tiendaCodigo,
+          monedaCodigo,
+          estadoEntidad,
+          estadoCodigo,
+          paisNombre,
+        );
 
-    const diagnostics: SyncDiagnostic[] = [
-      {
-        code: 'EMPRESA_EXISTS',
-        ok: Boolean(context.empresaId),
-        message: context.empresaId
-          ? `Empresa ${empresaId} disponible`
-          : `Empresa ${empresaId} no existe`,
-      },
-      {
-        code: `STORE_${tiendaCodigo}_EXISTS`,
-        ok: Boolean(context.tiendaId),
-        message: context.tiendaId
-          ? `Tienda ${tiendaCodigo} disponible`
-          : `Tienda ${tiendaCodigo} no existe o no esta activa`,
-      },
-      {
-        code: `CANAL_${defaultCanalCodigo}_DEFAULT_EXISTS`,
-        ok: context.canales.some(
-          (item) => item.codigo.toUpperCase() === defaultCanalCodigo.toUpperCase(),
-        ),
-        message: context.canales.some(
-          (item) => item.codigo.toUpperCase() === defaultCanalCodigo.toUpperCase(),
-        )
-          ? `Canal default ${defaultCanalCodigo} disponible`
-          : `Canal default ${defaultCanalCodigo} no existe para empresa ${empresaId}`,
-      },
-      {
-        code: `${monedaCodigo}_EXISTS`,
-        ok: Boolean(context.monedaId),
-        message: context.monedaId
-          ? `Moneda ${monedaCodigo} disponible`
-          : `Moneda ${monedaCodigo} no existe`,
-      },
-      {
-        code: `ESTADO_${estadoEntidad}_${estadoCodigo}_EXISTS`,
-        ok: Boolean(context.estadoId),
-        message: context.estadoId
-          ? `Estado ${estadoEntidad}/${estadoCodigo} disponible`
-          : `Estado ${estadoEntidad}/${estadoCodigo} no existe`,
-      },
-      {
-        code: 'PAIS_COLOMBIA_EXISTS',
-        ok: Boolean(context.paisId),
-        message: context.paisId ? 'Pais Colombia disponible' : 'Pais Colombia no existe',
-      },
-    ];
+        const diagnostics: SyncDiagnostic[] = [
+          {
+            code: 'EMPRESA_EXISTS',
+            ok: Boolean(context.empresaId),
+            message: context.empresaId
+              ? `Empresa ${empresaId} disponible`
+              : `Empresa ${empresaId} no existe`,
+          },
+          {
+            code: `STORE_${tiendaCodigo}_EXISTS`,
+            ok: Boolean(context.tiendaId),
+            message: context.tiendaId
+              ? `Tienda ${tiendaCodigo} disponible`
+              : `Tienda ${tiendaCodigo} no existe o no esta activa`,
+          },
+          {
+            code: `CANAL_${defaultCanalCodigo}_DEFAULT_EXISTS`,
+            ok: context.canales.some(
+              (item) =>
+                item.codigo.toUpperCase() === defaultCanalCodigo.toUpperCase(),
+            ),
+            message: context.canales.some(
+              (item) =>
+                item.codigo.toUpperCase() === defaultCanalCodigo.toUpperCase(),
+            )
+              ? `Canal default ${defaultCanalCodigo} disponible`
+              : `Canal default ${defaultCanalCodigo} no existe para empresa ${empresaId}`,
+          },
+          {
+            code: `${monedaCodigo}_EXISTS`,
+            ok: Boolean(context.monedaId),
+            message: context.monedaId
+              ? `Moneda ${monedaCodigo} disponible`
+              : `Moneda ${monedaCodigo} no existe`,
+          },
+          {
+            code: `ESTADO_${estadoEntidad}_${estadoCodigo}_EXISTS`,
+            ok: Boolean(context.estadoId),
+            message: context.estadoId
+              ? `Estado ${estadoEntidad}/${estadoCodigo} disponible`
+              : `Estado ${estadoEntidad}/${estadoCodigo} no existe`,
+          },
+          {
+            code: 'PAIS_COLOMBIA_EXISTS',
+            ok: Boolean(context.paisId),
+            message: context.paisId
+              ? 'Pais Colombia disponible'
+              : 'Pais Colombia no existe',
+          },
+        ];
 
-    const origenMap = this.getOrigenCanalMap();
-    const fallbackCity = this.findCityByKoajName(context.ciudades, fallbackCityName);
-    diagnostics.push({
-      code: `CIUDAD_FALLBACK_${this.normalizeText(fallbackCityName) || 'EMPTY'}_EXISTS`,
-      ok: Boolean(fallbackCity),
-      message: fallbackCity
-        ? `Ciudad fallback ${fallbackCityName} disponible`
-        : `Ciudad fallback ${fallbackCityName} no existe en catalogo`,
-    });
-
-    const canalesByCode = new Map(
-      context.canales.map((canal) => [canal.codigo.toUpperCase(), canal.canalVentaId]),
-    );
-
-    const usedOrigenes = new Set<number>(
-      orders
-        .map((order) => this.toNumber(order.id_shop))
-        .filter(
-          (value): value is number =>
-            typeof value === 'number' && Number.isInteger(value) && value > 0,
-        ),
-    );
-    for (const origen of usedOrigenes) {
-      const mappedCode = origenMap.get(origen) ?? defaultCanalCodigo;
-      const canalId = canalesByCode.get(mappedCode.toUpperCase());
-      diagnostics.push({
-        code: `CANAL_${mappedCode}_FOR_ORIGEN_${origen}`,
-        ok: Boolean(canalId),
-        message: canalId
-          ? `ORIGEN ${origen} mapea a canal ${mappedCode}`
-          : `Canal ${mappedCode} no existe para empresa ${empresaId}`,
-      });
-    }
-
-    // La ciudad fallback no debe bloquear toda la sincronizacion:
-    // si llega ciudad en el pedido y mapea, el pedido puede insertarse.
-    const blockedByDiagnostics = diagnostics.some(
-      (diagnostic) =>
-        !diagnostic.ok && !diagnostic.code.startsWith('CIUDAD_FALLBACK_'),
-    );
-
-    if (
-      blockedByDiagnostics ||
-      !context.empresaId ||
-      !context.tiendaId ||
-      !context.monedaId ||
-      !context.estadoId ||
-      !context.paisId
-    ) {
-      return {
-        success: true,
-        blockedByDiagnostics: true,
-        summary: {
-          pendingReceived: orders.length,
-          inserted: 0,
-          skippedExisting: 0,
-          skippedValidation: 0,
-          failed: 0,
-        },
-        diagnostics,
-        items: [],
-      };
-    }
-
-    const items: SyncPendingItemResult[] = [];
-    const addressCache = new Map<number, KoajPsAddress | null>();
-    const customerCache = new Map<number, KoajPsCustomer | null>();
-    const candidateNumeroPedidos: string[] = [];
-    const candidateNumeroExternos: string[] = [];
-
-    for (const order of orders) {
-      const koajOrderId = this.toNumber(order.id);
-      if (!koajOrderId || !Number.isInteger(koajOrderId) || koajOrderId <= 0) {
-        continue;
-      }
-
-      const numeroPedido = this.resolveNumeroPedidoFromKoajPsOrder(order, koajOrderId);
-      if (!numeroPedido) {
-        continue;
-      }
-
-      candidateNumeroPedidos.push(numeroPedido);
-      candidateNumeroExternos.push(String(koajOrderId));
-    }
-
-    const existingKeys = await this.ordersRepository.findExistingPedidoKeys({
-      numeroPedidos: candidateNumeroPedidos,
-      numeroExternos: candidateNumeroExternos,
-    });
-    const existingNumeroPedidos = new Set(existingKeys.numeroPedidos.map((item) => item.trim()));
-    const existingNumeroExternos = new Set(existingKeys.numeroExternos.map((item) => item.trim()));
-
-    let inserted = 0;
-    let skippedExisting = 0;
-    let skippedValidation = 0;
-    let failed = 0;
-
-    for (const order of orders) {
-      const koajOrderId = this.toNumber(order.id);
-      if (!koajOrderId || !Number.isInteger(koajOrderId) || koajOrderId <= 0) {
-        skippedValidation += 1;
-        items.push({
-          koajOrderId: 0,
-          numeroPedido: '',
-          status: 'skipped_validation',
-          pedidoId: null,
-          reason: 'Order.id invalido en KOAJ full',
-        });
-        continue;
-      }
-
-      const numeroPedido = this.resolveNumeroPedidoFromKoajPsOrder(order, koajOrderId);
-      const numeroExterno = String(koajOrderId);
-
-      if (!numeroPedido) {
-        skippedValidation += 1;
-        items.push({
-          koajOrderId,
-          numeroPedido: '',
-          status: 'skipped_validation',
-          pedidoId: null,
-          reason: 'NumeroPedido vacio',
-        });
-        continue;
-      }
-
-      const existsByNumeroPedido = existingNumeroPedidos.has(numeroPedido);
-      const existsByNumeroExterno = existingNumeroExternos.has(numeroExterno);
-      if (existsByNumeroPedido || existsByNumeroExterno) {
-        skippedExisting += 1;
-        items.push({
-          koajOrderId,
-          numeroPedido,
-          status: 'skipped_existing',
-          pedidoId: null,
-          reason: existsByNumeroPedido
-            ? 'NumeroPedido ya existe'
-            : 'NumeroExterno ya existe',
-        });
-        continue;
-      }
-
-      const origen = this.toNumber(order.id_shop) ?? 1;
-      const canalCode = origenMap.get(origen) ?? defaultCanalCodigo;
-      const canalVentaId = canalCode ? canalesByCode.get(canalCode.toUpperCase()) ?? null : null;
-
-      if (!canalVentaId) {
-        skippedValidation += 1;
-        items.push({
-          koajOrderId,
-          numeroPedido,
-          status: 'skipped_validation',
-          pedidoId: null,
-          reason: `No existe canal para ORIGEN ${origen}`,
-        });
-        continue;
-      }
-
-      const shippingAddress = await this.loadKoajPsAddressById(
-        addressCache,
-        this.toNumber(order.id_address_delivery),
-      );
-      const customer = await this.loadKoajPsCustomerById(
-        customerCache,
-        this.toNumber(order.id_customer),
-      );
-
-      const clienteNombre = this.buildClienteNombreFromKoajPs(order, customer, shippingAddress);
-      const shippingCity =
-        this.findCityByKoajName(context.ciudades, shippingAddress?.city) ?? fallbackCity;
-      if (!shippingCity) {
-        skippedValidation += 1;
-        items.push({
-          koajOrderId,
-          numeroPedido,
-          status: 'skipped_validation',
-          pedidoId: null,
-          reason: `Ciudad no mapeada: ${shippingAddress?.city ?? 'SIN_CIUDAD'}`,
-        });
-        continue;
-      }
-
-      const createdAt = this.parseKoajDate(order.date_add) ?? new Date();
-      const totals = this.extractTotalsFromKoajPsOrder(order);
-
-      try {
-        const result = await this.ordersRepository.createPedido({
-          empresaId: context.empresaId,
-          empresaClienteId: null,
-          canalVentaId,
-          tiendaOrigenId: context.tiendaId,
-          monedaId: context.monedaId,
-          numeroPedido,
-          numeroExterno,
-          estadoId: context.estadoId,
-          clienteNombre,
-          clienteDocumento: this.truncate(this.normalizeOptionalText(customer?.dni), 60),
-          clienteEmail: this.truncate(this.normalizeOptionalText(customer?.email), 180),
-          clienteTelefono:
-            this.truncate(this.normalizeOptionalText(shippingAddress?.phone_mobile), 50) ??
-            this.truncate(this.normalizeOptionalText(shippingAddress?.phone), 50),
-          shippingPaisId: context.paisId,
-          shippingCiudadId: shippingCity.ciudadId,
-          shippingDireccion: this.buildShippingAddress(shippingAddress),
-          shippingBarrio: this.truncate(this.normalizeOptionalText(shippingAddress?.address2), 120),
-          shippingZip: this.truncate(this.normalizeOptionalText(shippingAddress?.postcode), 20),
-          subtotal: totals.subtotal,
-          descuento: totals.descuento,
-          impuestos: totals.impuestos,
-          costoEnvio: totals.costoEnvio,
-          total: totals.total,
-          pasarelaPagoId: null,
-          pagoReferencia: null,
-          pagoEstadoId: null,
-          createdAt,
+        const origenMap = this.getOrigenCanalMap();
+        const fallbackCity = this.findCityByKoajName(
+          context.ciudades,
+          fallbackCityName,
+        );
+        diagnostics.push({
+          code: `CIUDAD_FALLBACK_${this.normalizeText(fallbackCityName) || 'EMPTY'}_EXISTS`,
+          ok: Boolean(fallbackCity),
+          message: fallbackCity
+            ? `Ciudad fallback ${fallbackCityName} disponible`
+            : `Ciudad fallback ${fallbackCityName} no existe en catalogo`,
         });
 
-        inserted += 1;
-        items.push({
-          koajOrderId,
-          numeroPedido,
-          status: 'inserted',
-          pedidoId: result.pedidoId,
-          reason: null,
-        });
-        existingNumeroPedidos.add(numeroPedido);
-        existingNumeroExternos.add(numeroExterno);
-      } catch (error) {
-        if (this.isUniqueConstraintError(error)) {
-          skippedExisting += 1;
-          items.push({
-            koajOrderId,
-            numeroPedido,
-            status: 'skipped_existing',
-            pedidoId: null,
-            reason: 'Pedido ya existe (concurrencia)',
+        const canalesByCode = new Map(
+          context.canales.map((canal) => [
+            canal.codigo.toUpperCase(),
+            canal.canalVentaId,
+          ]),
+        );
+
+        const usedOrigenes = new Set<number>(
+          orders
+            .map((order) => this.toNumber(order.id_shop))
+            .filter(
+              (value): value is number =>
+                typeof value === 'number' &&
+                Number.isInteger(value) &&
+                value > 0,
+            ),
+        );
+        for (const origen of usedOrigenes) {
+          const mappedCode = origenMap.get(origen) ?? defaultCanalCodigo;
+          const canalId = canalesByCode.get(mappedCode.toUpperCase());
+          diagnostics.push({
+            code: `CANAL_${mappedCode}_FOR_ORIGEN_${origen}`,
+            ok: Boolean(canalId),
+            message: canalId
+              ? `ORIGEN ${origen} mapea a canal ${mappedCode}`
+              : `Canal ${mappedCode} no existe para empresa ${empresaId}`,
           });
-          existingNumeroPedidos.add(numeroPedido);
-          existingNumeroExternos.add(numeroExterno);
-          continue;
         }
 
-        failed += 1;
-        items.push({
-          koajOrderId,
-          numeroPedido,
-          status: 'failed',
-          pedidoId: null,
-          reason: this.getErrorMessage(error),
-        });
-      }
-    }
+        // La ciudad fallback no debe bloquear toda la sincronizacion:
+        // si llega ciudad en el pedido y mapea, el pedido puede insertarse.
+        const blockedByDiagnostics = diagnostics.some(
+          (diagnostic) =>
+            !diagnostic.ok && !diagnostic.code.startsWith('CIUDAD_FALLBACK_'),
+        );
 
-      return {
-        success: true,
-        blockedByDiagnostics: false,
-        summary: {
-          pendingReceived: orders.length,
-          inserted,
-          skippedExisting,
-          skippedValidation,
-          failed,
-        },
-        diagnostics,
-        items,
-      };
+        if (
+          blockedByDiagnostics ||
+          !context.empresaId ||
+          !context.tiendaId ||
+          !context.monedaId ||
+          !context.estadoId ||
+          !context.paisId
+        ) {
+          return {
+            success: true,
+            blockedByDiagnostics: true,
+            summary: {
+              pendingReceived: orders.length,
+              inserted: 0,
+              skippedExisting: 0,
+              skippedValidation: 0,
+              failed: 0,
+            },
+            diagnostics,
+            items: [],
+          };
+        }
+
+        const items: SyncPendingItemResult[] = [];
+        const addressCache = new Map<number, KoajPsAddress | null>();
+        const customerCache = new Map<number, KoajPsCustomer | null>();
+        const candidateNumeroPedidos: string[] = [];
+        const candidateNumeroExternos: string[] = [];
+
+        for (const order of orders) {
+          const koajOrderId = this.toNumber(order.id);
+          if (
+            !koajOrderId ||
+            !Number.isInteger(koajOrderId) ||
+            koajOrderId <= 0
+          ) {
+            continue;
+          }
+
+          const numeroPedido = this.resolveNumeroPedidoFromKoajPsOrder(
+            order,
+            koajOrderId,
+          );
+          if (!numeroPedido) {
+            continue;
+          }
+
+          candidateNumeroPedidos.push(numeroPedido);
+          candidateNumeroExternos.push(String(koajOrderId));
+        }
+
+        const existingKeys = await this.ordersRepository.findExistingPedidoKeys(
+          {
+            numeroPedidos: candidateNumeroPedidos,
+            numeroExternos: candidateNumeroExternos,
+          },
+        );
+        const existingNumeroPedidos = new Set(
+          existingKeys.numeroPedidos.map((item) => item.trim()),
+        );
+        const existingNumeroExternos = new Set(
+          existingKeys.numeroExternos.map((item) => item.trim()),
+        );
+
+        let inserted = 0;
+        let skippedExisting = 0;
+        let skippedValidation = 0;
+        let failed = 0;
+
+        for (const order of orders) {
+          const koajOrderId = this.toNumber(order.id);
+          if (
+            !koajOrderId ||
+            !Number.isInteger(koajOrderId) ||
+            koajOrderId <= 0
+          ) {
+            skippedValidation += 1;
+            items.push({
+              koajOrderId: 0,
+              numeroPedido: '',
+              status: 'skipped_validation',
+              pedidoId: null,
+              reason: 'Order.id invalido en KOAJ full',
+            });
+            continue;
+          }
+
+          const numeroPedido = this.resolveNumeroPedidoFromKoajPsOrder(
+            order,
+            koajOrderId,
+          );
+          const numeroExterno = String(koajOrderId);
+
+          if (!numeroPedido) {
+            skippedValidation += 1;
+            items.push({
+              koajOrderId,
+              numeroPedido: '',
+              status: 'skipped_validation',
+              pedidoId: null,
+              reason: 'NumeroPedido vacio',
+            });
+            continue;
+          }
+
+          const existsByNumeroPedido = existingNumeroPedidos.has(numeroPedido);
+          const existsByNumeroExterno =
+            existingNumeroExternos.has(numeroExterno);
+          if (existsByNumeroPedido || existsByNumeroExterno) {
+            skippedExisting += 1;
+            items.push({
+              koajOrderId,
+              numeroPedido,
+              status: 'skipped_existing',
+              pedidoId: null,
+              reason: existsByNumeroPedido
+                ? 'NumeroPedido ya existe'
+                : 'NumeroExterno ya existe',
+            });
+            continue;
+          }
+
+          const origen = this.toNumber(order.id_shop) ?? 1;
+          const canalCode = origenMap.get(origen) ?? defaultCanalCodigo;
+          const canalVentaId = canalCode
+            ? (canalesByCode.get(canalCode.toUpperCase()) ?? null)
+            : null;
+
+          if (!canalVentaId) {
+            skippedValidation += 1;
+            items.push({
+              koajOrderId,
+              numeroPedido,
+              status: 'skipped_validation',
+              pedidoId: null,
+              reason: `No existe canal para ORIGEN ${origen}`,
+            });
+            continue;
+          }
+
+          const shippingAddress = await this.loadKoajPsAddressById(
+            addressCache,
+            this.toNumber(order.id_address_delivery),
+          );
+          const customer = await this.loadKoajPsCustomerById(
+            customerCache,
+            this.toNumber(order.id_customer),
+          );
+
+          const clienteNombre = this.buildClienteNombreFromKoajPs(
+            order,
+            customer,
+            shippingAddress,
+          );
+          const shippingCity =
+            this.findCityByKoajName(context.ciudades, shippingAddress?.city) ??
+            fallbackCity;
+          if (!shippingCity) {
+            skippedValidation += 1;
+            items.push({
+              koajOrderId,
+              numeroPedido,
+              status: 'skipped_validation',
+              pedidoId: null,
+              reason: `Ciudad no mapeada: ${shippingAddress?.city ?? 'SIN_CIUDAD'}`,
+            });
+            continue;
+          }
+
+          const createdAt = this.parseKoajDate(order.date_add) ?? new Date();
+          const totals = this.extractTotalsFromKoajPsOrder(order);
+
+          try {
+            const result = await this.ordersRepository.createPedido({
+              empresaId: context.empresaId,
+              empresaClienteId: null,
+              canalVentaId,
+              tiendaOrigenId: context.tiendaId,
+              monedaId: context.monedaId,
+              numeroPedido,
+              numeroExterno,
+              estadoId: context.estadoId,
+              clienteNombre,
+              clienteDocumento: this.truncate(
+                this.normalizeOptionalText(customer?.dni),
+                60,
+              ),
+              clienteEmail: this.truncate(
+                this.normalizeOptionalText(customer?.email),
+                180,
+              ),
+              clienteTelefono:
+                this.truncate(
+                  this.normalizeOptionalText(shippingAddress?.phone_mobile),
+                  50,
+                ) ??
+                this.truncate(
+                  this.normalizeOptionalText(shippingAddress?.phone),
+                  50,
+                ),
+              shippingPaisId: context.paisId,
+              shippingCiudadId: shippingCity.ciudadId,
+              shippingDireccion: this.buildShippingAddress(shippingAddress),
+              shippingBarrio: this.truncate(
+                this.normalizeOptionalText(shippingAddress?.address2),
+                120,
+              ),
+              shippingZip: this.truncate(
+                this.normalizeOptionalText(shippingAddress?.postcode),
+                20,
+              ),
+              subtotal: totals.subtotal,
+              descuento: totals.descuento,
+              impuestos: totals.impuestos,
+              costoEnvio: totals.costoEnvio,
+              total: totals.total,
+              pasarelaPagoId: null,
+              pagoReferencia: null,
+              pagoEstadoId: null,
+              createdAt,
+            });
+
+            inserted += 1;
+            items.push({
+              koajOrderId,
+              numeroPedido,
+              status: 'inserted',
+              pedidoId: result.pedidoId,
+              reason: null,
+            });
+            existingNumeroPedidos.add(numeroPedido);
+            existingNumeroExternos.add(numeroExterno);
+          } catch (error) {
+            if (this.isUniqueConstraintError(error)) {
+              skippedExisting += 1;
+              items.push({
+                koajOrderId,
+                numeroPedido,
+                status: 'skipped_existing',
+                pedidoId: null,
+                reason: 'Pedido ya existe (concurrencia)',
+              });
+              existingNumeroPedidos.add(numeroPedido);
+              existingNumeroExternos.add(numeroExterno);
+              continue;
+            }
+
+            failed += 1;
+            items.push({
+              koajOrderId,
+              numeroPedido,
+              status: 'failed',
+              pedidoId: null,
+              reason: this.getErrorMessage(error),
+            });
+          }
+        }
+
+        return {
+          success: true,
+          blockedByDiagnostics: false,
+          summary: {
+            pendingReceived: orders.length,
+            inserted,
+            skippedExisting,
+            skippedValidation,
+            failed,
+          },
+          diagnostics,
+          items,
+        };
       } catch (error) {
         if (error instanceof ServiceUnavailableException) {
           throw error;
@@ -602,7 +689,9 @@ export class OrdersService {
   ): Promise<AssignmentComputation> {
     const detail = await this.getOrderDetail(pedidoId);
     const strategy = this.normalizeAssignmentStrategy(options?.strategy);
-    const storeCodesCandidate = this.resolveStoreCodesCandidate(options?.storeCodesCandidate);
+    const storeCodesCandidate = this.resolveStoreCodesCandidate(
+      options?.storeCodesCandidate,
+    );
 
     const reglas: string[] = [
       `Estrategia seleccionada: ${strategy}`,
@@ -648,9 +737,13 @@ export class OrdersService {
 
     let zonaEnvio: AssignmentPreview['zonaEnvio'] = null;
     if (!detail.shipping.ciudadId) {
-      advertencias.push('Pedido sin ciudad de envio; no se puede resolver zona de transporte');
+      advertencias.push(
+        'Pedido sin ciudad de envio; no se puede resolver zona de transporte',
+      );
     } else {
-      const zona = await this.ordersRepository.findZonaByCiudadId(detail.shipping.ciudadId);
+      const zona = await this.ordersRepository.findZonaByCiudadId(
+        detail.shipping.ciudadId,
+      );
       if (!zona) {
         advertencias.push(
           `No existe relacion ZonaCiudad para CiudadId ${detail.shipping.ciudadId}`,
@@ -666,13 +759,17 @@ export class OrdersService {
 
     const monedaId = detail.totales.monedaId;
     if (!monedaId) {
-      advertencias.push('Pedido sin moneda; no se puede calcular costo de transporte');
+      advertencias.push(
+        'Pedido sin moneda; no se puede calcular costo de transporte',
+      );
     }
 
     let koajFullOrder: KoajFullOrderPreview | null = null;
     let valorPedidoParaRango: number | null = null;
     if (detail.numeroExterno) {
-      const koajSource = await this.loadKoajFullOrderForAssignment(detail.numeroExterno);
+      const koajSource = await this.loadKoajFullOrderForAssignment(
+        detail.numeroExterno,
+      );
       koajFullOrder = koajSource.order;
       if (koajSource.warning) {
         advertencias.push(koajSource.warning);
@@ -680,7 +777,9 @@ export class OrdersService {
 
       if (koajFullOrder) {
         valorPedidoParaRango =
-          koajFullOrder.totalProductsWithTax ?? koajFullOrder.totalPaidTaxIncl ?? null;
+          koajFullOrder.totalProductsWithTax ??
+          koajFullOrder.totalPaidTaxIncl ??
+          null;
 
         reglas.push(
           `KOAJ full usado para assignment: orderId=${koajFullOrder.id}, carrierOrigen=${koajFullOrder.idCarrier ?? 'N/A'}, valorRef=${valorPedidoParaRango ?? 'N/A'}`,
@@ -701,23 +800,31 @@ export class OrdersService {
       reglas.push(...inventoryDecision.reglas);
       advertencias.push(...inventoryDecision.advertencias);
     } else {
-      reglas.push('Inventario F3 lite: KOAJ no devolvio order_rows; se mantiene fallback de tienda');
+      reglas.push(
+        'Inventario F3 lite: KOAJ no devolvio order_rows; se mantiene fallback de tienda',
+      );
     }
 
     let costoSugerido: AssignmentPreview['costoSugerido'] = null;
-    let transportadoraSugerida: AssignmentPreview['transportadoraSugerida'] = null;
+    let transportadoraSugerida: AssignmentPreview['transportadoraSugerida'] =
+      null;
 
     if (zonaEnvio && monedaId) {
-      const costosActivos = await this.ordersRepository.listActiveTransportCosts(
-        detail.empresaId,
-        zonaEnvio.zonaTransporteId,
-        monedaId,
-      );
+      const costosActivos =
+        await this.ordersRepository.listActiveTransportCosts(
+          detail.empresaId,
+          zonaEnvio.zonaTransporteId,
+          monedaId,
+        );
 
       let costosFiltrados = costosActivos;
       if (valorPedidoParaRango !== null) {
         const costosPorRangoValor = costosActivos.filter((item) =>
-          this.isValueWithinRange(valorPedidoParaRango, item.valorMin, item.valorMax),
+          this.isValueWithinRange(
+            valorPedidoParaRango,
+            item.valorMin,
+            item.valorMax,
+          ),
         );
         if (costosPorRangoValor.length > 0) {
           costosFiltrados = costosPorRangoValor;
@@ -775,8 +882,11 @@ export class OrdersService {
     return { detail, preview };
   }
 
-  private async fetchKoajPsOrders(limit?: number): Promise<KoajPsOrdersResponse> {
-    const normalizedLimit = Number.isInteger(limit) && (limit as number) > 0 ? Number(limit) : 100;
+  private async fetchKoajPsOrders(
+    limit?: number,
+  ): Promise<KoajPsOrdersResponse> {
+    const normalizedLimit =
+      Number.isInteger(limit) && (limit as number) > 0 ? Number(limit) : 100;
     const payload = await this.fetchKoajPsResource<KoajPsOrdersResponse>(
       '/orders',
       {
@@ -788,7 +898,9 @@ export class OrdersService {
     );
 
     if (!payload || typeof payload !== 'object') {
-      throw new ServiceUnavailableException('KOAJ full list devolvio una respuesta invalida');
+      throw new ServiceUnavailableException(
+        'KOAJ full list devolvio una respuesta invalida',
+      );
     }
 
     return payload;
@@ -861,7 +973,9 @@ export class OrdersService {
   ): Promise<T> {
     const wsKey = this.getKoajPsWsKey();
     if (!wsKey) {
-      throw new ServiceUnavailableException('KOAJ full no configurado (falta KOAJ_PS_WS_KEY)');
+      throw new ServiceUnavailableException(
+        'KOAJ full no configurado (falta KOAJ_PS_WS_KEY)',
+      );
     }
 
     const baseUrl = this.getKoajPsBaseUrl();
@@ -885,7 +999,9 @@ export class OrdersService {
         },
       });
     } catch {
-      throw new ServiceUnavailableException(`No fue posible consultar ${resourceLabel}`);
+      throw new ServiceUnavailableException(
+        `No fue posible consultar ${resourceLabel}`,
+      );
     }
 
     if (!response.ok) {
@@ -896,7 +1012,9 @@ export class OrdersService {
 
     const payload = (await response.json().catch(() => null)) as T | null;
     if (!payload) {
-      throw new ServiceUnavailableException(`${resourceLabel} devolvio una respuesta invalida`);
+      throw new ServiceUnavailableException(
+        `${resourceLabel} devolvio una respuesta invalida`,
+      );
     }
 
     return payload;
@@ -914,7 +1032,8 @@ export class OrdersService {
     if (!wsKey) {
       return {
         order: null,
-        warning: 'KOAJ full no configurado (falta KOAJ_PS_WS_KEY); se usa logica local',
+        warning:
+          'KOAJ full no configurado (falta KOAJ_PS_WS_KEY); se usa logica local',
       };
     }
 
@@ -1016,7 +1135,10 @@ export class OrdersService {
     return defaultMap;
   }
 
-  private resolveNumeroPedidoFromKoajPsOrder(order: KoajPsOrder, orderId: number): string {
+  private resolveNumeroPedidoFromKoajPsOrder(
+    order: KoajPsOrder,
+    orderId: number,
+  ): string {
     const reference = this.normalizeOptionalText(order.reference);
     if (reference) {
       return this.truncate(reference, 60);
@@ -1098,7 +1220,10 @@ export class OrdersService {
     const customerId = this.toNumber(order.id_customer);
     const orderId = this.toNumber(order.id);
     const fallbackId = customerId ?? orderId;
-    return this.truncate(fallbackId ? `Cliente KOAJ ${fallbackId}` : 'Cliente KOAJ', 180);
+    return this.truncate(
+      fallbackId ? `Cliente KOAJ ${fallbackId}` : 'Cliente KOAJ',
+      180,
+    );
   }
 
   private buildShippingAddress(address: KoajPsAddress | null): string | null {
@@ -1113,18 +1238,28 @@ export class OrdersService {
     costoEnvio: number;
     total: number;
   } {
-    const subtotal = this.toNumber(order.total_products_wt) ?? this.toNumber(order.total_products) ?? 0;
+    const subtotal =
+      this.toNumber(order.total_products_wt) ??
+      this.toNumber(order.total_products) ??
+      0;
     const descuento =
-      this.toNumber(order.total_discounts_tax_incl) ?? this.toNumber(order.total_discounts) ?? 0;
+      this.toNumber(order.total_discounts_tax_incl) ??
+      this.toNumber(order.total_discounts) ??
+      0;
     const costoEnvio =
-      this.toNumber(order.total_shipping_tax_incl) ?? this.toNumber(order.total_shipping) ?? 0;
-    const totalTaxIncl = this.toNumber(order.total_paid_tax_incl) ?? this.toNumber(order.total_paid);
+      this.toNumber(order.total_shipping_tax_incl) ??
+      this.toNumber(order.total_shipping) ??
+      0;
+    const totalTaxIncl =
+      this.toNumber(order.total_paid_tax_incl) ??
+      this.toNumber(order.total_paid);
     const totalTaxExcl = this.toNumber(order.total_paid_tax_excl);
     const impuestos =
       totalTaxIncl !== null && totalTaxExcl !== null
         ? Math.max(0, totalTaxIncl - totalTaxExcl)
         : 0;
-    const total = totalTaxIncl ?? Math.max(0, subtotal - descuento + costoEnvio);
+    const total =
+      totalTaxIncl ?? Math.max(0, subtotal - descuento + costoEnvio);
 
     return {
       subtotal,
@@ -1135,7 +1270,9 @@ export class OrdersService {
     };
   }
 
-  private extractKoajPsAddress(payload: KoajPsAddressResponse): KoajPsAddress | null {
+  private extractKoajPsAddress(
+    payload: KoajPsAddressResponse,
+  ): KoajPsAddress | null {
     if (payload.address && typeof payload.address === 'object') {
       return payload.address;
     }
@@ -1145,7 +1282,9 @@ export class OrdersService {
     return null;
   }
 
-  private extractKoajPsCustomer(payload: KoajPsCustomerResponse): KoajPsCustomer | null {
+  private extractKoajPsCustomer(
+    payload: KoajPsCustomerResponse,
+  ): KoajPsCustomer | null {
     if (payload.customer && typeof payload.customer === 'object') {
       return payload.customer;
     }
@@ -1181,9 +1320,8 @@ export class OrdersService {
       throw new ForbiddenException('Usuario tienda sin tienda asignada');
     }
 
-    const scope = await this.ordersRepository.findStoreScopeByUserStoreId(
-      storeReference,
-    );
+    const scope =
+      await this.ordersRepository.findStoreScopeByUserStoreId(storeReference);
     if (!scope) {
       throw new ForbiddenException(
         `No se pudo resolver una tienda activa para el usuario (${storeReference})`,
@@ -1198,7 +1336,11 @@ export class OrdersService {
   }
 
   private filterAndPrioritizeStoreRows<
-    T extends { estadoCodigo: string | null; estadoNombre: string | null; createdAt: string },
+    T extends {
+      estadoCodigo: string | null;
+      estadoNombre: string | null;
+      createdAt: string;
+    },
   >(rows: T[], isStoreUser: boolean): T[] {
     if (!isStoreUser) {
       return rows;
@@ -1304,8 +1446,10 @@ export class OrdersService {
   }
 
   private resolveStoreCodesCandidate(input?: string[]): string[] {
-    const fromBody = input?.map((code) => code.trim().toUpperCase()).filter(Boolean) ?? [];
-    const source = fromBody.length > 0 ? fromBody : this.getStoreCodesCandidateFromConfig();
+    const fromBody =
+      input?.map((code) => code.trim().toUpperCase()).filter(Boolean) ?? [];
+    const source =
+      fromBody.length > 0 ? fromBody : this.getStoreCodesCandidateFromConfig();
     const unique = [...new Set(source)];
     return unique.length > 0 ? unique : ['081', '198'];
   }
@@ -1323,7 +1467,9 @@ export class OrdersService {
         const parsed = JSON.parse(trimmed) as unknown;
         if (Array.isArray(parsed)) {
           const normalized = parsed
-            .map((item) => (typeof item === 'string' ? item.trim().toUpperCase() : ''))
+            .map((item) =>
+              typeof item === 'string' ? item.trim().toUpperCase() : '',
+            )
             .filter(Boolean);
           return normalized.length > 0 ? normalized : fallback;
         }
@@ -1359,10 +1505,11 @@ export class OrdersService {
     const warnings: string[] = [];
     const normalizedSolicitado = estadoCodigoSolicitado.trim().toUpperCase();
 
-    const requested = await this.ordersRepository.findEstadoActivoByEntidadCodigo(
-      estadoEntidad,
-      normalizedSolicitado,
-    );
+    const requested =
+      await this.ordersRepository.findEstadoActivoByEntidadCodigo(
+        estadoEntidad,
+        normalizedSolicitado,
+      );
     if (requested) {
       return { estado: requested, warnings };
     }
@@ -1376,7 +1523,10 @@ export class OrdersService {
       candidateCodes.add(candidate.trim().toUpperCase());
     }
 
-    const koajEstadoCodigo = this.getStringConfig('KOAJ_ESTADO_CODIGO', 'NUEVO').toUpperCase();
+    const koajEstadoCodigo = this.getStringConfig(
+      'KOAJ_ESTADO_CODIGO',
+      'NUEVO',
+    ).toUpperCase();
     candidateCodes.add(koajEstadoCodigo);
 
     if (detail.estado.codigo?.trim()) {
@@ -1424,7 +1574,9 @@ export class OrdersService {
 
   private getEstadoCodigoFallbacksFromConfig(): string[] {
     const defaults = ['ASIGNADO', 'CONFIRMADO', 'ALISTANDO', 'NUEVO'];
-    const raw = this.configService.get<string>('KOAJ_ASSIGNMENT_ESTADO_CANDIDATES');
+    const raw = this.configService.get<string>(
+      'KOAJ_ASSIGNMENT_ESTADO_CANDIDATES',
+    );
     if (!raw?.trim()) {
       return defaults;
     }
@@ -1435,7 +1587,9 @@ export class OrdersService {
         const parsed = JSON.parse(trimmed) as unknown;
         if (Array.isArray(parsed)) {
           const normalized = parsed
-            .map((item) => (typeof item === 'string' ? item.trim().toUpperCase() : ''))
+            .map((item) =>
+              typeof item === 'string' ? item.trim().toUpperCase() : '',
+            )
             .filter(Boolean);
           return normalized.length > 0 ? normalized : defaults;
         }
@@ -1459,7 +1613,12 @@ export class OrdersService {
   private async selectStoreByInventory(
     detail: PedidoDetail,
     storeCodesCandidate: string[],
-    tiendas: Array<{ tiendaId: number; codigo: string; nombre: string; activa: boolean }>,
+    tiendas: Array<{
+      tiendaId: number;
+      codigo: string;
+      nombre: string;
+      activa: boolean;
+    }>,
     orderRows: KoajFullOrderRow[],
   ): Promise<{
     tiendaSugerida: AssignmentPreview['tiendaSugerida'] | null;
@@ -1474,7 +1633,16 @@ export class OrdersService {
     );
     const tiendasActivasOrdenadas = storeCodesCandidate
       .map((code) => tiendasByCode.get(code.toUpperCase()))
-      .filter((tienda): tienda is { tiendaId: number; codigo: string; nombre: string; activa: boolean } => Boolean(tienda?.activa));
+      .filter(
+        (
+          tienda,
+        ): tienda is {
+          tiendaId: number;
+          codigo: string;
+          nombre: string;
+          activa: boolean;
+        } => Boolean(tienda?.activa),
+      );
 
     if (tiendasActivasOrdenadas.length === 0) {
       advertencias.push(
@@ -1484,7 +1652,11 @@ export class OrdersService {
     }
 
     const signals = this.collectInventorySignals(orderRows);
-    if (signals.varianteIds.length === 0 && signals.skus.length === 0 && signals.eans.length === 0) {
+    if (
+      signals.varianteIds.length === 0 &&
+      signals.skus.length === 0 &&
+      signals.eans.length === 0
+    ) {
       advertencias.push(
         'Inventario F3 lite: order_rows sin señales de variante/SKU/EAN; se mantiene fallback',
       );
@@ -1505,15 +1677,26 @@ export class OrdersService {
       return { tiendaSugerida: null, reglas, advertencias };
     }
 
-    const variantesById = new Map(variantes.map((item) => [item.varianteId, item.varianteId]));
+    const variantesById = new Map(
+      variantes.map((item) => [item.varianteId, item.varianteId]),
+    );
     const variantesBySku = new Map(
       variantes
-        .map((item) => [this.normalizeInventorySku(item.sku), item.varianteId] as const)
+        .map(
+          (item) =>
+            [this.normalizeInventorySku(item.sku), item.varianteId] as const,
+        )
         .filter((entry): entry is [string, number] => Boolean(entry[0])),
     );
     const variantesByEan = new Map(
       variantes
-        .map((item) => [this.normalizeOptionalText(item.ean ?? undefined), item.varianteId] as const)
+        .map(
+          (item) =>
+            [
+              this.normalizeOptionalText(item.ean ?? undefined),
+              item.varianteId,
+            ] as const,
+        )
         .filter((entry): entry is [string, number] => Boolean(entry[0])),
     );
 
@@ -1531,10 +1714,14 @@ export class OrdersService {
         continue;
       }
 
-      const qty = Number.isFinite(row.productQuantity) && row.productQuantity > 0
-        ? Math.ceil(row.productQuantity)
-        : 1;
-      qtyRequeridaPorVariante.set(varianteId, (qtyRequeridaPorVariante.get(varianteId) ?? 0) + qty);
+      const qty =
+        Number.isFinite(row.productQuantity) && row.productQuantity > 0
+          ? Math.ceil(row.productQuantity)
+          : 1;
+      qtyRequeridaPorVariante.set(
+        varianteId,
+        (qtyRequeridaPorVariante.get(varianteId) ?? 0) + qty,
+      );
     }
 
     if (unresolvedItems > 0) {
@@ -1563,7 +1750,12 @@ export class OrdersService {
 
     const bodegasByTienda = new Map<
       number,
-      Array<{ bodegaId: number; tiendaId: number; codigo: string; nombre: string }>
+      Array<{
+        bodegaId: number;
+        tiendaId: number;
+        codigo: string;
+        nombre: string;
+      }>
     >();
     for (const bodega of bodegas) {
       const current = bodegasByTienda.get(bodega.tiendaId) ?? [];
@@ -1571,13 +1763,17 @@ export class OrdersService {
       bodegasByTienda.set(bodega.tiendaId, current);
     }
 
-    const inventarioRows = await this.ordersRepository.listInventarioDisponibilidad({
-      empresaId: detail.empresaId,
-      bodegaIds: [...new Set(bodegas.map((row) => row.bodegaId))],
-      varianteIds: [...qtyRequeridaPorVariante.keys()],
-    });
+    const inventarioRows =
+      await this.ordersRepository.listInventarioDisponibilidad({
+        empresaId: detail.empresaId,
+        bodegaIds: [...new Set(bodegas.map((row) => row.bodegaId))],
+        varianteIds: [...qtyRequeridaPorVariante.keys()],
+      });
     const availableByBodegaVariante = new Map(
-      inventarioRows.map((row) => [`${row.bodegaId}:${row.varianteId}`, row.stockDisponible] as const),
+      inventarioRows.map(
+        (row) =>
+          [`${row.bodegaId}:${row.varianteId}`, row.stockDisponible] as const,
+      ),
     );
 
     const totalVariantes = qtyRequeridaPorVariante.size;
@@ -1590,9 +1786,17 @@ export class OrdersService {
 
       let covered = 0;
       let missing = 0;
-      for (const [varianteId, qtyRequerida] of qtyRequeridaPorVariante.entries()) {
+      for (const [
+        varianteId,
+        qtyRequerida,
+      ] of qtyRequeridaPorVariante.entries()) {
         const disponible = bodegasDeTienda.reduce((sum, bodega) => {
-          return sum + (availableByBodegaVariante.get(`${bodega.bodegaId}:${varianteId}`) ?? 0);
+          return (
+            sum +
+            (availableByBodegaVariante.get(
+              `${bodega.bodegaId}:${varianteId}`,
+            ) ?? 0)
+          );
         }, 0);
         if (disponible >= qtyRequerida) {
           covered += 1;
@@ -1639,24 +1843,32 @@ export class OrdersService {
     skus: string[];
     eans: string[];
   } {
-    const varianteIds = [...new Set(
-      orderRows
-        .map((row) => row.productAttributeId)
-        .filter(
-          (value): value is number =>
-            typeof value === 'number' && Number.isInteger(value) && value > 0,
-        ),
-    )];
-    const skus = [...new Set(
-      orderRows
-        .map((row) => this.normalizeInventorySku(row.productReference))
-        .filter((value): value is string => Boolean(value)),
-    )];
-    const eans = [...new Set(
-      orderRows
-        .map((row) => this.normalizeOptionalText(row.productEan13 ?? undefined))
-        .filter((value): value is string => Boolean(value)),
-    )];
+    const varianteIds = [
+      ...new Set(
+        orderRows
+          .map((row) => row.productAttributeId)
+          .filter(
+            (value): value is number =>
+              typeof value === 'number' && Number.isInteger(value) && value > 0,
+          ),
+      ),
+    ];
+    const skus = [
+      ...new Set(
+        orderRows
+          .map((row) => this.normalizeInventorySku(row.productReference))
+          .filter((value): value is string => Boolean(value)),
+      ),
+    ];
+    const eans = [
+      ...new Set(
+        orderRows
+          .map((row) =>
+            this.normalizeOptionalText(row.productEan13 ?? undefined),
+          )
+          .filter((value): value is string => Boolean(value)),
+      ),
+    ];
 
     return { varianteIds, skus, eans };
   }
@@ -1676,7 +1888,9 @@ export class OrdersService {
       return variantesBySku.get(normalizedSku) ?? null;
     }
 
-    const normalizedEan = this.normalizeOptionalText(row.productEan13 ?? undefined);
+    const normalizedEan = this.normalizeOptionalText(
+      row.productEan13 ?? undefined,
+    );
     if (normalizedEan && variantesByEan.has(normalizedEan)) {
       return variantesByEan.get(normalizedEan) ?? null;
     }
@@ -1699,13 +1913,19 @@ export class OrdersService {
     return value >= minValue && value <= maxValue;
   }
 
-  private extractKoajFullOrder(payload: unknown): Record<string, unknown> | null {
+  private extractKoajFullOrder(
+    payload: unknown,
+  ): Record<string, unknown> | null {
     if (!payload || typeof payload !== 'object') {
       return null;
     }
 
     const root = payload as Record<string, unknown>;
-    if (root.order && typeof root.order === 'object' && !Array.isArray(root.order)) {
+    if (
+      root.order &&
+      typeof root.order === 'object' &&
+      !Array.isArray(root.order)
+    ) {
       return root.order as Record<string, unknown>;
     }
 
@@ -1719,9 +1939,15 @@ export class OrdersService {
     return null;
   }
 
-  private extractKoajOrderRows(order: Record<string, unknown>): KoajFullOrderRow[] {
+  private extractKoajOrderRows(
+    order: Record<string, unknown>,
+  ): KoajFullOrderRow[] {
     const associations = order.associations;
-    if (!associations || typeof associations !== 'object' || Array.isArray(associations)) {
+    if (
+      !associations ||
+      typeof associations !== 'object' ||
+      Array.isArray(associations)
+    ) {
       return [];
     }
 
@@ -1740,7 +1966,9 @@ export class OrdersService {
       rows.push({
         productAttributeId: this.toNumber(row.product_attribute_id),
         productReference: this.normalizeOptionalText(
-          typeof row.product_reference === 'string' ? row.product_reference : undefined,
+          typeof row.product_reference === 'string'
+            ? row.product_reference
+            : undefined,
         ),
         productEan13: this.normalizeOptionalText(
           typeof row.product_ean13 === 'string' ? row.product_ean13 : undefined,

@@ -33,8 +33,10 @@ export class ConfiguracionGeneralService {
       {
         id: 'empresa-cliente',
         label: 'Empresa Cliente',
-        description: 'Clientes por empresa con validaciones de documento y email',
-        frontendPath: '/panel/order-manager/configuracion-general/empresa-cliente',
+        description:
+          'Clientes por empresa con validaciones de documento y email',
+        frontendPath:
+          '/panel/order-manager/configuracion-general/empresa-cliente',
         permission: 'config.read',
         enabled: true,
       },
@@ -50,7 +52,8 @@ export class ConfiguracionGeneralService {
         id: 'pasarela-pago',
         label: 'Pasarelas de Pago',
         description: 'Catalogo de pasarelas de pago por empresa',
-        frontendPath: '/panel/order-manager/configuracion-general/pasarela-pago',
+        frontendPath:
+          '/panel/order-manager/configuracion-general/pasarela-pago',
         permission: 'config.read',
         enabled: true,
       },
@@ -66,7 +69,8 @@ export class ConfiguracionGeneralService {
         id: 'producto-variante',
         label: 'Producto Variante',
         description: 'Variantes de producto con SKU/EAN y atributos logisticos',
-        frontendPath: '/panel/order-manager/configuracion-general/producto-variante',
+        frontendPath:
+          '/panel/order-manager/configuracion-general/producto-variante',
         permission: 'config.read',
         enabled: true,
       },
@@ -81,7 +85,8 @@ export class ConfiguracionGeneralService {
       {
         id: 'inventario',
         label: 'Inventario',
-        description: 'Stock total, reservado y disponible por bodega y variante',
+        description:
+          'Stock total, reservado y disponible por bodega y variante',
         frontendPath: '/panel/order-manager/configuracion-general/inventario',
         permission: 'config.read',
         enabled: true,
@@ -89,7 +94,8 @@ export class ConfiguracionGeneralService {
       {
         id: 'tienda',
         label: 'Tiendas',
-        description: 'Tiendas asociadas a empresas con ubicacion y estado operativo',
+        description:
+          'Tiendas asociadas a empresas con ubicacion y estado operativo',
         frontendPath: '/panel/order-manager/configuracion-general/tienda',
         permission: 'config.read',
         enabled: true,
@@ -98,7 +104,8 @@ export class ConfiguracionGeneralService {
         id: 'transportadora',
         label: 'Transportadoras',
         description: 'Catalogo de transportadoras por empresa',
-        frontendPath: '/panel/order-manager/configuracion-general/transportadora',
+        frontendPath:
+          '/panel/order-manager/configuracion-general/transportadora',
         permission: 'config.read',
         enabled: true,
       },
@@ -106,7 +113,8 @@ export class ConfiguracionGeneralService {
         id: 'zona-transporte',
         label: 'Zonas de Transporte',
         description: 'Zonas logisticas por empresa y pais',
-        frontendPath: '/panel/order-manager/configuracion-general/zona-transporte',
+        frontendPath:
+          '/panel/order-manager/configuracion-general/zona-transporte',
         permission: 'config.read',
         enabled: true,
       },
@@ -122,7 +130,8 @@ export class ConfiguracionGeneralService {
         id: 'costo-transporte',
         label: 'Costos de Transporte',
         description: 'Rangos y costos de transporte por combinacion operativa',
-        frontendPath: '/panel/order-manager/configuracion-general/costo-transporte',
+        frontendPath:
+          '/panel/order-manager/configuracion-general/costo-transporte',
         permission: 'config.read',
         enabled: true,
       },

@@ -55,7 +55,9 @@ export class InventarioRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async list(): Promise<InventarioListItem[]> {
-    const result = await this.databaseService.execute<sql.IResult<InventarioRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<InventarioRow>
+    >(
       (pool) =>
         pool.request().query<InventarioRow>(`
           SELECT
@@ -137,11 +139,11 @@ export class InventarioRepository {
   }
 
   async findById(inventarioId: number): Promise<InventarioListItem | null> {
-    const result = await this.databaseService.execute<sql.IResult<InventarioRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<InventarioRow>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('inventarioId', sql.BigInt, inventarioId)
+        pool.request().input('inventarioId', sql.BigInt, inventarioId)
           .query<InventarioRow>(`
             SELECT
               [InventarioId],
@@ -170,7 +172,9 @@ export class InventarioRepository {
     varianteId: number,
     excludeInventarioId?: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
@@ -191,12 +195,13 @@ export class InventarioRepository {
   }
 
   async existsEmpresaById(empresaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+        pool.request().input('empresaId', sql.Int, empresaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Empresa]
             WHERE [EmpresaId] = @empresaId
@@ -211,13 +216,14 @@ export class InventarioRepository {
     bodegaId: number,
     empresaId: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('bodegaId', sql.Int, bodegaId)
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+          .input('empresaId', sql.Int, empresaId).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Bodega]
             WHERE [BodegaId] = @bodegaId
@@ -233,13 +239,14 @@ export class InventarioRepository {
     varianteId: number,
     empresaId: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('varianteId', sql.BigInt, varianteId)
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+          .input('empresaId', sql.Int, empresaId).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[ProductoVariante]
             WHERE [VarianteId] = @varianteId
@@ -251,8 +258,12 @@ export class InventarioRepository {
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
-  async create(input: CreateInventarioInput): Promise<{ inventarioId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<InventarioIdentityRow>>(
+  async create(
+    input: CreateInventarioInput,
+  ): Promise<{ inventarioId: number }> {
+    const result = await this.databaseService.execute<
+      sql.IResult<InventarioIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -288,7 +299,10 @@ export class InventarioRepository {
     return { inventarioId: Number(result.recordset[0].InventarioId) };
   }
 
-  async update(inventarioId: number, input: UpdateInventarioInput): Promise<void> {
+  async update(
+    inventarioId: number,
+    input: UpdateInventarioInput,
+  ): Promise<void> {
     await this.databaseService.execute<sql.IResult<unknown>>(
       (pool) =>
         pool
@@ -298,8 +312,7 @@ export class InventarioRepository {
           .input('bodegaId', sql.Int, input.bodegaId)
           .input('varianteId', sql.BigInt, input.varianteId)
           .input('stockTotal', sql.Int, input.stockTotal)
-          .input('stockReservado', sql.Int, input.stockReservado)
-          .query(`
+          .input('stockReservado', sql.Int, input.stockReservado).query(`
             UPDATE [oms].[Inventario]
             SET
               [EmpresaId] = @empresaId,

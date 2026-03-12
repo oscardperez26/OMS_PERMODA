@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OrdersService } from './orders.service';
 
@@ -14,13 +19,21 @@ export class OrdersSyncScheduler implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
-    const enabled = this.getBooleanConfig('ORDERS_SYNC_FULL_JOB_ENABLED', false);
+    const enabled = this.getBooleanConfig(
+      'ORDERS_SYNC_FULL_JOB_ENABLED',
+      false,
+    );
     if (!enabled) {
-      this.logger.log('Job KOAJ full deshabilitado (ORDERS_SYNC_FULL_JOB_ENABLED=false)');
+      this.logger.log(
+        'Job KOAJ full deshabilitado (ORDERS_SYNC_FULL_JOB_ENABLED=false)',
+      );
       return;
     }
 
-    const intervalMs = this.getNumberConfig('ORDERS_SYNC_FULL_JOB_INTERVAL_MS', 300000);
+    const intervalMs = this.getNumberConfig(
+      'ORDERS_SYNC_FULL_JOB_INTERVAL_MS',
+      300000,
+    );
     const initialDelayMs = this.getNumberConfig(
       'ORDERS_SYNC_FULL_JOB_INITIAL_DELAY_MS',
       15000,
@@ -57,7 +70,9 @@ export class OrdersSyncScheduler implements OnModuleInit, OnModuleDestroy {
 
   private async runSyncTick(): Promise<void> {
     if (this.ordersService.isSyncInProgress()) {
-      this.logger.warn('Sync KOAJ full omitido: ya hay una sincronizacion en progreso');
+      this.logger.warn(
+        'Sync KOAJ full omitido: ya hay una sincronizacion en progreso',
+      );
       return;
     }
 
@@ -73,10 +88,13 @@ export class OrdersSyncScheduler implements OnModuleInit, OnModuleDestroy {
           .filter((item) => !item.ok)
           .map((item) => item.message)
           .join(' | ');
-        this.logger.warn(`Sync KOAJ full bloqueado por diagnostico: ${blocked || 'sin detalle'}`);
+        this.logger.warn(
+          `Sync KOAJ full bloqueado por diagnostico: ${blocked || 'sin detalle'}`,
+        );
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error desconocido';
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido';
       this.logger.error(`Sync KOAJ full fallo: ${message}`);
     }
   }

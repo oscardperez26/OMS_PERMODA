@@ -51,15 +51,25 @@ export class BodegaService {
     return bodega;
   }
 
-  async createBodega(params: CreateBodegaParams): Promise<{ bodegaId: number }> {
+  async createBodega(
+    params: CreateBodegaParams,
+  ): Promise<{ bodegaId: number }> {
     const empresaId = this.normalizeRequiredId(params.empresaId, 'empresaId');
     const codigo = this.normalizeCodigo(params.codigo);
     const nombre = this.normalizeRequiredText(params.nombre, 'nombre', 180);
-    const tipo = this.normalizeRequiredText(params.tipo, 'tipo', 30).toUpperCase();
+    const tipo = this.normalizeRequiredText(
+      params.tipo,
+      'tipo',
+      30,
+    ).toUpperCase();
     const tiendaId = this.normalizeOptionalId(params.tiendaId, 'tiendaId');
     const paisId = this.normalizeOptionalId(params.paisId, 'paisId');
     const ciudadId = this.normalizeOptionalId(params.ciudadId, 'ciudadId');
-    const direccion = this.normalizeOptionalText(params.direccion, 'direccion', 255);
+    const direccion = this.normalizeOptionalText(
+      params.direccion,
+      'direccion',
+      255,
+    );
     const activo = this.normalizeBoolean(params.activo, true);
 
     const duplicated = await this.bodegaRepository.existsByEmpresaAndCodigo(
@@ -67,7 +77,9 @@ export class BodegaService {
       codigo,
     );
     if (duplicated) {
-      throw new ConflictException('Ya existe una bodega con ese codigo en la empresa');
+      throw new ConflictException(
+        'Ya existe una bodega con ese codigo en la empresa',
+      );
     }
 
     await this.validateForeignKeys(empresaId, tiendaId, paisId, ciudadId);
@@ -86,13 +98,18 @@ export class BodegaService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe una bodega con ese codigo en la empresa');
+        throw new ConflictException(
+          'Ya existe una bodega con ese codigo en la empresa',
+        );
       }
       throw error;
     }
   }
 
-  async updateBodega(bodegaId: number, params: UpdateBodegaParams): Promise<void> {
+  async updateBodega(
+    bodegaId: number,
+    params: UpdateBodegaParams,
+  ): Promise<void> {
     const hasAnyField =
       params.empresaId !== undefined ||
       params.codigo !== undefined ||
@@ -105,7 +122,9 @@ export class BodegaService {
       params.activo !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.bodegaRepository.findById(bodegaId);
@@ -118,7 +137,9 @@ export class BodegaService {
         ? this.normalizeRequiredId(params.empresaId, 'empresaId')
         : current.empresaId;
     const nextCodigo =
-      params.codigo !== undefined ? this.normalizeCodigo(params.codigo) : current.codigo;
+      params.codigo !== undefined
+        ? this.normalizeCodigo(params.codigo)
+        : current.codigo;
     const nextNombre =
       params.nombre !== undefined
         ? this.normalizeRequiredText(params.nombre, 'nombre', 180)
@@ -130,21 +151,23 @@ export class BodegaService {
     const nextTiendaId =
       params.tiendaId !== undefined
         ? this.normalizeOptionalId(params.tiendaId, 'tiendaId')
-        : current.tiendaId ?? null;
+        : (current.tiendaId ?? null);
     const nextPaisId =
       params.paisId !== undefined
         ? this.normalizeOptionalId(params.paisId, 'paisId')
-        : current.paisId ?? null;
+        : (current.paisId ?? null);
     const nextCiudadId =
       params.ciudadId !== undefined
         ? this.normalizeOptionalId(params.ciudadId, 'ciudadId')
-        : current.ciudadId ?? null;
+        : (current.ciudadId ?? null);
     const nextDireccion =
       params.direccion !== undefined
         ? this.normalizeOptionalText(params.direccion, 'direccion', 255)
-        : current.direccion ?? null;
+        : (current.direccion ?? null);
     const nextActivo =
-      params.activo !== undefined ? this.normalizeBoolean(params.activo) : current.activo;
+      params.activo !== undefined
+        ? this.normalizeBoolean(params.activo)
+        : current.activo;
 
     const duplicated = await this.bodegaRepository.existsByEmpresaAndCodigo(
       nextEmpresaId,
@@ -152,7 +175,9 @@ export class BodegaService {
       bodegaId,
     );
     if (duplicated) {
-      throw new ConflictException('Ya existe una bodega con ese codigo en la empresa');
+      throw new ConflictException(
+        'Ya existe una bodega con ese codigo en la empresa',
+      );
     }
 
     await this.validateForeignKeys(
@@ -176,7 +201,9 @@ export class BodegaService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe una bodega con ese codigo en la empresa');
+        throw new ConflictException(
+          'Ya existe una bodega con ese codigo en la empresa',
+        );
       }
       throw error;
     }
@@ -188,16 +215,18 @@ export class BodegaService {
     paisId: number | null,
     ciudadId: number | null,
   ): Promise<void> {
-    const empresaExists = await this.bodegaRepository.existsEmpresaById(empresaId);
+    const empresaExists =
+      await this.bodegaRepository.existsEmpresaById(empresaId);
     if (!empresaExists) {
       throw new BadRequestException('EmpresaId no existe en la base de datos');
     }
 
     if (tiendaId !== null) {
-      const tiendaExists = await this.bodegaRepository.existsTiendaByIdAndEmpresaId(
-        tiendaId,
-        empresaId,
-      );
+      const tiendaExists =
+        await this.bodegaRepository.existsTiendaByIdAndEmpresaId(
+          tiendaId,
+          empresaId,
+        );
       if (!tiendaExists) {
         throw new BadRequestException(
           'TiendaId no existe o no pertenece a la empresa seleccionada',
@@ -217,19 +246,20 @@ export class BodegaService {
     }
 
     if (paisId === null) {
-      const ciudadExists = await this.bodegaRepository.existsCiudadById(ciudadId);
+      const ciudadExists =
+        await this.bodegaRepository.existsCiudadById(ciudadId);
       if (!ciudadExists) {
         throw new BadRequestException('CiudadId no existe en la base de datos');
       }
       return;
     }
 
-    const ciudadBelongsToPais = await this.bodegaRepository.existsCiudadByIdAndPaisId(
-      ciudadId,
-      paisId,
-    );
+    const ciudadBelongsToPais =
+      await this.bodegaRepository.existsCiudadByIdAndPaisId(ciudadId, paisId);
     if (!ciudadBelongsToPais) {
-      throw new BadRequestException('CiudadId no pertenece al pais seleccionado');
+      throw new BadRequestException(
+        'CiudadId no pertenece al pais seleccionado',
+      );
     }
   }
 
@@ -239,7 +269,9 @@ export class BodegaService {
       throw new BadRequestException('El campo codigo no puede estar vacio');
     }
     if (normalized.length > 60) {
-      throw new BadRequestException('El campo codigo no puede exceder 60 caracteres');
+      throw new BadRequestException(
+        'El campo codigo no puede exceder 60 caracteres',
+      );
     }
     return normalized;
   }
@@ -251,7 +283,9 @@ export class BodegaService {
   ): string {
     const normalized = value.trim();
     if (!normalized) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacio`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacio`,
+      );
     }
     if (normalized.length > maxLength) {
       throw new BadRequestException(
@@ -280,7 +314,9 @@ export class BodegaService {
 
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
@@ -293,12 +329,17 @@ export class BodegaService {
       return null;
     }
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
 
-  private normalizeBoolean(value: boolean | undefined, fallback?: boolean): boolean {
+  private normalizeBoolean(
+    value: boolean | undefined,
+    fallback?: boolean,
+  ): boolean {
     if (value === undefined) {
       if (fallback === undefined) {
         throw new BadRequestException('Valor booleano no enviado');

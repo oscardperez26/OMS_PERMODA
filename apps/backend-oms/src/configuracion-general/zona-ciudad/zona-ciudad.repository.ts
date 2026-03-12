@@ -33,7 +33,9 @@ export class ZonaCiudadRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async list(): Promise<ZonaCiudadListItem[]> {
-    const result = await this.databaseService.execute<sql.IResult<ZonaCiudadRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<ZonaCiudadRow>
+    >(
       (pool) =>
         pool.request().query<ZonaCiudadRow>(`
           SELECT
@@ -91,13 +93,14 @@ export class ZonaCiudadRepository {
     zonaTransporteId: number,
     ciudadId: number,
   ): Promise<ZonaCiudadListItem | null> {
-    const result = await this.databaseService.execute<sql.IResult<ZonaCiudadRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<ZonaCiudadRow>
+    >(
       (pool) =>
         pool
           .request()
           .input('zonaTransporteId', sql.Int, zonaTransporteId)
-          .input('ciudadId', sql.Int, ciudadId)
-          .query<ZonaCiudadRow>(`
+          .input('ciudadId', sql.Int, ciudadId).query<ZonaCiudadRow>(`
             SELECT
               [ZonaTransporteId],
               [CiudadId]
@@ -121,15 +124,22 @@ export class ZonaCiudadRepository {
     ciudadId: number,
     exclude?: { zonaTransporteId: number; ciudadId: number },
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('zonaTransporteId', sql.Int, zonaTransporteId)
           .input('ciudadId', sql.Int, ciudadId)
-          .input('excludeZonaTransporteId', sql.Int, exclude?.zonaTransporteId ?? null)
-          .input('excludeCiudadId', sql.Int, exclude?.ciudadId ?? null)
-          .query<{ count: number }>(`
+          .input(
+            'excludeZonaTransporteId',
+            sql.Int,
+            exclude?.zonaTransporteId ?? null,
+          )
+          .input('excludeCiudadId', sql.Int, exclude?.ciudadId ?? null).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[ZonaCiudad]
             WHERE [ZonaTransporteId] = @zonaTransporteId
@@ -148,11 +158,11 @@ export class ZonaCiudadRepository {
   }
 
   async existsZonaTransporteById(zonaTransporteId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('zonaTransporteId', sql.Int, zonaTransporteId)
+        pool.request().input('zonaTransporteId', sql.Int, zonaTransporteId)
           .query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[ZonaTransporte]
@@ -165,12 +175,13 @@ export class ZonaCiudadRepository {
   }
 
   async existsCiudadById(ciudadId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('ciudadId', sql.Int, ciudadId)
-          .query<{ count: number }>(`
+        pool.request().input('ciudadId', sql.Int, ciudadId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Ciudad]
             WHERE [CiudadId] = @ciudadId
@@ -187,8 +198,7 @@ export class ZonaCiudadRepository {
         pool
           .request()
           .input('ZonaTransporteId', sql.Int, input.zonaTransporteId)
-          .input('CiudadId', sql.Int, input.ciudadId)
-          .query(`
+          .input('CiudadId', sql.Int, input.ciudadId).query(`
             INSERT INTO [oms].[ZonaCiudad]
             (
               [ZonaTransporteId],
@@ -216,8 +226,7 @@ export class ZonaCiudadRepository {
           .input('currentZonaTransporteId', sql.Int, currentZonaTransporteId)
           .input('currentCiudadId', sql.Int, currentCiudadId)
           .input('zonaTransporteId', sql.Int, input.zonaTransporteId)
-          .input('ciudadId', sql.Int, input.ciudadId)
-          .query(`
+          .input('ciudadId', sql.Int, input.ciudadId).query(`
             UPDATE [oms].[ZonaCiudad]
             SET
               [ZonaTransporteId] = @zonaTransporteId,

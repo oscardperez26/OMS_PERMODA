@@ -28,7 +28,9 @@ type UpdatePasarelaPagoParams = {
 
 @Injectable()
 export class PasarelaPagoService {
-  constructor(private readonly pasarelaPagoRepository: PasarelaPagoRepository) {}
+  constructor(
+    private readonly pasarelaPagoRepository: PasarelaPagoRepository,
+  ) {}
 
   async listPasarelasPago(): Promise<PasarelaPagoListItem[]> {
     return this.pasarelaPagoRepository.list();
@@ -38,8 +40,11 @@ export class PasarelaPagoService {
     return this.pasarelaPagoRepository.listBootstrapData();
   }
 
-  async getPasarelaPagoById(pasarelaPagoId: number): Promise<PasarelaPagoListItem> {
-    const pasarelaPago = await this.pasarelaPagoRepository.findById(pasarelaPagoId);
+  async getPasarelaPagoById(
+    pasarelaPagoId: number,
+  ): Promise<PasarelaPagoListItem> {
+    const pasarelaPago =
+      await this.pasarelaPagoRepository.findById(pasarelaPagoId);
     if (!pasarelaPago) {
       throw new NotFoundException('Pasarela de pago no existe');
     }
@@ -57,12 +62,15 @@ export class PasarelaPagoService {
 
     await this.validateEmpresa(empresaId);
 
-    const duplicated = await this.pasarelaPagoRepository.existsByEmpresaAndCodigo(
-      empresaId,
-      codigo,
-    );
+    const duplicated =
+      await this.pasarelaPagoRepository.existsByEmpresaAndCodigo(
+        empresaId,
+        codigo,
+      );
     if (duplicated) {
-      throw new ConflictException('Ya existe una pasarela con ese codigo en la empresa');
+      throw new ConflictException(
+        'Ya existe una pasarela con ese codigo en la empresa',
+      );
     }
 
     try {
@@ -75,7 +83,9 @@ export class PasarelaPagoService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe una pasarela con ese codigo en la empresa');
+        throw new ConflictException(
+          'Ya existe una pasarela con ese codigo en la empresa',
+        );
       }
       throw error;
     }
@@ -93,7 +103,9 @@ export class PasarelaPagoService {
       params.configJson !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.pasarelaPagoRepository.findById(pasarelaPagoId);
@@ -106,27 +118,34 @@ export class PasarelaPagoService {
         ? this.normalizeRequiredId(params.empresaId, 'empresaId')
         : current.empresaId;
     const nextCodigo =
-      params.codigo !== undefined ? this.normalizeCodigo(params.codigo) : current.codigo;
+      params.codigo !== undefined
+        ? this.normalizeCodigo(params.codigo)
+        : current.codigo;
     const nextNombre =
       params.nombre !== undefined
         ? this.normalizeRequiredText(params.nombre, 'nombre', 180)
         : current.nombre;
     const nextActivo =
-      params.activo !== undefined ? this.normalizeBoolean(params.activo) : current.activo;
+      params.activo !== undefined
+        ? this.normalizeBoolean(params.activo)
+        : current.activo;
     const nextConfigJson =
       params.configJson !== undefined
         ? this.normalizeOptionalJson(params.configJson)
-        : current.configJson ?? null;
+        : (current.configJson ?? null);
 
     await this.validateEmpresa(nextEmpresaId);
 
-    const duplicated = await this.pasarelaPagoRepository.existsByEmpresaAndCodigo(
-      nextEmpresaId,
-      nextCodigo,
-      pasarelaPagoId,
-    );
+    const duplicated =
+      await this.pasarelaPagoRepository.existsByEmpresaAndCodigo(
+        nextEmpresaId,
+        nextCodigo,
+        pasarelaPagoId,
+      );
     if (duplicated) {
-      throw new ConflictException('Ya existe una pasarela con ese codigo en la empresa');
+      throw new ConflictException(
+        'Ya existe una pasarela con ese codigo en la empresa',
+      );
     }
 
     try {
@@ -139,14 +158,17 @@ export class PasarelaPagoService {
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe una pasarela con ese codigo en la empresa');
+        throw new ConflictException(
+          'Ya existe una pasarela con ese codigo en la empresa',
+        );
       }
       throw error;
     }
   }
 
   private async validateEmpresa(empresaId: number): Promise<void> {
-    const empresaExists = await this.pasarelaPagoRepository.existsEmpresaById(empresaId);
+    const empresaExists =
+      await this.pasarelaPagoRepository.existsEmpresaById(empresaId);
     if (!empresaExists) {
       throw new BadRequestException('EmpresaId no existe en la base de datos');
     }
@@ -158,7 +180,9 @@ export class PasarelaPagoService {
       throw new BadRequestException('El campo codigo no puede estar vacio');
     }
     if (normalized.length > 60) {
-      throw new BadRequestException('El campo codigo no puede exceder 60 caracteres');
+      throw new BadRequestException(
+        'El campo codigo no puede exceder 60 caracteres',
+      );
     }
     return normalized;
   }
@@ -170,7 +194,9 @@ export class PasarelaPagoService {
   ): string {
     const normalized = value.trim();
     if (!normalized) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacio`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacio`,
+      );
     }
     if (normalized.length > maxLength) {
       throw new BadRequestException(
@@ -182,12 +208,17 @@ export class PasarelaPagoService {
 
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
 
-  private normalizeBoolean(value: boolean | undefined, fallback?: boolean): boolean {
+  private normalizeBoolean(
+    value: boolean | undefined,
+    fallback?: boolean,
+  ): boolean {
     if (value === undefined) {
       if (fallback === undefined) {
         throw new BadRequestException('El campo activo es requerido');
@@ -197,7 +228,9 @@ export class PasarelaPagoService {
     return value;
   }
 
-  private normalizeOptionalJson(value: string | null | undefined): string | null {
+  private normalizeOptionalJson(
+    value: string | null | undefined,
+  ): string | null {
     const normalized = value?.trim();
     if (!normalized) {
       return null;
@@ -206,7 +239,9 @@ export class PasarelaPagoService {
     try {
       JSON.parse(normalized);
     } catch {
-      throw new BadRequestException('El campo configJson debe contener JSON valido');
+      throw new BadRequestException(
+        'El campo configJson debe contener JSON valido',
+      );
     }
 
     return normalized;

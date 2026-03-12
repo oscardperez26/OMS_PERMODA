@@ -99,10 +99,7 @@ export class CiudadRepository {
   async findById(ciudadId: number): Promise<CiudadListItem | null> {
     const result = await this.databaseService.execute<sql.IResult<CiudadRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('ciudadId', sql.Int, ciudadId)
-          .query<CiudadRow>(`
+        pool.request().input('ciudadId', sql.Int, ciudadId).query<CiudadRow>(`
             SELECT
               [CiudadId],
               [PaisId],
@@ -127,12 +124,13 @@ export class CiudadRepository {
 
   // Verifica integridad FK: oms.Ciudad.PaisId -> oms.Pais.PaisId.
   async existsPaisById(paisId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('paisId', sql.Int, paisId)
-          .query<{ count: number }>(`
+        pool.request().input('paisId', sql.Int, paisId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Pais]
             WHERE [PaisId] = @paisId
@@ -149,31 +147,32 @@ export class CiudadRepository {
     nombre: string,
     excludeCiudadId?: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
-      (pool) => {
-        const request = pool
-          .request()
-          .input('paisId', sql.Int, paisId)
-          .input('nombre', sql.NVarChar(160), nombre)
-          .input('excludeCiudadId', sql.Int, excludeCiudadId ?? null);
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >((pool) => {
+      const request = pool
+        .request()
+        .input('paisId', sql.Int, paisId)
+        .input('nombre', sql.NVarChar(160), nombre)
+        .input('excludeCiudadId', sql.Int, excludeCiudadId ?? null);
 
-        return request.query<{ count: number }>(`
+      return request.query<{ count: number }>(`
           SELECT COUNT(1) AS [count]
           FROM [oms].[Ciudad]
           WHERE [PaisId] = @paisId
             AND [Nombre] = @nombre
             AND (@excludeCiudadId IS NULL OR [CiudadId] <> @excludeCiudadId)
         `);
-      },
-      'ciudad.existsByPaisAndNombre',
-    );
+    }, 'ciudad.existsByPaisAndNombre');
 
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
   // Inserta ciudad respetando tipos reales en oms.Ciudad.
   async create(input: CreateCiudadInput): Promise<{ ciudadId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<CiudadIdentityRow>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<CiudadIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -217,8 +216,7 @@ export class CiudadRepository {
           .input('paisId', sql.Int, input.paisId)
           .input('nombre', sql.NVarChar(160), input.nombre)
           .input('departamento', sql.NVarChar(160), input.departamento)
-          .input('codigo', sql.NVarChar(50), input.codigo)
-          .query(`
+          .input('codigo', sql.NVarChar(50), input.codigo).query(`
             UPDATE [oms].[Ciudad]
             SET
               [PaisId] = @paisId,

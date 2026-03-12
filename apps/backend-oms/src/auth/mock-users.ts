@@ -49,5 +49,5 @@ export const MOCK_USERS: UserRecord[] = [
     role: 'STORE_ADMIN',
     permissions: ['orders.read', 'orders.manage'],
     storeId: 'store-002',
-  }
+  },
 ];

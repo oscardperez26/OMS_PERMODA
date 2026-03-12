@@ -129,9 +129,7 @@ export class ProductoVarianteRepository {
   async findById(varianteId: number): Promise<ProductoVarianteListItem | null> {
     const result = await this.databaseService.execute<sql.IResult<VarianteRow>>(
       (pool) =>
-        pool
-          .request()
-          .input('varianteId', sql.BigInt, varianteId)
+        pool.request().input('varianteId', sql.BigInt, varianteId)
           .query<VarianteRow>(`
             SELECT
               [VarianteId],
@@ -166,7 +164,9 @@ export class ProductoVarianteRepository {
     sku: string,
     excludeVarianteId?: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
@@ -187,12 +187,13 @@ export class ProductoVarianteRepository {
   }
 
   async existsEmpresaById(empresaId: number): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
-        pool
-          .request()
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+        pool.request().input('empresaId', sql.Int, empresaId).query<{
+          count: number;
+        }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Empresa]
             WHERE [EmpresaId] = @empresaId
@@ -207,13 +208,14 @@ export class ProductoVarianteRepository {
     productoId: number,
     empresaId: number,
   ): Promise<boolean> {
-    const result = await this.databaseService.execute<sql.IResult<{ count: number }>>(
+    const result = await this.databaseService.execute<
+      sql.IResult<{ count: number }>
+    >(
       (pool) =>
         pool
           .request()
           .input('productoId', sql.Int, productoId)
-          .input('empresaId', sql.Int, empresaId)
-          .query<{ count: number }>(`
+          .input('empresaId', sql.Int, empresaId).query<{ count: number }>(`
             SELECT COUNT(1) AS [count]
             FROM [oms].[Producto]
             WHERE [ProductoId] = @productoId
@@ -225,8 +227,12 @@ export class ProductoVarianteRepository {
     return (result.recordset[0]?.count ?? 0) > 0;
   }
 
-  async create(input: CreateProductoVarianteInput): Promise<{ varianteId: number }> {
-    const result = await this.databaseService.execute<sql.IResult<VarianteIdentityRow>>(
+  async create(
+    input: CreateProductoVarianteInput,
+  ): Promise<{ varianteId: number }> {
+    const result = await this.databaseService.execute<
+      sql.IResult<VarianteIdentityRow>
+    >(
       (pool) =>
         pool
           .request()
@@ -239,8 +245,7 @@ export class ProductoVarianteRepository {
           .input('LargoCm', sql.Decimal(18, 4), input.largoCm)
           .input('AnchoCm', sql.Decimal(18, 4), input.anchoCm)
           .input('AltoCm', sql.Decimal(18, 4), input.altoCm)
-          .input('Activo', sql.Bit, input.activo)
-          .query<VarianteIdentityRow>(`
+          .input('Activo', sql.Bit, input.activo).query<VarianteIdentityRow>(`
             INSERT INTO [oms].[ProductoVariante]
             (
               [EmpresaId],
@@ -277,7 +282,10 @@ export class ProductoVarianteRepository {
     return { varianteId: Number(result.recordset[0].VarianteId) };
   }
 
-  async update(varianteId: number, input: UpdateProductoVarianteInput): Promise<void> {
+  async update(
+    varianteId: number,
+    input: UpdateProductoVarianteInput,
+  ): Promise<void> {
     await this.databaseService.execute<sql.IResult<unknown>>(
       (pool) =>
         pool
@@ -292,8 +300,7 @@ export class ProductoVarianteRepository {
           .input('largoCm', sql.Decimal(18, 4), input.largoCm)
           .input('anchoCm', sql.Decimal(18, 4), input.anchoCm)
           .input('altoCm', sql.Decimal(18, 4), input.altoCm)
-          .input('activo', sql.Bit, input.activo)
-          .query(`
+          .input('activo', sql.Bit, input.activo).query(`
             UPDATE [oms].[ProductoVariante]
             SET
               [EmpresaId] = @empresaId,

@@ -44,7 +44,11 @@ export class PaisService {
 
     return this.paisRepository.create({
       codigoISO2,
-      codigoISO3: this.normalizeOptionalCode(params.codigoISO3, 3, 'codigoISO3'),
+      codigoISO3: this.normalizeOptionalCode(
+        params.codigoISO3,
+        3,
+        'codigoISO3',
+      ),
       nombre: this.normalizeRequiredText(params.nombre, 'nombre'),
     });
   }
@@ -56,7 +60,9 @@ export class PaisService {
       params.nombre !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.paisRepository.findById(paisId);
@@ -71,7 +77,7 @@ export class PaisService {
     const nextCodigoISO3 =
       params.codigoISO3 !== undefined
         ? this.normalizeOptionalCode(params.codigoISO3, 3, 'codigoISO3')
-        : current.codigoISO3 ?? null;
+        : (current.codigoISO3 ?? null);
     const nextNombre =
       params.nombre !== undefined
         ? this.normalizeRequiredText(params.nombre, 'nombre')
@@ -95,12 +101,18 @@ export class PaisService {
   private normalizeRequiredText(value: string, fieldName: string): string {
     const normalized = value.trim();
     if (!normalized) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacio`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacio`,
+      );
     }
     return normalized;
   }
 
-  private normalizeCode(value: string, length: number, fieldName: string): string {
+  private normalizeCode(
+    value: string,
+    length: number,
+    fieldName: string,
+  ): string {
     const normalized = value.trim().toUpperCase();
     if (normalized.length !== length) {
       throw new BadRequestException(

@@ -1,10 +1,4 @@
-import {
-  IsBoolean,
-  IsInt,
-  IsNumber,
-  IsOptional,
-  Min,
-} from 'class-validator';
+import { IsBoolean, IsInt, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class CreateCostoTransporteDto {
   @IsInt()

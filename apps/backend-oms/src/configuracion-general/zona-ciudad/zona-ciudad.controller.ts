@@ -62,7 +62,10 @@ export class ZonaCiudadController {
     return { success: true };
   }
 
-  private parseCompositeId(id: string): { zonaTransporteId: number; ciudadId: number } {
+  private parseCompositeId(id: string): {
+    zonaTransporteId: number;
+    ciudadId: number;
+  } {
     const parts = id.split(':');
     if (parts.length !== 2) {
       throw new BadRequestException(
@@ -74,7 +77,9 @@ export class ZonaCiudadController {
     const ciudadId = Number(parts[1]);
 
     if (!Number.isInteger(zonaTransporteId) || zonaTransporteId <= 0) {
-      throw new BadRequestException('ZonaTransporteId invalido en id compuesto');
+      throw new BadRequestException(
+        'ZonaTransporteId invalido en id compuesto',
+      );
     }
     if (!Number.isInteger(ciudadId) || ciudadId <= 0) {
       throw new BadRequestException('CiudadId invalido en id compuesto');

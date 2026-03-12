@@ -42,7 +42,9 @@ export class UsersService {
       throw new ForbiddenException('Contexto de franquicia invalido');
     }
 
-    return this.usersRepository.listByEmpresaClienteId(actor.actorEmpresaClienteId);
+    return this.usersRepository.listByEmpresaClienteId(
+      actor.actorEmpresaClienteId,
+    );
   }
 
   listProfiles(actor: UsersActorContext) {

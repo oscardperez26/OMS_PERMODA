@@ -28,14 +28,18 @@ export class UsersController {
   @Get()
   @Permissions('users.manage')
   async list(@Req() req: RequestWithUser) {
-    const users = await this.usersService.listUsers(this.buildActorContext(req.user));
+    const users = await this.usersService.listUsers(
+      this.buildActorContext(req.user),
+    );
     return { users };
   }
 
   @Get('profiles')
   @Permissions('users.manage')
   listProfiles(@Req() req: RequestWithUser) {
-    const profiles = this.usersService.listProfiles(this.buildActorContext(req.user));
+    const profiles = this.usersService.listProfiles(
+      this.buildActorContext(req.user),
+    );
     return { profiles };
   }
 
@@ -87,7 +91,10 @@ export class UsersController {
       throw new ForbiddenException('Usuario no autenticado');
     }
 
-    const actorEmpresaId = this.parseOptionalPositiveInt(user.storeId, 'empresa');
+    const actorEmpresaId = this.parseOptionalPositiveInt(
+      user.storeId,
+      'empresa',
+    );
     const actorEmpresaClienteId = this.parseOptionalPositiveInt(
       user.empresaClienteId,
       'franquicia',

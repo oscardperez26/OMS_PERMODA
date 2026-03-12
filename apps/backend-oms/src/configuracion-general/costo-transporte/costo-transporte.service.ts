@@ -43,7 +43,9 @@ type UpdateCostoTransporteParams = {
 
 @Injectable()
 export class CostoTransporteService {
-  constructor(private readonly costoTransporteRepository: CostoTransporteRepository) {}
+  constructor(
+    private readonly costoTransporteRepository: CostoTransporteRepository,
+  ) {}
 
   async listCostosTransporte(): Promise<CostoTransporteListItem[]> {
     return this.costoTransporteRepository.list();
@@ -53,12 +55,15 @@ export class CostoTransporteService {
     return this.costoTransporteRepository.listBootstrapData();
   }
 
-  async getCostoTransporteById(costoTransporteId: string): Promise<CostoTransporteListItem> {
+  async getCostoTransporteById(
+    costoTransporteId: string,
+  ): Promise<CostoTransporteListItem> {
     const normalizedId = this.normalizeRequiredBigIntId(
       costoTransporteId,
       'costoTransporteId',
     );
-    const costoTransporte = await this.costoTransporteRepository.findById(normalizedId);
+    const costoTransporte =
+      await this.costoTransporteRepository.findById(normalizedId);
     if (!costoTransporte) {
       throw new NotFoundException('Costo transporte no existe');
     }
@@ -78,7 +83,9 @@ export class CostoTransporteService {
       return await this.costoTransporteRepository.create(normalized);
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe un costo transporte con la misma combinacion');
+        throw new ConflictException(
+          'Ya existe un costo transporte con la misma combinacion',
+        );
       }
       throw error;
     }
@@ -108,7 +115,9 @@ export class CostoTransporteService {
       params.activo !== undefined;
 
     if (!hasAnyField) {
-      throw new BadRequestException('Debes enviar al menos un campo para actualizar');
+      throw new BadRequestException(
+        'Debes enviar al menos un campo para actualizar',
+      );
     }
 
     const current = await this.costoTransporteRepository.findById(normalizedId);
@@ -123,11 +132,17 @@ export class CostoTransporteService {
           : current.empresaId,
       zonaTransporteId:
         params.zonaTransporteId !== undefined
-          ? this.normalizeRequiredId(params.zonaTransporteId, 'zonaTransporteId')
+          ? this.normalizeRequiredId(
+              params.zonaTransporteId,
+              'zonaTransporteId',
+            )
           : current.zonaTransporteId,
       transportadoraId:
         params.transportadoraId !== undefined
-          ? this.normalizeRequiredId(params.transportadoraId, 'transportadoraId')
+          ? this.normalizeRequiredId(
+              params.transportadoraId,
+              'transportadoraId',
+            )
           : current.transportadoraId,
       monedaId:
         params.monedaId !== undefined
@@ -136,19 +151,19 @@ export class CostoTransporteService {
       pesoMinKg:
         params.pesoMinKg !== undefined
           ? this.normalizeOptionalDecimal(params.pesoMinKg, 'pesoMinKg')
-          : current.pesoMinKg ?? null,
+          : (current.pesoMinKg ?? null),
       pesoMaxKg:
         params.pesoMaxKg !== undefined
           ? this.normalizeOptionalDecimal(params.pesoMaxKg, 'pesoMaxKg')
-          : current.pesoMaxKg ?? null,
+          : (current.pesoMaxKg ?? null),
       valorMin:
         params.valorMin !== undefined
           ? this.normalizeOptionalDecimal(params.valorMin, 'valorMin')
-          : current.valorMin ?? null,
+          : (current.valorMin ?? null),
       valorMax:
         params.valorMax !== undefined
           ? this.normalizeOptionalDecimal(params.valorMax, 'valorMax')
-          : current.valorMax ?? null,
+          : (current.valorMax ?? null),
       costo:
         params.costo !== undefined
           ? this.normalizeRequiredDecimal(params.costo, 'costo')
@@ -156,11 +171,11 @@ export class CostoTransporteService {
       diasMin:
         params.diasMin !== undefined
           ? this.normalizeOptionalInteger(params.diasMin, 'diasMin')
-          : current.diasMin ?? null,
+          : (current.diasMin ?? null),
       diasMax:
         params.diasMax !== undefined
           ? this.normalizeOptionalInteger(params.diasMax, 'diasMax')
-          : current.diasMax ?? null,
+          : (current.diasMax ?? null),
       activo: params.activo !== undefined ? params.activo : current.activo,
     };
 
@@ -173,7 +188,9 @@ export class CostoTransporteService {
       await this.costoTransporteRepository.update(normalizedId, normalized);
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Ya existe un costo transporte con la misma combinacion');
+        throw new ConflictException(
+          'Ya existe un costo transporte con la misma combinacion',
+        );
       }
       throw error;
     }
@@ -217,12 +234,16 @@ export class CostoTransporteService {
       monedaExists,
     ] = await Promise.all([
       this.costoTransporteRepository.existsEmpresaById(input.empresaId),
-      this.costoTransporteRepository.existsZonaTransporteById(input.zonaTransporteId),
+      this.costoTransporteRepository.existsZonaTransporteById(
+        input.zonaTransporteId,
+      ),
       this.costoTransporteRepository.existsZonaTransporteByIdAndEmpresaId(
         input.zonaTransporteId,
         input.empresaId,
       ),
-      this.costoTransporteRepository.existsTransportadoraById(input.transportadoraId),
+      this.costoTransporteRepository.existsTransportadoraById(
+        input.transportadoraId,
+      ),
       this.costoTransporteRepository.existsTransportadoraByIdAndEmpresaId(
         input.transportadoraId,
         input.empresaId,
@@ -234,13 +255,19 @@ export class CostoTransporteService {
       throw new BadRequestException('EmpresaId no existe en la base de datos');
     }
     if (!zonaExists) {
-      throw new BadRequestException('ZonaTransporteId no existe en la base de datos');
+      throw new BadRequestException(
+        'ZonaTransporteId no existe en la base de datos',
+      );
     }
     if (!zonaBelongsEmpresa) {
-      throw new BadRequestException('ZonaTransporteId no pertenece a la empresa seleccionada');
+      throw new BadRequestException(
+        'ZonaTransporteId no pertenece a la empresa seleccionada',
+      );
     }
     if (!transportadoraExists) {
-      throw new BadRequestException('TransportadoraId no existe en la base de datos');
+      throw new BadRequestException(
+        'TransportadoraId no existe en la base de datos',
+      );
     }
     if (!transportadoraBelongsEmpresa) {
       throw new BadRequestException(
@@ -269,12 +296,15 @@ export class CostoTransporteService {
     },
     excludeCostoTransporteId?: string,
   ): Promise<void> {
-    const duplicated = await this.costoTransporteRepository.existsExactDuplicate(
-      input,
-      excludeCostoTransporteId,
-    );
+    const duplicated =
+      await this.costoTransporteRepository.existsExactDuplicate(
+        input,
+        excludeCostoTransporteId,
+      );
     if (duplicated) {
-      throw new ConflictException('Existe un costo transporte duplicado con los mismos rangos');
+      throw new ConflictException(
+        'Existe un costo transporte duplicado con los mismos rangos',
+      );
     }
   }
 
@@ -298,13 +328,14 @@ export class CostoTransporteService {
       return;
     }
 
-    const activeRanges = await this.costoTransporteRepository.listActiveByCombination(
-      input.empresaId,
-      input.zonaTransporteId,
-      input.transportadoraId,
-      input.monedaId,
-      excludeCostoTransporteId,
-    );
+    const activeRanges =
+      await this.costoTransporteRepository.listActiveByCombination(
+        input.empresaId,
+        input.zonaTransporteId,
+        input.transportadoraId,
+        input.monedaId,
+        excludeCostoTransporteId,
+      );
 
     const hasOverlap = activeRanges.some((candidate) =>
       this.overlapsAllRanges(candidate, input),
@@ -370,7 +401,12 @@ export class CostoTransporteService {
     diasMin: number | null;
     diasMax: number | null;
   }): void {
-    this.validateMinMax('pesoMinKg', input.pesoMinKg, 'pesoMaxKg', input.pesoMaxKg);
+    this.validateMinMax(
+      'pesoMinKg',
+      input.pesoMinKg,
+      'pesoMaxKg',
+      input.pesoMaxKg,
+    );
     this.validateMinMax('valorMin', input.valorMin, 'valorMax', input.valorMax);
     this.validateMinMax('diasMin', input.diasMin, 'diasMax', input.diasMax);
   }
@@ -393,7 +429,9 @@ export class CostoTransporteService {
 
   private normalizeRequiredId(value: number, fieldName: string): number {
     if (!Number.isInteger(value) || value <= 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero mayor a 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero mayor a 0`,
+      );
     }
     return value;
   }
@@ -401,7 +439,9 @@ export class CostoTransporteService {
   private normalizeRequiredBigIntId(value: string, fieldName: string): string {
     const normalized = value.trim();
     if (!/^[0-9]+$/.test(normalized)) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un bigint valido`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un bigint valido`,
+      );
     }
     if (normalized === '0') {
       throw new BadRequestException(`El campo ${fieldName} debe ser mayor a 0`);
@@ -417,14 +457,18 @@ export class CostoTransporteService {
       return null;
     }
     if (!Number.isFinite(value) || value < 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un numero >= 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un numero >= 0`,
+      );
     }
     return value;
   }
 
   private normalizeRequiredDecimal(value: number, fieldName: string): number {
     if (!Number.isFinite(value) || value < 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un numero >= 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un numero >= 0`,
+      );
     }
     return value;
   }
@@ -437,7 +481,9 @@ export class CostoTransporteService {
       return null;
     }
     if (!Number.isInteger(value) || value < 0) {
-      throw new BadRequestException(`El campo ${fieldName} debe ser un entero >= 0`);
+      throw new BadRequestException(
+        `El campo ${fieldName} debe ser un entero >= 0`,
+      );
     }
     return value;
   }
