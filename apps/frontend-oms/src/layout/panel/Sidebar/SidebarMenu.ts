@@ -65,24 +65,6 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
     ],
   },
   {
-    key: "configure",
-    sectionLabel: "CONFIGURE",
-    icon: "bi-gear",
-    groups: [
-      {
-        key: "configure_group",
-        groupLabel: "Parametros",
-        items: [
-          {
-            label: "Parametros de la tienda",
-            path: ROUTES.CONFIGURE_STORE_PARAMS,
-            requiredPermissions: ['config.read'],
-          },
-        ],
-      },
-    ],
-  },
-  {
     key: "order_manager",
     sectionLabel: "GESTOR DE PEDIDOS",
     icon: "bi-box-seam",
@@ -102,68 +84,28 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
             requiredPermissions: ['config.read'],
           },
           {
-            label: "Monedas",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_MONEDA,
+            label: "Comercial / Franquicias",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_COMERCIAL,
             requiredPermissions: ['config.read'],
           },
           {
-            label: "Empresas",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_EMPRESA,
+            label: "Parametros Base",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PARAMETROS_BASE,
             requiredPermissions: ['config.read'],
           },
           {
-            label: "Empresa Cliente",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_EMPRESA_CLIENTE,
+            label: "Catalogo e Inventario",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_CATALOGO_INVENTARIO,
             requiredPermissions: ['config.read'],
           },
           {
-            label: "Pasarelas de Pago",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PASARELA_PAGO,
+            label: "Pagos e Integraciones",
+            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PAGOS_INTEGRACIONES,
             requiredPermissions: ['config.read'],
           },
           {
-            label: "Tiendas",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_TIENDA,
-            requiredPermissions: ['config.read'],
-          },
-          {
-            label: "Bodegas",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_BODEGA,
-            requiredPermissions: ['config.read'],
-          },
-          {
-            label: "Productos",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PRODUCTO,
-            requiredPermissions: ['config.read'],
-          },
-          {
-            label: "Producto Variante",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PRODUCTO_VARIANTE,
-            requiredPermissions: ['config.read'],
-          },
-          {
-            label: "Inventario",
-            path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_INVENTARIO,
-            requiredPermissions: ['config.read'],
-          },
-          {
-            label: "Gestion de Perfiles",
-            path: ROUTES.ORDER_MANAGER_PROFILES,
-            requiredPermissions: ['users.manage'],
-          },
-          {
-            label: "Gestion de Empleados",
-            path: ROUTES.ORDER_MANAGER_EMPLOYEES,
-            requiredPermissions: ['users.manage'],
-          },
-          {
-            label: "Gestion de Permisos",
-            path: ROUTES.ORDER_MANAGER_PERMISSIONS,
-            requiredPermissions: ['security.manage'],
-          },
-          {
-            label: "Configurar Acceso de Empleados",
-            path: ROUTES.ORDER_MANAGER_EMPLOYEE_ACCESS,
+            label: "Seguridad y Accesos",
+            path: ROUTES.ORDER_MANAGER_SEGURIDAD_ACCESOS,
             requiredPermissions: ['users.manage'],
           },
         ],

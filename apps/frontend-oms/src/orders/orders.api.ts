@@ -5,6 +5,7 @@ export type OrdersListItem = {
   id: string;
   reference: string;
   newCustomer: string;
+  origin: string;
   delivery: string;
   customer: string;
   total: string;
@@ -14,6 +15,11 @@ export type OrdersListItem = {
   alias: string;
   koajOrderId: number;
   origen: number;
+  origenLabel: string;
+  origenCanalCodigo: string | null;
+  origenCanalNombre: string | null;
+  origenConectorCodigo: string | null;
+  origenProveedorCodigo: string | null;
   tiendaOrigenId: number | null;
   tiendaOrigenCodigo: string | null;
   tiendaOrigenNombre: string | null;

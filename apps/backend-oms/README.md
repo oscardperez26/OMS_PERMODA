@@ -32,6 +32,11 @@ npm run test -- --runInBand
 - `DB_POOL_IDLE_MS`
 - `AUTH_SECRET`
 - `TRANSPORTADORA_API_CRYPTO_KEY_BASE64` (32 bytes base64, recomendado produccion)
+- `INBOUND_SYNC_JOB_ENABLED` (default `false`)
+- `INBOUND_SYNC_CRON` (default `*/5 * * * *`)
+- `INBOUND_SYNC_MAX_CONNECTORS_PER_RUN` (default `10`)
+- `INBOUND_SYNC_JOB_LIMIT` (default `200`)
+- `INBOUND_SYNC_JOB_INITIAL_DELAY_MS` (default `15000`)
 
 ## Modulo Transportadora API Config V2
 - Endpoints:
@@ -55,3 +60,4 @@ Ver en raiz del repo:
 - `../docs/04-api-contract.md`
 - `../docs/05-logistica-transportadora-api-v2.md`
 - `../docs/06-runbook-sql-econnreset.md`
+- `../docs/07-integraciones-entrantes-v1.md`

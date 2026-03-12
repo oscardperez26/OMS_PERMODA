@@ -1,0 +1,244 @@
+.integraciones-entrantes-page {
+  display: grid;
+  gap: 16px;
+  padding: 8px;
+}
+
+.integraciones-entrantes-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.integraciones-entrantes-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #21303f;
+}
+
+.integraciones-entrantes-header p {
+  margin: 6px 0 0;
+  color: #576677;
+}
+
+.integraciones-entrantes-error,
+.integraciones-entrantes-success {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.integraciones-entrantes-error {
+  border: 1px solid #f3c3c7;
+  background: #fef0f1;
+  color: #8f1824;
+}
+
+.integraciones-entrantes-success {
+  border: 1px solid #b8e6ce;
+  background: #ecfbf3;
+  color: #0e6845;
+}
+
+.integraciones-entrantes-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #d7dee6;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+}
+
+.integraciones-entrantes-card h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #253444;
+}
+
+.integraciones-entrantes-template-row {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+
+.integraciones-entrantes-template-row label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #3f4d5d;
+  min-width: 260px;
+}
+
+.integraciones-entrantes-template-row select {
+  border: 1px solid #cfd8e3;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.integraciones-entrantes-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.integraciones-entrantes-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #3f4d5d;
+}
+
+.integraciones-entrantes-help {
+  color: #6a7888;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.integraciones-entrantes-form input,
+.integraciones-entrantes-form select {
+  border: 1px solid #cfd8e3;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.integraciones-entrantes-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.integraciones-entrantes-checkbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.integraciones-entrantes-actions {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+
+.integraciones-entrantes-actions button,
+.integraciones-entrantes-template-row button,
+.integraciones-entrantes-row-actions button {
+  border: 1px solid #1d5fd4;
+  border-radius: 8px;
+  background: #1d5fd4;
+  color: #fff;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.integraciones-entrantes-actions .btn-secondary,
+.integraciones-entrantes-template-row .btn-secondary,
+.integraciones-entrantes-row-actions .btn-secondary {
+  border-color: #c8d2de;
+  background: #fff;
+  color: #2f3f50;
+}
+
+.integraciones-entrantes-loading {
+  margin: 0;
+  color: #516173;
+}
+
+.integraciones-entrantes-table-wrap {
+  overflow-x: auto;
+}
+
+.integraciones-entrantes-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.integraciones-entrantes-table th,
+.integraciones-entrantes-table td {
+  border-bottom: 1px solid #e4eaf1;
+  padding: 10px;
+  text-align: left;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.integraciones-entrantes-table th {
+  background: #f3f7fb;
+  color: #344658;
+}
+
+.integraciones-entrantes-table tbody tr {
+  cursor: pointer;
+}
+
+.integraciones-entrantes-table tbody tr:hover {
+  background: #f8fbff;
+}
+
+.integraciones-entrantes-row-selected {
+  background: #eef5ff;
+}
+
+.integraciones-entrantes-empty-cell {
+  text-align: center;
+  color: #667688;
+}
+
+.integraciones-entrantes-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.integraciones-entrantes-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.integraciones-entrantes-detail-grid > div {
+  display: grid;
+  gap: 4px;
+  border: 1px solid #dfe7f0;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fbfdff;
+}
+
+.integraciones-entrantes-detail-grid span {
+  font-size: 12px;
+  color: #667688;
+}
+
+.integraciones-entrantes-detail-grid strong {
+  color: #243447;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.integraciones-entrantes-detail-full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1120px) {
+  .integraciones-entrantes-form {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
+  .integraciones-entrantes-detail-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .integraciones-entrantes-header {
+    flex-direction: column;
+  }
+
+  .integraciones-entrantes-form {
+    grid-template-columns: 1fr;
+  }
+
+  .integraciones-entrantes-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

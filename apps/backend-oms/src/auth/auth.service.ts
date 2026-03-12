@@ -75,12 +75,18 @@ export class AuthService {
         dbUser.perfilId,
       );
 
+    const storeIdForToken =
+      profileAccess.role === 'STORE_ADMIN' ||
+      profileAccess.role === 'STORE_READONLY'
+        ? dbUser.empresaId
+        : undefined;
+
     const safeUser: SafeUser = {
       id: dbUser.id,
       username: dbUser.email,
       role: profileAccess.role,
       permissions,
-      storeId: dbUser.empresaId,
+      storeId: storeIdForToken,
       empresaClienteId: dbUser.empresaClienteId,
     };
 

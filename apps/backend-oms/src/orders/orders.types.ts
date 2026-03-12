@@ -55,6 +55,7 @@ export type OrderListItem = {
   id: string;
   reference: string;
   newCustomer: string;
+  origin: string;
   delivery: string;
   customer: string;
   total: string;
@@ -64,6 +65,11 @@ export type OrderListItem = {
   alias: string;
   koajOrderId: number;
   origen: number;
+  origenLabel: string;
+  origenCanalCodigo: string | null;
+  origenCanalNombre: string | null;
+  origenConectorCodigo: string | null;
+  origenProveedorCodigo: string | null;
   tiendaOrigenId: number | null;
   tiendaOrigenCodigo: string | null;
   tiendaOrigenNombre: string | null;
@@ -118,6 +124,11 @@ export type PedidoListRow = {
   pedidoId: number;
   numeroPedido: string;
   numeroExterno: string | null;
+  canalVentaCodigo: string | null;
+  canalVentaNombre: string | null;
+  integracionCodigo: string | null;
+  proveedorCodigo: string | null;
+  origenLabel: string;
   clienteNombre: string;
   total: number;
   createdAt: string;
@@ -168,6 +179,7 @@ export type PedidoDetail = {
     codigo: string | null;
     nombre: string | null;
     activa: boolean | null;
+    empresaClienteId: number | null;
   };
   empresaId: number;
   createdAt: string;

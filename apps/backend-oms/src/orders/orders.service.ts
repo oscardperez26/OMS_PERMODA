@@ -6,7 +6,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { SafeUser } from '../auth/auth.types';
+import type { Permission, SafeUser } from '../auth/auth.types';
 import { OrdersRepository } from './orders.repository';
 import type {
   AssignmentConfirmResult,
@@ -47,13 +47,21 @@ type KoajFullOrderPreview = {
   orderRows: KoajFullOrderRow[];
 };
 
-type OrdersActorContext = Pick<SafeUser, 'role' | 'storeId'>;
+type OrdersActorContext = Pick<
+  SafeUser,
+  'role' | 'storeId' | 'empresaClienteId' | 'permissions'
+>;
 
 type StoreScope = {
   tiendaId: number;
   codigo: string;
   nombre: string;
 };
+
+type OrderAccessScope =
+  | { kind: 'GLOBAL' }
+  | { kind: 'STORE'; store: StoreScope }
+  | { kind: 'FRANCHISE'; empresaClienteId: number };
 
 @Injectable()
 export class OrdersService {
@@ -69,13 +77,13 @@ export class OrdersService {
   }
 
   async listOrders(actor?: OrdersActorContext): Promise<OrderListItem[]> {
-    const storeScope = await this.resolveActorStoreScope(actor);
+    const accessScope = await this.resolveActorAccessScope(actor);
     const rows = await this.ordersRepository.listPedidos(
-      storeScope ? { tiendaOrigenId: storeScope.tiendaId } : undefined,
+      this.buildPedidoListFilters(accessScope),
     );
     const storeRows = this.filterAndPrioritizeStoreRows(
       rows,
-      Boolean(storeScope),
+      accessScope.kind === 'STORE',
     );
 
     return storeRows.map((row) => ({
@@ -83,6 +91,7 @@ export class OrdersService {
       id: row.numeroExterno?.trim() || String(row.pedidoId),
       reference: row.numeroPedido,
       newCustomer: 'No',
+      origin: row.origenLabel,
       delivery: row.paisNombre ?? '-',
       customer: row.clienteNombre,
       total: this.formatMoney(row.total),
@@ -92,6 +101,11 @@ export class OrdersService {
       alias: row.numeroPedido,
       koajOrderId: Number(row.numeroExterno ?? 0) || 0,
       origen: 0,
+      origenLabel: row.origenLabel,
+      origenCanalCodigo: row.canalVentaCodigo,
+      origenCanalNombre: row.canalVentaNombre,
+      origenConectorCodigo: row.integracionCodigo,
+      origenProveedorCodigo: row.proveedorCodigo,
       tiendaOrigenId: row.tiendaOrigenId,
       tiendaOrigenCodigo: row.tiendaOrigenCodigo,
       tiendaOrigenNombre: row.tiendaOrigenNombre,
@@ -102,34 +116,43 @@ export class OrdersService {
     pedidoId: number,
     actor?: OrdersActorContext,
   ): Promise<PedidoDetail> {
+    const accessScope = await this.resolveActorAccessScope(actor);
+    return this.getOrderDetailByScope(pedidoId, accessScope);
+  }
+
+  private async getOrderDetailByScope(
+    pedidoId: number,
+    accessScope: OrderAccessScope,
+  ): Promise<PedidoDetail> {
     const detail = await this.ordersRepository.findPedidoDetailById(pedidoId);
     if (!detail) {
       throw new NotFoundException(`Pedido ${pedidoId} no existe`);
     }
 
-    const storeScope = await this.resolveActorStoreScope(actor);
-    if (storeScope && detail.tiendaOrigen.tiendaId !== storeScope.tiendaId) {
-      throw new ForbiddenException(
-        `No tienes acceso al pedido ${pedidoId}; pertenece a otra tienda`,
-      );
-    }
+    this.assertAccessToPedido(detail, accessScope);
 
     return detail;
   }
 
   async previewAssignment(
     pedidoId: number,
+    actor?: OrdersActorContext,
     options?: {
       storeCodesCandidate?: string[];
       strategy?: AssignmentStrategy;
     },
   ): Promise<AssignmentPreview> {
-    const computation = await this.computeAssignmentPreview(pedidoId, options);
+    const computation = await this.computeAssignmentPreview(
+      pedidoId,
+      actor,
+      options,
+    );
     return computation.preview;
   }
 
   async confirmAssignment(
     pedidoId: number,
+    actor?: OrdersActorContext,
     options?: {
       storeCodesCandidate?: string[];
       strategy?: AssignmentStrategy;
@@ -137,10 +160,14 @@ export class OrdersService {
       estadoCodigo?: string;
     },
   ): Promise<AssignmentConfirmResult> {
-    const { detail, preview } = await this.computeAssignmentPreview(pedidoId, {
-      storeCodesCandidate: options?.storeCodesCandidate,
-      strategy: options?.strategy,
-    });
+    const { detail, preview } = await this.computeAssignmentPreview(
+      pedidoId,
+      actor,
+      {
+        storeCodesCandidate: options?.storeCodesCandidate,
+        strategy: options?.strategy,
+      },
+    );
 
     if (!preview.tiendaSugerida) {
       throw new UnprocessableEntityException(
@@ -682,12 +709,14 @@ export class OrdersService {
 
   private async computeAssignmentPreview(
     pedidoId: number,
+    actor?: OrdersActorContext,
     options?: {
       storeCodesCandidate?: string[];
       strategy?: AssignmentStrategy;
     },
   ): Promise<AssignmentComputation> {
-    const detail = await this.getOrderDetail(pedidoId);
+    const accessScope = await this.resolveActorAccessScope(actor);
+    const detail = await this.getOrderDetailByScope(pedidoId, accessScope);
     const strategy = this.normalizeAssignmentStrategy(options?.strategy);
     const storeCodesCandidate = this.resolveStoreCodesCandidate(
       options?.storeCodesCandidate,
@@ -705,6 +734,9 @@ export class OrdersService {
     const tiendas = await this.ordersRepository.listTiendasByCodes(
       detail.empresaId,
       storeCodesCandidate,
+      accessScope.kind === 'FRANCHISE'
+        ? accessScope.empresaClienteId
+        : undefined,
     );
     const tiendasByCode = new Map(
       tiendas.map((tienda) => [tienda.codigo.trim().toUpperCase(), tienda]),
@@ -1308,13 +1340,38 @@ export class OrdersService {
     return parsed;
   }
 
-  private async resolveActorStoreScope(
+  private async resolveActorAccessScope(
     actor?: OrdersActorContext,
-  ): Promise<StoreScope | null> {
-    if (!actor || !this.isStoreRole(actor.role)) {
-      return null;
+  ): Promise<OrderAccessScope> {
+    if (!actor) {
+      return { kind: 'GLOBAL' };
     }
 
+    if (this.isGlobalSuperAdmin(actor)) {
+      return { kind: 'GLOBAL' };
+    }
+
+    if (this.isStoreRole(actor.role)) {
+      const storeScope = await this.resolveActorStoreScope(actor);
+      return { kind: 'STORE', store: storeScope };
+    }
+
+    if (this.isPanelRole(actor.role)) {
+      const empresaClienteId = this.parsePositiveInteger(actor.empresaClienteId);
+      if (!empresaClienteId) {
+        throw new ForbiddenException(
+          'Usuario panel sin franquicia asignada. Solo super admin global puede ver todos los pedidos.',
+        );
+      }
+      return { kind: 'FRANCHISE', empresaClienteId };
+    }
+
+    return { kind: 'GLOBAL' };
+  }
+
+  private async resolveActorStoreScope(
+    actor: OrdersActorContext,
+  ): Promise<StoreScope> {
     const storeReference = actor.storeId?.trim();
     if (!storeReference) {
       throw new ForbiddenException('Usuario tienda sin tienda asignada');
@@ -1331,8 +1388,78 @@ export class OrdersService {
     return scope;
   }
 
+  private buildPedidoListFilters(
+    scope: OrderAccessScope,
+  ): { tiendaOrigenId?: number; empresaClienteId?: number } | undefined {
+    if (scope.kind === 'STORE') {
+      return { tiendaOrigenId: scope.store.tiendaId };
+    }
+
+    if (scope.kind === 'FRANCHISE') {
+      return { empresaClienteId: scope.empresaClienteId };
+    }
+
+    return undefined;
+  }
+
+  private assertAccessToPedido(
+    detail: PedidoDetail,
+    scope: OrderAccessScope,
+  ): void {
+    if (scope.kind === 'GLOBAL') {
+      return;
+    }
+
+    if (scope.kind === 'STORE') {
+      if (detail.tiendaOrigen.tiendaId !== scope.store.tiendaId) {
+        throw new ForbiddenException(
+          `No tienes acceso al pedido ${detail.pedidoId}; pertenece a otra tienda`,
+        );
+      }
+      return;
+    }
+
+    if (detail.tiendaOrigen.empresaClienteId !== scope.empresaClienteId) {
+      throw new ForbiddenException(
+        `No tienes acceso al pedido ${detail.pedidoId}; pertenece a otra franquicia`,
+      );
+    }
+  }
+
   private isStoreRole(role: OrdersActorContext['role']): boolean {
     return role === 'STORE_ADMIN' || role === 'STORE_READONLY';
+  }
+
+  private isPanelRole(role: OrdersActorContext['role']): boolean {
+    return role === 'ADMIN' || role === 'PANEL_READONLY';
+  }
+
+  private isGlobalSuperAdmin(actor: OrdersActorContext): boolean {
+    const empresaClienteId = this.parsePositiveInteger(actor.empresaClienteId);
+    return (
+      empresaClienteId === null &&
+      this.hasPermission(actor.permissions, 'security.manage')
+    );
+  }
+
+  private hasPermission(
+    permissions: Permission[] | undefined,
+    expected: Permission,
+  ): boolean {
+    return Array.isArray(permissions) && permissions.includes(expected);
+  }
+
+  private parsePositiveInteger(rawValue?: string): number | null {
+    if (!rawValue) {
+      return null;
+    }
+
+    const parsed = Number(rawValue);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      return null;
+    }
+
+    return parsed;
   }
 
   private filterAndPrioritizeStoreRows<

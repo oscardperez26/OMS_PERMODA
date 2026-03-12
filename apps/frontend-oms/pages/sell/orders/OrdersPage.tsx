@@ -1,6 +1,6 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../../src/auth/useAuth';
-import { listOrders, syncPendingOrders } from '../../../src/orders/orders.api';
+import { listOrders } from '../../../src/orders/orders.api';
 import { OrderDetailModal } from './OrderDetailModal';
 import { OrdersShell } from './OrdersShell';
 import { OrdersTable, type OrderRow, type OrdersFilters } from './OrdersTable';
@@ -13,17 +13,17 @@ import { OrdersTable, type OrderRow, type OrdersFilters } from './OrdersTable';
  * - Filtra en cliente cuando el usuario da click en Buscar
  */
 export function OrdersPage() {
-  const { accessToken, isLoading: isAuthLoading, hasPermissions } = useAuth();
+  const { accessToken, isLoading: isAuthLoading } = useAuth();
 
   const [rowsAll, setRowsAll] = useState<OrderRow[]>([]);
   const [rows, setRows] = useState<OrderRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [loadError, setLoadError] = useState('');
 
   const [filters, setFilters] = useState<OrdersFilters>({
     id: '',
     reference: '',
+    origin: '',
     newCustomer: '',
     delivery: '',
     customer: '',
@@ -70,42 +70,6 @@ export function OrdersPage() {
     void loadOrdersFromApi();
   }, [accessToken, isAuthLoading]);
 
-  async function handleManualSync() {
-    if (!accessToken) {
-      setLoadError('Sesion no disponible');
-      return;
-    }
-
-    setIsSyncing(true);
-    setLoadError('');
-
-    try {
-      const syncResult = await syncPendingOrders(accessToken);
-      let syncWarning = '';
-
-      if (syncResult.blockedByDiagnostics) {
-        const blockedReasons = syncResult.diagnostics
-          .filter((item) => !item.ok)
-          .map((item) => item.message)
-          .join(' | ');
-        syncWarning =
-          blockedReasons || 'Sincronizacion KOAJ full bloqueada por diagnostico de catalogos';
-      }
-
-      const response = await listOrders(accessToken);
-      const nextRows = mapApiOrdersToRows(response);
-      setRowsAll(nextRows);
-      setRows(nextRows);
-      setLoadError(syncWarning);
-    } catch (error) {
-      const message =
-        error instanceof Error ? `No se pudo sincronizar KOAJ full: ${error.message}` : 'No se pudo sincronizar KOAJ full';
-      setLoadError(message);
-    } finally {
-      setIsSyncing(false);
-    }
-  }
-
   const total = useMemo(() => rows.length, [rows]);
 
   const onSearch = () => {
@@ -114,6 +78,8 @@ export function OrdersPage() {
       const refOk =
         !filters.reference ||
         r.reference.toLowerCase().includes(filters.reference.toLowerCase());
+      const originOk =
+        !filters.origin || r.origin.toLowerCase().includes(filters.origin.toLowerCase());
       const newOk = !filters.newCustomer || r.newCustomer === filters.newCustomer;
       const delOk =
         !filters.delivery || r.delivery.toLowerCase().includes(filters.delivery.toLowerCase());
@@ -132,6 +98,7 @@ export function OrdersPage() {
       return (
         idOk &&
         refOk &&
+        originOk &&
         newOk &&
         delOk &&
         customerOk &&
@@ -158,6 +125,7 @@ export function OrdersPage() {
     const empty: OrdersFilters = {
       id: '',
       reference: '',
+      origin: '',
       newCustomer: '',
       delivery: '',
       customer: '',
@@ -180,13 +148,6 @@ export function OrdersPage() {
     >
       {isLoading && <p>Cargando pedidos desde API...</p>}
       {loadError && <p style={{ color: '#b00020' }}>{loadError}</p>}
-      {hasPermissions(['orders.manage']) && (
-        <div style={{ marginBottom: 10 }}>
-          <button type="button" onClick={() => void handleManualSync()} disabled={isSyncing}>
-            {isSyncing ? 'Sincronizando KOAJ full...' : 'Sincronizar KOAJ full'}
-          </button>
-        </div>
-      )}
 
       <OrdersTable
         rows={rows}
@@ -236,6 +197,7 @@ function mapApiOrdersToRows(items: Awaited<ReturnType<typeof listOrders>>): Orde
     pedidoId: item.pedidoId,
     id: item.id,
     reference: item.reference,
+    origin: item.origenLabel || item.origin || '-',
     newCustomer: normalizeNewCustomer(item.newCustomer),
     delivery: item.delivery,
     customer: item.customer,

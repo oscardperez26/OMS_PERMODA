@@ -34,3 +34,4 @@ Ver en raiz del repo:
 - `../docs/04-api-contract.md`
 - `../docs/05-logistica-transportadora-api-v2.md`
 - `../docs/06-runbook-sql-econnreset.md`
+- `../docs/07-integraciones-entrantes-v1.md`

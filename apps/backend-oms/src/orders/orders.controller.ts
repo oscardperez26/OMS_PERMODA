@@ -67,8 +67,13 @@ export class OrdersController {
   async previewAssignment(
     @Param('pedidoId', ParseIntPipe) pedidoId: number,
     @Body() body: AssignmentPreviewDto,
+    @Req() req: RequestWithUser,
   ) {
-    return this.ordersService.previewAssignment(pedidoId, body);
+    if (!req.user) {
+      throw new UnauthorizedException('Usuario no autenticado');
+    }
+
+    return this.ordersService.previewAssignment(pedidoId, req.user, body);
   }
 
   @Patch(':pedidoId/assignment/confirm')
@@ -76,7 +81,12 @@ export class OrdersController {
   async confirmAssignment(
     @Param('pedidoId', ParseIntPipe) pedidoId: number,
     @Body() body: AssignmentConfirmDto,
+    @Req() req: RequestWithUser,
   ) {
-    return this.ordersService.confirmAssignment(pedidoId, body);
+    if (!req.user) {
+      throw new UnauthorizedException('Usuario no autenticado');
+    }
+
+    return this.ordersService.confirmAssignment(pedidoId, req.user, body);
   }
 }

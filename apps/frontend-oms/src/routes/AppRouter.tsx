@@ -52,6 +52,12 @@ import { CostoTransportePage } from '../../pages/gestor/CostoTransportePage';
 import { StoreParamsPage } from '../../pages/configure/StoreParamsPage';
 import { PermissionsPage } from '../../pages/gestor/PermissionsPage';
 import { LogisticaPage } from '../../pages/gestor/LogisticaPage';
+import { ComercialPage } from '../../pages/gestor/ComercialPage';
+import { ParametrosBasePage } from '../../pages/gestor/ParametrosBasePage';
+import { CatalogoInventarioPage } from '../../pages/gestor/CatalogoInventarioPage';
+import { PagosIntegracionesPage } from '../../pages/gestor/PagosIntegracionesPage';
+import { SeguridadAccesosPage } from '../../pages/gestor/SeguridadAccesosPage';
+import { IntegracionesEntrantesPage } from '../../pages/gestor/IntegracionesEntrantesPage';
 
 
 /**
@@ -151,6 +157,18 @@ export function AppRouter() {
           />
 
           <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_COMERCIAL_STORE_PARAMS}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['config.read']}
+              >
+                <StoreParamsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG}
             element={
               <ProtectedRoute
@@ -170,6 +188,90 @@ export function AppRouter() {
                 requiredPermissions={['config.read']}
               >
                 <LogisticaPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_COMERCIAL}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['config.read']}
+              >
+                <ComercialPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PARAMETROS_BASE}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['config.read']}
+              >
+                <ParametrosBasePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_CATALOGO_INVENTARIO}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['config.read']}
+              >
+                <CatalogoInventarioPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_PAGOS_INTEGRACIONES}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['config.read']}
+              >
+                <PagosIntegracionesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_INTEGRACIONES}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['config.read']}
+              >
+                <IntegracionesEntrantesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_INTEGRACIONES_ENTRANTES}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['config.read']}
+              >
+                <IntegracionesEntrantesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_SEGURIDAD_ACCESOS}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['users.manage']}
+              >
+                <SeguridadAccesosPage />
               </ProtectedRoute>
             }
           />

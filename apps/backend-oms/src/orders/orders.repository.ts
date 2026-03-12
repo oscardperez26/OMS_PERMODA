@@ -43,6 +43,10 @@ type PedidoRow = {
   PedidoId: number;
   NumeroPedido: string;
   NumeroExterno: string | null;
+  CanalVentaCodigo: string | null;
+  CanalVentaNombre: string | null;
+  IntegracionCodigo: string | null;
+  IntegracionConfigJson: string | null;
   ClienteNombre: string;
   Total: number;
   CreatedAt: Date;
@@ -52,6 +56,7 @@ type PedidoRow = {
   TiendaOrigenId: number | null;
   TiendaOrigenCodigo: string | null;
   TiendaOrigenNombre: string | null;
+  TiendaOrigenEmpresaClienteId: number | null;
 };
 
 type PedidoDetailRow = {
@@ -85,6 +90,7 @@ type PedidoDetailRow = {
   TiendaOrigenCodigo: string | null;
   TiendaOrigenNombre: string | null;
   TiendaOrigenActiva: boolean | null;
+  TiendaOrigenEmpresaClienteId: number | null;
   CreatedAt: Date;
   UpdatedAt: Date | null;
 };
@@ -459,6 +465,7 @@ export class OrdersRepository {
 
   async listPedidos(filters?: {
     tiendaOrigenId?: number;
+    empresaClienteId?: number;
   }): Promise<PedidoListRow[]> {
     const result = await this.databaseService.execute<sql.IResult<PedidoRow>>(
       (pool) => {
@@ -469,6 +476,10 @@ export class OrdersRepository {
           request.input('tiendaOrigenId', sql.Int, filters.tiendaOrigenId);
           whereParts.push('p.[TiendaOrigenId] = @tiendaOrigenId');
         }
+        if (filters?.empresaClienteId) {
+          request.input('empresaClienteId', sql.Int, filters.empresaClienteId);
+          whereParts.push('ti.[EmpresaClienteId] = @empresaClienteId');
+        }
 
         const whereClause =
           whereParts.length > 0 ? `WHERE ${whereParts.join(' AND ')}` : '';
@@ -478,6 +489,10 @@ export class OrdersRepository {
             p.[PedidoId],
             p.[NumeroPedido],
             p.[NumeroExterno],
+            cv.[Codigo] AS [CanalVentaCodigo],
+            cv.[Nombre] AS [CanalVentaNombre],
+            ig.[Codigo] AS [IntegracionCodigo],
+            ig.[ConfigJson] AS [IntegracionConfigJson],
             p.[ClienteNombre],
             p.[Total],
             p.[CreatedAt],
@@ -486,7 +501,8 @@ export class OrdersRepository {
             pa.[Nombre] AS [PaisNombre],
             p.[TiendaOrigenId],
             ti.[Codigo] AS [TiendaOrigenCodigo],
-            ti.[Nombre] AS [TiendaOrigenNombre]
+            ti.[Nombre] AS [TiendaOrigenNombre],
+            ti.[EmpresaClienteId] AS [TiendaOrigenEmpresaClienteId]
           FROM [oms].[Pedido] p
           LEFT JOIN [oms].[Estado] e
             ON e.[EstadoId] = p.[EstadoId]
@@ -494,6 +510,21 @@ export class OrdersRepository {
             ON pa.[PaisId] = p.[ShippingPaisId]
           LEFT JOIN [oms].[Tienda] ti
             ON ti.[TiendaId] = p.[TiendaOrigenId]
+          LEFT JOIN [oms].[CanalVenta] cv
+            ON cv.[CanalVentaId] = p.[CanalVentaId]
+          OUTER APPLY
+          (
+            SELECT TOP 1
+              [Codigo],
+              [ConfigJson]
+            FROM [oms].[Integracion]
+            WHERE [EmpresaId] = p.[EmpresaId]
+              AND [CanalVentaId] = p.[CanalVentaId]
+            ORDER BY
+              CASE WHEN [Estado] = 'ACTIVO' THEN 0 ELSE 1 END,
+              [UpdatedAt] DESC,
+              [IntegracionId] DESC
+          ) ig
           ${whereClause}
           ORDER BY p.[CreatedAt] DESC, p.[PedidoId] DESC
         `);
@@ -505,6 +536,16 @@ export class OrdersRepository {
       pedidoId: row.PedidoId,
       numeroPedido: row.NumeroPedido,
       numeroExterno: row.NumeroExterno,
+      canalVentaCodigo: row.CanalVentaCodigo,
+      canalVentaNombre: row.CanalVentaNombre,
+      integracionCodigo: row.IntegracionCodigo,
+      proveedorCodigo: this.extractProviderCode(row.IntegracionConfigJson),
+      origenLabel: this.buildOrigenLabel(
+        row.CanalVentaCodigo,
+        row.CanalVentaNombre,
+        row.IntegracionCodigo,
+        row.IntegracionConfigJson,
+      ),
       clienteNombre: row.ClienteNombre,
       total: row.Total,
       createdAt: row.CreatedAt.toISOString(),
@@ -515,6 +556,31 @@ export class OrdersRepository {
       tiendaOrigenCodigo: row.TiendaOrigenCodigo,
       tiendaOrigenNombre: row.TiendaOrigenNombre,
     }));
+  }
+
+  private extractProviderCode(configJson: string | null): string | null {
+    if (!configJson) {
+      return null;
+    }
+    try {
+      const payload = JSON.parse(configJson) as { providerCode?: string };
+      const providerCode = payload.providerCode?.trim();
+      return providerCode ? providerCode.toUpperCase() : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private buildOrigenLabel(
+    canalCodigo: string | null,
+    canalNombre: string | null,
+    integracionCodigo: string | null,
+    configJson: string | null,
+  ): string {
+    const providerCode = this.extractProviderCode(configJson);
+    const providerPart = providerCode ?? integracionCodigo ?? 'SIN CONECTOR';
+    const canalPart = canalCodigo ?? canalNombre ?? 'SIN CANAL';
+    return `${providerPart} / ${canalPart}`;
   }
 
   async findPedidoDetailById(pedidoId: number): Promise<PedidoDetail | null> {
@@ -555,6 +621,7 @@ export class OrdersRepository {
               ti.[Codigo] AS [TiendaOrigenCodigo],
               ti.[Nombre] AS [TiendaOrigenNombre],
               ti.[Activo] AS [TiendaOrigenActiva],
+              ti.[EmpresaClienteId] AS [TiendaOrigenEmpresaClienteId],
               p.[CreatedAt],
               p.[UpdatedAt]
             FROM [oms].[Pedido] p
@@ -620,6 +687,7 @@ export class OrdersRepository {
           row.TiendaOrigenActiva === null
             ? null
             : this.normalizeBoolean(row.TiendaOrigenActiva),
+        empresaClienteId: row.TiendaOrigenEmpresaClienteId,
       },
       empresaId: row.EmpresaId,
       createdAt: row.CreatedAt.toISOString(),
@@ -715,6 +783,7 @@ export class OrdersRepository {
   async listTiendasByCodes(
     empresaId: number,
     storeCodes: string[],
+    empresaClienteId?: number,
   ): Promise<
     Array<{ tiendaId: number; codigo: string; nombre: string; activa: boolean }>
   > {
@@ -727,7 +796,10 @@ export class OrdersRepository {
 
     return this.databaseService
       .execute<sql.IResult<TiendaRow>>((pool) => {
-        const request = pool.request().input('empresaId', sql.Int, empresaId);
+        const request = pool
+          .request()
+          .input('empresaId', sql.Int, empresaId)
+          .input('empresaClienteId', sql.Int, empresaClienteId ?? null);
         const params: string[] = [];
 
         normalizedCodes.forEach((code, index) => {
@@ -744,6 +816,7 @@ export class OrdersRepository {
             [Activo]
           FROM [oms].[Tienda]
           WHERE [EmpresaId] = @empresaId
+            AND (@empresaClienteId IS NULL OR [EmpresaClienteId] = @empresaClienteId)
             AND [Codigo] IN (${params.join(', ')})
         `);
       }, 'orders.listTiendasByCodes')

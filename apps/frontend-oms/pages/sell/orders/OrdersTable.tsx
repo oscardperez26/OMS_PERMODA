@@ -7,6 +7,7 @@ export type OrderRow = {
   pedidoId: number;
   id: string;
   reference: string;
+  origin: string;
   newCustomer: "Sí" | "No";
   delivery: string;
   customer: string;
@@ -37,6 +38,7 @@ export type OrderDetail = {
 export type OrdersFilters = {
   id: string;
   reference: string;
+  origin: string;
   newCustomer: "" | "Sí" | "No";
   delivery: string;
   customer: string;
@@ -77,6 +79,7 @@ export function OrdersTable({
               </th>
               <th className="col-id">ID</th>
               <th className="col-ref">Referencia</th>
+              <th className="col-ref">Origen</th>
               <th className="col-new">Nuevo cliente</th>
               <th className="col-delivery">Entrega</th>
               <th className="col-customer">Cliente</th>
@@ -109,6 +112,15 @@ export function OrdersTable({
                   placeholder="Buscar ref"
                   value={filters.reference}
                   onChange={(e) => set("reference", e.target.value)}
+                />
+              </td>
+              <td>
+                <input
+                  className="koaj-input py-1 px-2"
+                  style={{ fontSize: "0.8rem", height: "32px" }}
+                  placeholder="Origen"
+                  value={filters.origin}
+                  onChange={(e) => set("origin", e.target.value)}
                 />
               </td>
               <td>
@@ -224,6 +236,7 @@ export function OrdersTable({
                 </td>
                 <td>{r.id}</td>
                 <td>{r.reference}</td>
+                <td>{r.origin}</td>
                 <td>{r.newCustomer}</td>
                 <td>{r.delivery}</td>
                 <td>
@@ -255,7 +268,7 @@ export function OrdersTable({
 
             {!rows.length && (
               <tr>
-                <td colSpan={11} className="orders-empty">
+                <td colSpan={12} className="orders-empty">
                   No hay pedidos para mostrar.
                 </td>
               </tr>

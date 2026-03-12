@@ -43,6 +43,22 @@ export const ROUTES = {
   ORDER_MANAGER_GENERAL_CONFIG: '/panel/order-manager/configuracion-general',
   ORDER_MANAGER_GENERAL_CONFIG_LOGISTICA:
     '/panel/order-manager/configuracion-general/logistica',
+  ORDER_MANAGER_GENERAL_CONFIG_COMERCIAL:
+    '/panel/order-manager/configuracion-general/comercial',
+  ORDER_MANAGER_GENERAL_CONFIG_PARAMETROS_BASE:
+    '/panel/order-manager/configuracion-general/parametros-base',
+  ORDER_MANAGER_GENERAL_CONFIG_CATALOGO_INVENTARIO:
+    '/panel/order-manager/configuracion-general/catalogo-inventario',
+  ORDER_MANAGER_GENERAL_CONFIG_PAGOS_INTEGRACIONES:
+    '/panel/order-manager/configuracion-general/pagos-integraciones',
+  ORDER_MANAGER_GENERAL_CONFIG_INTEGRACIONES:
+    '/panel/order-manager/configuracion-general/pagos-integraciones/integraciones',
+  ORDER_MANAGER_GENERAL_CONFIG_INTEGRACIONES_ENTRANTES:
+    '/panel/order-manager/configuracion-general/pagos-integraciones/integraciones/entrantes',
+  ORDER_MANAGER_GENERAL_CONFIG_COMERCIAL_STORE_PARAMS:
+    '/panel/order-manager/configuracion-general/comercial/store-params',
+  ORDER_MANAGER_SEGURIDAD_ACCESOS:
+    '/panel/order-manager/seguridad-accesos',
   ORDER_MANAGER_GENERAL_CONFIG_PAIS:
     '/panel/order-manager/configuracion-general/pais',
   ORDER_MANAGER_GENERAL_CONFIG_CIUDAD:

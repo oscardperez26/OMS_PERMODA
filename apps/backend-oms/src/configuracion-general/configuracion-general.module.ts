@@ -8,6 +8,7 @@ import { BodegaModule } from './bodega/bodega.module';
 import { EmpresaModule } from './empresa/empresa.module';
 import { EmpresaClienteModule } from './empresa-cliente/empresa-cliente.module';
 import { InventarioModule } from './inventario/inventario.module';
+import { IntegracionesEntrantesModule } from './integraciones-entrantes/integraciones-entrantes.module';
 import { MonedaModule } from './moneda/moneda.module';
 import { PasarelaPagoModule } from './pasarela-pago/pasarela-pago.module';
 import { PaisModule } from './pais/pais.module';
@@ -31,6 +32,7 @@ import { ZonaTransporteModule } from './zona-transporte/zona-transporte.module';
     ProductoModule,
     ProductoVarianteModule,
     InventarioModule,
+    IntegracionesEntrantesModule,
     TransportadoraModule,
     ZonaTransporteModule,
     ZonaCiudadModule,
