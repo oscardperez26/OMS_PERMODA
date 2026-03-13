@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import type { Request } from 'express';
@@ -39,6 +40,22 @@ export class IntegracionesEntrantesController {
       id,
     );
     return { integracionEntrante };
+  }
+
+  @Get(':id/runs')
+  @Permissions('config.read')
+  async listRuns(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('limit') limitRaw?: string,
+  ) {
+    const parsedLimit = Number(limitRaw);
+    const runs = await this.integracionesEntrantesService.listRuns(
+      id,
+      Number.isInteger(parsedLimit) && parsedLimit > 0
+        ? parsedLimit
+        : undefined,
+    );
+    return { runs };
   }
 
   @Post()

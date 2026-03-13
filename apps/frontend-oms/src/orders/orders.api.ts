@@ -20,6 +20,8 @@ export type OrdersListItem = {
   origenCanalNombre: string | null;
   origenConectorCodigo: string | null;
   origenProveedorCodigo: string | null;
+  origenIntegracionId: number | null;
+  origenExternalOrderId: string | null;
   tiendaOrigenId: number | null;
   tiendaOrigenCodigo: string | null;
   tiendaOrigenNombre: string | null;

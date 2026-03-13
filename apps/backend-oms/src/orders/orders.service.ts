@@ -6,6 +6,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createHash } from 'node:crypto';
 import type { Permission, SafeUser } from '../auth/auth.types';
 import { OrdersRepository } from './orders.repository';
 import type {
@@ -63,6 +64,13 @@ type OrderAccessScope =
   | { kind: 'STORE'; store: StoreScope }
   | { kind: 'FRANCHISE'; empresaClienteId: number };
 
+type SyncPendingOrdersOptions = {
+  integracionId?: number;
+  integracionCodigo?: string;
+  dedupeByConnector?: boolean;
+  numeroPedidoPrefix?: string;
+};
+
 @Injectable()
 export class OrdersService {
   private syncInProgress = false;
@@ -106,6 +114,8 @@ export class OrdersService {
       origenCanalNombre: row.canalVentaNombre,
       origenConectorCodigo: row.integracionCodigo,
       origenProveedorCodigo: row.proveedorCodigo,
+      origenIntegracionId: row.integracionId,
+      origenExternalOrderId: row.externalOrderId,
       tiendaOrigenId: row.tiendaOrigenId,
       tiendaOrigenCodigo: row.tiendaOrigenCodigo,
       tiendaOrigenNombre: row.tiendaOrigenNombre,
@@ -270,7 +280,10 @@ export class OrdersService {
     };
   }
 
-  async syncPendingOrders(limit?: number): Promise<SyncPendingResult> {
+  async syncPendingOrders(
+    limit?: number,
+    options?: SyncPendingOrdersOptions,
+  ): Promise<SyncPendingResult> {
     if (this.syncInProgress) {
       throw new ServiceUnavailableException(
         'Ya existe una sincronizacion de pedidos KOAJ full en progreso',
@@ -446,6 +459,21 @@ export class OrdersService {
           };
         }
 
+        const normalizedIntegracionId =
+          Number.isInteger(options?.integracionId) &&
+          (options?.integracionId as number) > 0
+            ? Number(options?.integracionId)
+            : null;
+        const dedupeByConnector =
+          Boolean(options?.dedupeByConnector) &&
+          normalizedIntegracionId !== null;
+        const connectorPrefix = dedupeByConnector
+          ? this.resolveNumeroPedidoPrefix(
+              options?.numeroPedidoPrefix,
+              options?.integracionCodigo ?? `INT${normalizedIntegracionId}`,
+            )
+          : null;
+
         const items: SyncPendingItemResult[] = [];
         const addressCache = new Map<number, KoajPsAddress | null>();
         const customerCache = new Map<number, KoajPsCustomer | null>();
@@ -462,13 +490,18 @@ export class OrdersService {
             continue;
           }
 
-          const numeroPedido = this.resolveNumeroPedidoFromKoajPsOrder(
+          const baseNumeroPedido = this.resolveNumeroPedidoFromKoajPsOrder(
             order,
             koajOrderId,
           );
-          if (!numeroPedido) {
+          if (!baseNumeroPedido) {
             continue;
           }
+
+          const numeroPedido =
+            dedupeByConnector && connectorPrefix
+              ? this.applyNumeroPedidoPrefix(baseNumeroPedido, connectorPrefix)
+              : baseNumeroPedido;
 
           candidateNumeroPedidos.push(numeroPedido);
           candidateNumeroExternos.push(String(koajOrderId));
@@ -477,7 +510,7 @@ export class OrdersService {
         const existingKeys = await this.ordersRepository.findExistingPedidoKeys(
           {
             numeroPedidos: candidateNumeroPedidos,
-            numeroExternos: candidateNumeroExternos,
+            numeroExternos: dedupeByConnector ? [] : candidateNumeroExternos,
           },
         );
         const existingNumeroPedidos = new Set(
@@ -486,6 +519,17 @@ export class OrdersService {
         const existingNumeroExternos = new Set(
           existingKeys.numeroExternos.map((item) => item.trim()),
         );
+        const existingExternalByIntegracion =
+          dedupeByConnector && normalizedIntegracionId
+            ? new Set(
+                await this.ordersRepository.findExistingExternalOrdersByIntegracion(
+                  {
+                    integracionId: normalizedIntegracionId,
+                    externalOrderIds: candidateNumeroExternos,
+                  },
+                ),
+              )
+            : new Set<string>();
 
         let inserted = 0;
         let skippedExisting = 0;
@@ -510,13 +554,18 @@ export class OrdersService {
             continue;
           }
 
-          const numeroPedido = this.resolveNumeroPedidoFromKoajPsOrder(
+          const baseNumeroPedido = this.resolveNumeroPedidoFromKoajPsOrder(
             order,
             koajOrderId,
           );
           const numeroExterno = String(koajOrderId);
+          const externalReference = this.truncate(
+            this.normalizeOptionalText(order.reference),
+            200,
+          );
+          const payloadHash = this.computePayloadHash(order);
 
-          if (!numeroPedido) {
+          if (!baseNumeroPedido) {
             skippedValidation += 1;
             items.push({
               koajOrderId,
@@ -525,22 +574,56 @@ export class OrdersService {
               pedidoId: null,
               reason: 'NumeroPedido vacio',
             });
+            await this.trackExternalSyncOutcome({
+              integracionId: normalizedIntegracionId,
+              externalOrderId: numeroExterno,
+              externalReference,
+              pedidoId: null,
+              estado: 'FAILED',
+              payloadHash,
+            });
             continue;
           }
 
+          const numeroPedido =
+            dedupeByConnector && connectorPrefix
+              ? this.applyNumeroPedidoPrefix(baseNumeroPedido, connectorPrefix)
+              : baseNumeroPedido;
+
+          const existsByConnectorExternal =
+            dedupeByConnector &&
+            existingExternalByIntegracion.has(numeroExterno);
           const existsByNumeroPedido = existingNumeroPedidos.has(numeroPedido);
           const existsByNumeroExterno =
-            existingNumeroExternos.has(numeroExterno);
-          if (existsByNumeroPedido || existsByNumeroExterno) {
+            !dedupeByConnector && existingNumeroExternos.has(numeroExterno);
+          if (
+            existsByConnectorExternal ||
+            existsByNumeroPedido ||
+            existsByNumeroExterno
+          ) {
             skippedExisting += 1;
+            const reason = existsByConnectorExternal
+              ? 'Pedido externo ya existe para este conector'
+              : existsByNumeroPedido
+                ? 'NumeroPedido ya existe'
+                : 'NumeroExterno ya existe';
             items.push({
               koajOrderId,
               numeroPedido,
               status: 'skipped_existing',
               pedidoId: null,
-              reason: existsByNumeroPedido
-                ? 'NumeroPedido ya existe'
-                : 'NumeroExterno ya existe',
+              reason,
+            });
+            existingNumeroPedidos.add(numeroPedido);
+            existingNumeroExternos.add(numeroExterno);
+            existingExternalByIntegracion.add(numeroExterno);
+            await this.trackExternalSyncOutcome({
+              integracionId: normalizedIntegracionId,
+              externalOrderId: numeroExterno,
+              externalReference,
+              pedidoId: null,
+              estado: 'DUPLICADO',
+              payloadHash,
             });
             continue;
           }
@@ -559,6 +642,14 @@ export class OrdersService {
               status: 'skipped_validation',
               pedidoId: null,
               reason: `No existe canal para ORIGEN ${origen}`,
+            });
+            await this.trackExternalSyncOutcome({
+              integracionId: normalizedIntegracionId,
+              externalOrderId: numeroExterno,
+              externalReference,
+              pedidoId: null,
+              estado: 'FAILED',
+              payloadHash,
             });
             continue;
           }
@@ -589,6 +680,14 @@ export class OrdersService {
               pedidoId: null,
               reason: `Ciudad no mapeada: ${shippingAddress?.city ?? 'SIN_CIUDAD'}`,
             });
+            await this.trackExternalSyncOutcome({
+              integracionId: normalizedIntegracionId,
+              externalOrderId: numeroExterno,
+              externalReference,
+              pedidoId: null,
+              estado: 'FAILED',
+              payloadHash,
+            });
             continue;
           }
 
@@ -599,6 +698,7 @@ export class OrdersService {
             const result = await this.ordersRepository.createPedido({
               empresaId: context.empresaId,
               empresaClienteId: null,
+              integracionId: normalizedIntegracionId,
               canalVentaId,
               tiendaOrigenId: context.tiendaId,
               monedaId: context.monedaId,
@@ -655,6 +755,15 @@ export class OrdersService {
             });
             existingNumeroPedidos.add(numeroPedido);
             existingNumeroExternos.add(numeroExterno);
+            existingExternalByIntegracion.add(numeroExterno);
+            await this.trackExternalSyncOutcome({
+              integracionId: normalizedIntegracionId,
+              externalOrderId: numeroExterno,
+              externalReference,
+              pedidoId: result.pedidoId,
+              estado: 'INGESTADO',
+              payloadHash,
+            });
           } catch (error) {
             if (this.isUniqueConstraintError(error)) {
               skippedExisting += 1;
@@ -667,6 +776,15 @@ export class OrdersService {
               });
               existingNumeroPedidos.add(numeroPedido);
               existingNumeroExternos.add(numeroExterno);
+              existingExternalByIntegracion.add(numeroExterno);
+              await this.trackExternalSyncOutcome({
+                integracionId: normalizedIntegracionId,
+                externalOrderId: numeroExterno,
+                externalReference,
+                pedidoId: null,
+                estado: 'DUPLICADO',
+                payloadHash,
+              });
               continue;
             }
 
@@ -677,6 +795,14 @@ export class OrdersService {
               status: 'failed',
               pedidoId: null,
               reason: this.getErrorMessage(error),
+            });
+            await this.trackExternalSyncOutcome({
+              integracionId: normalizedIntegracionId,
+              externalOrderId: numeroExterno,
+              externalReference,
+              pedidoId: null,
+              estado: 'FAILED',
+              payloadHash,
             });
           }
         }
@@ -1176,6 +1302,70 @@ export class OrdersService {
       return this.truncate(reference, 60);
     }
     return this.truncate(`KOAJ-${orderId}`, 60);
+  }
+
+  private resolveNumeroPedidoPrefix(
+    value: string | undefined,
+    fallback: string,
+  ): string {
+    const raw = (value?.trim() || fallback.trim() || 'INT').toUpperCase();
+    const normalized = raw.replace(/[^A-Z0-9_-]/g, '');
+    return normalized ? normalized.slice(0, 20) : 'INT';
+  }
+
+  private applyNumeroPedidoPrefix(numeroPedido: string, prefix: string): string {
+    const normalizedOrder = numeroPedido.trim();
+    if (!normalizedOrder) {
+      return this.truncate(prefix, 60);
+    }
+
+    const normalizedPrefix = prefix.trim().toUpperCase();
+    if (
+      normalizedOrder.toUpperCase().startsWith(`${normalizedPrefix}-`) ||
+      normalizedOrder.toUpperCase().startsWith(`${normalizedPrefix}_`)
+    ) {
+      return this.truncate(normalizedOrder, 60);
+    }
+
+    return this.truncate(`${normalizedPrefix}-${normalizedOrder}`, 60);
+  }
+
+  private computePayloadHash(payload: unknown): string | null {
+    try {
+      const serialized = JSON.stringify(payload);
+      if (!serialized) {
+        return null;
+      }
+      return createHash('sha256').update(serialized).digest('hex');
+    } catch {
+      return null;
+    }
+  }
+
+  private async trackExternalSyncOutcome(input: {
+    integracionId: number | null;
+    externalOrderId: string;
+    externalReference: string | null;
+    pedidoId: number | null;
+    estado: 'INGESTADO' | 'DUPLICADO' | 'FAILED';
+    payloadHash: string | null;
+  }): Promise<void> {
+    if (!input.integracionId) {
+      return;
+    }
+
+    try {
+      await this.ordersRepository.upsertIntegracionPedidoExterno({
+        integracionId: input.integracionId,
+        externalOrderId: input.externalOrderId,
+        externalReference: input.externalReference,
+        pedidoId: input.pedidoId,
+        estado: input.estado,
+        payloadHash: input.payloadHash,
+      });
+    } catch {
+      // El tracking de idempotencia no debe bloquear la ingesta principal.
+    }
   }
 
   private normalizeText(value: string): string {

@@ -7,7 +7,7 @@ Esta guia aplica al modulo:
 - `/panel/order-manager/configuracion-general/pagos-integraciones/entrantes`
 
 ## Alcance V1
-- Se configura 1 conector entrante por canal (regla actual).
+- Se puede configurar mas de 1 conector entrante por canal (V3).
 - Se usa sincronizacion manual con boton `Sincronizar ahora`.
 - El flujo ingiere pedidos externos y los persiste en OMS.
 - No hay creacion manual de pedidos en este modulo.
@@ -152,9 +152,11 @@ Uso:
 - Se mantiene boton manual mientras termina la transicion operativa.
 
 ### V3 (escalamiento multi-proveedor)
-- Multiples conectores activos por empresa.
-- Versionado de mapping por proveedor.
-- Reintentos con politica por tipo de error.
+- Multiples conectores activos por empresa/canal: implementado.
+- Dedupe por conector con `Pedido.IntegracionId` + `oms.IntegracionPedidoExterno`: implementado.
+- Trazabilidad en Orders (`origenIntegracionId`, `origenExternalOrderId`): implementado.
+- Endpoint de soporte `GET /configuracion-general/integraciones/entrantes/:id/runs`: implementado.
+- Pendiente: adapters reales adicionales (ademas de KOAJ), y politicas avanzadas de retry.
 
 ### V4 (integracion saliente completa)
 - Encadenar salida a Zona de Integracion.

@@ -4,20 +4,27 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { OrdersService } from '../../orders/orders.service';
 import type { SyncPendingResult } from '../../orders/orders.types';
+import { GenericBlockedInboundAdapter } from './adapters/generic-blocked-inbound.adapter';
+import type {
+  IntegracionEntranteAdapterExecutionResult,
+  IntegracionEntranteSyncAdapter,
+} from './adapters/integracion-entrante-sync.adapter';
+import { KoajPilotInboundAdapter } from './adapters/koaj-pilot-inbound.adapter';
 import type { CreateIntegracionEntranteDto } from './dto/create-integracion-entrante.dto';
 import type { UpdateIntegracionEntranteDto } from './dto/update-integracion-entrante.dto';
 import { IntegracionesEntrantesRepository } from './integraciones-entrantes.repository';
 import type {
   IntegracionEntranteAutoSyncBatchResult,
   IntegracionEntranteConfig,
+  IntegracionEntranteDedupeSummary,
   IntegracionEntranteDiagnosticsSummary,
   IntegracionEntranteLastSync,
   IntegracionEntranteListItem,
   IntegracionEntranteMode,
   IntegracionEntranteOperationStatus,
   IntegracionEntrantePersistenceRow,
+  IntegracionEntranteRunLog,
   IntegracionEntranteSyncResult,
   IntegracionEntranteTemplate,
   IntegracionEntranteValidationResult,
@@ -52,11 +59,15 @@ type InboundConfigPayload = Partial<{
 @Injectable()
 export class IntegracionesEntrantesService {
   private readonly connectorSyncLocks = new Set<number>();
+  private readonly syncAdapters: IntegracionEntranteSyncAdapter[];
 
   constructor(
     private readonly integracionesEntrantesRepository: IntegracionesEntrantesRepository,
-    private readonly ordersService: OrdersService,
-  ) {}
+    koajPilotInboundAdapter: KoajPilotInboundAdapter,
+    genericBlockedInboundAdapter: GenericBlockedInboundAdapter,
+  ) {
+    this.syncAdapters = [koajPilotInboundAdapter, genericBlockedInboundAdapter];
+  }
 
   async listBootstrap(): Promise<IntegracionesEntrantesBootstrap> {
     const data = await this.integracionesEntrantesRepository.listWithCatalog();
@@ -95,7 +106,37 @@ export class IntegracionesEntrantesService {
       );
     }
 
+    inbound.dedupe =
+      await this.integracionesEntrantesRepository.getDedupeSummaryByIntegracion(
+        inbound.integracionId,
+      );
+
     return inbound;
+  }
+
+  async listRuns(
+    integracionId: number,
+    limit?: number,
+  ): Promise<IntegracionEntranteRunLog[]> {
+    const row = await this.integracionesEntrantesRepository.findById(
+      integracionId,
+    );
+    if (!row) {
+      throw new NotFoundException('Integracion no existe');
+    }
+
+    const inbound = this.mapRowToInboundItem(row);
+    if (!inbound) {
+      throw new NotFoundException(
+        'La integracion solicitada no pertenece al flujo entrante',
+      );
+    }
+
+    const normalizedLimit = this.normalizePositiveInteger(limit, 20);
+    return this.integracionesEntrantesRepository.listRecentSyncRuns(
+      inbound.integracionId,
+      normalizedLimit,
+    );
   }
 
   async create(
@@ -137,8 +178,6 @@ export class IntegracionesEntrantesService {
         'Ya existe una integracion con ese codigo en la empresa',
       );
     }
-
-    await this.validateUniqueInboundConnectorForCanal(empresaId, canalVentaId);
 
     try {
       return await this.integracionesEntrantesRepository.create({
@@ -237,12 +276,6 @@ export class IntegracionesEntrantesService {
         'Ya existe una integracion con ese codigo en la empresa',
       );
     }
-
-    await this.validateUniqueInboundConnectorForCanal(
-      nextEmpresaId,
-      nextCanalVentaId,
-      integracionId,
-    );
 
     const nextConfig = this.buildConfigFromPayload(
       {
@@ -423,23 +456,6 @@ export class IntegracionesEntrantesService {
     }
 
     try {
-      if (
-        inbound.config.providerCode.toUpperCase() !== 'KOAJ' ||
-        inbound.config.mode !== 'KOAJ_PILOT'
-      ) {
-        const blockedResult = this.buildBlockedSyncResult({
-          inbound,
-          runId,
-          startedAt,
-          message:
-            'Sincronizacion pendiente de implementacion para el proveedor/modo configurado',
-          errorCode: 'SYNC_NOT_IMPLEMENTED',
-        });
-        await this.persistSyncOutcome(inbound, blockedResult, executedBy);
-        await this.tryInsertSyncOperationalLog(inbound, blockedResult, actor);
-        return blockedResult;
-      }
-
       const validationErrors = this.computeValidationErrors(inbound.config);
       if (validationErrors.length > 0) {
         const message = `Configuracion invalida: ${validationErrors.join(' | ')}`;
@@ -475,10 +491,28 @@ export class IntegracionesEntrantesService {
       }
 
       try {
-        const syncResult = await this.ordersService.syncPendingOrders(params.limit);
+        const adapter = this.resolveSyncAdapter(inbound);
+        const execution = await adapter.execute({
+          inbound,
+          limit: params.limit,
+        });
+
+        if (execution.kind === 'BLOCKED') {
+          const blockedResult = this.buildBlockedSyncResult({
+            inbound,
+            runId,
+            startedAt,
+            message: execution.message,
+            errorCode: execution.errorCode,
+          });
+          await this.persistSyncOutcome(inbound, blockedResult, executedBy);
+          await this.tryInsertSyncOperationalLog(inbound, blockedResult, actor);
+          return blockedResult;
+        }
+
         const result = this.buildSyncResultFromOrdersSync(
           inbound,
-          syncResult,
+          execution.syncResult,
           runId,
           startedAt,
         );
@@ -584,6 +618,7 @@ export class IntegracionesEntrantesService {
       nombre: row.Nombre,
       activo: this.mapEstadoToActivo(row.Estado),
       config: parsedConfig,
+      dedupe: null,
       createdAt: row.CreatedAt.toISOString(),
       updatedAt: row.UpdatedAt?.toISOString() ?? null,
     };
@@ -604,6 +639,10 @@ export class IntegracionesEntrantesService {
     try {
       const payload = JSON.parse(configJson) as InboundConfigPayload & {
         flowType?: string;
+        connection?: Partial<IntegracionEntranteConfig['connection']>;
+        endpoints?: Partial<IntegracionEntranteConfig['endpoints']>;
+        filters?: Partial<IntegracionEntranteConfig['filters']>;
+        mapping?: Partial<IntegracionEntranteConfig['mapping']>;
         validation?: IntegracionEntranteConfig['validation'];
         lastSync?: IntegracionEntranteConfig['lastSync'];
       };
@@ -616,17 +655,24 @@ export class IntegracionesEntrantesService {
         {
           providerCode: payload.providerCode,
           mode: payload.mode,
-          baseUrl: payload.baseUrl,
-          authType: payload.authType,
-          timeoutMs: payload.timeoutMs,
-          listConfirmedOrdersEndpoint: payload.listConfirmedOrdersEndpoint,
-          orderDetailEndpoint: payload.orderDetailEndpoint,
-          confirmedStatuses: payload.confirmedStatuses,
-          externalOrderIdField: payload.externalOrderIdField,
-          externalReferenceField: payload.externalReferenceField,
-          customerNameField: payload.customerNameField,
-          totalField: payload.totalField,
-          statusField: payload.statusField,
+          baseUrl: payload.baseUrl ?? payload.connection?.baseUrl,
+          authType: payload.authType ?? payload.connection?.authType,
+          timeoutMs: payload.timeoutMs ?? payload.connection?.timeoutMs,
+          listConfirmedOrdersEndpoint:
+            payload.listConfirmedOrdersEndpoint ??
+            payload.endpoints?.listConfirmedOrdersEndpoint,
+          orderDetailEndpoint:
+            payload.orderDetailEndpoint ?? payload.endpoints?.orderDetailEndpoint,
+          confirmedStatuses:
+            payload.confirmedStatuses ?? payload.filters?.confirmedStatuses,
+          externalOrderIdField:
+            payload.externalOrderIdField ?? payload.mapping?.externalOrderIdField,
+          externalReferenceField:
+            payload.externalReferenceField ?? payload.mapping?.externalReferenceField,
+          customerNameField:
+            payload.customerNameField ?? payload.mapping?.customerNameField,
+          totalField: payload.totalField ?? payload.mapping?.totalField,
+          statusField: payload.statusField ?? payload.mapping?.statusField,
         },
         baseConfig,
       );
@@ -767,31 +813,6 @@ export class IntegracionesEntrantesService {
     }
   }
 
-  private async validateUniqueInboundConnectorForCanal(
-    empresaId: number,
-    canalVentaId: number,
-    excludeIntegracionId?: number,
-  ): Promise<void> {
-    const rows = await this.integracionesEntrantesRepository.listByEmpresaAndCanal(
-      empresaId,
-      canalVentaId,
-    );
-
-    const duplicated = rows
-      .map((row) => ({ row, item: this.mapRowToInboundItem(row) }))
-      .some(
-        (entry) =>
-          entry.item !== null &&
-          entry.row.IntegracionId !== (excludeIntegracionId ?? -1),
-      );
-
-    if (duplicated) {
-      throw new ConflictException(
-        'Ya existe un conector entrante para ese canal de venta',
-      );
-    }
-  }
-
   private computeValidationErrors(config: IntegracionEntranteConfig): string[] {
     const errors: string[] = [];
 
@@ -874,6 +895,18 @@ export class IntegracionesEntrantesService {
       });
 
     return normalize(current) !== normalize(next);
+  }
+
+  private resolveSyncAdapter(
+    inbound: IntegracionEntranteListItem,
+  ): IntegracionEntranteSyncAdapter {
+    const adapter = this.syncAdapters.find((item) => item.supports(inbound));
+    if (!adapter) {
+      throw new BadRequestException(
+        `No existe adapter para ${inbound.config.providerCode}/${inbound.config.mode}`,
+      );
+    }
+    return adapter;
   }
 
   private normalizeValidationState(

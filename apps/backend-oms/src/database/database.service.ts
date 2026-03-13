@@ -8,6 +8,11 @@ export class DatabaseService implements OnModuleDestroy {
   private pool: sql.ConnectionPool | null = null;
   private poolPromise: Promise<sql.ConnectionPool> | null = null;
   private readonly stalePools = new Set<sql.ConnectionPool>();
+  private readonly stalePoolCloseTimers = new Map<
+    sql.ConnectionPool,
+    NodeJS.Timeout
+  >();
+  private readonly poolBorrowCount = new Map<sql.ConnectionPool, number>();
 
   constructor(private readonly config: ConfigService) {}
 
@@ -15,7 +20,18 @@ export class DatabaseService implements OnModuleDestroy {
     operation: (pool: sql.ConnectionPool) => Promise<T>,
     operationName = 'db.operation',
   ): Promise<T> {
-    const maxAttempts = 3;
+    const maxAttempts = Math.max(
+      1,
+      this.getNumberConfig('DB_RETRY_ATTEMPTS', 5),
+    );
+    const baseDelayMs = Math.max(
+      50,
+      this.getNumberConfig('DB_RETRY_BASE_DELAY_MS', 200),
+    );
+    const maxDelayMs = Math.max(
+      baseDelayMs,
+      this.getNumberConfig('DB_RETRY_MAX_DELAY_MS', 2_000),
+    );
     let lastError: unknown;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -23,7 +39,12 @@ export class DatabaseService implements OnModuleDestroy {
 
       try {
         pool = await this.getPool();
-        return await operation(pool);
+        this.markPoolAsBorrowed(pool);
+        try {
+          return await operation(pool);
+        } finally {
+          this.releaseBorrowedPool(pool);
+        }
       } catch (error) {
         lastError = error;
         if (
@@ -54,7 +75,8 @@ export class DatabaseService implements OnModuleDestroy {
         }
 
         await this.resetPool(pool ?? undefined);
-        await this.delay(100 * attempt);
+        const delayMs = Math.min(baseDelayMs * attempt, maxDelayMs);
+        await this.delay(delayMs);
       }
     }
 
@@ -99,10 +121,20 @@ export class DatabaseService implements OnModuleDestroy {
         this.markPoolAsStale(pool, 'Error en pool SQL', stack);
       });
 
-      this.poolPromise = pool.connect().then((connectedPool) => {
-        this.pool = connectedPool;
-        return connectedPool;
-      });
+      this.poolPromise = pool
+        .connect()
+        .then((connectedPool) => {
+          this.pool = connectedPool;
+          return connectedPool;
+        })
+        .catch(async (error) => {
+          try {
+            await pool.close();
+          } catch {
+            // Ignore close errors on failed connection bootstrap.
+          }
+          throw error;
+        });
     }
 
     try {
@@ -167,36 +199,37 @@ export class DatabaseService implements OnModuleDestroy {
     return Number.isFinite(parsed) ? parsed : fallback;
   }
 
-  private async resetPool(expectedPool?: sql.ConnectionPool): Promise<void> {
+  private async resetPool(
+    expectedPool?: sql.ConnectionPool,
+    forceClose = false,
+  ): Promise<void> {
     const currentPool = this.pool;
 
     if (currentPool && (!expectedPool || currentPool === expectedPool)) {
       this.pool = null;
-      if (expectedPool) {
+      if (!forceClose) {
         // Under transient errors, avoid hard-closing immediately to prevent
         // aborting concurrent in-flight requests that still reference this pool.
         this.queueStalePoolClose(currentPool);
       } else {
-        try {
-          await currentPool.close();
-        } catch {
-          // Ignore close failures for already broken pools.
-        }
+        await this.forceClosePool(currentPool);
       }
     }
 
-    if (!expectedPool) {
+    if (forceClose) {
       const stale = [...this.stalePools];
       this.stalePools.clear();
       await Promise.allSettled(
-        stale.map(async (pool) => {
-          try {
-            await pool.close();
-          } catch {
-            // Ignore close failures for already broken pools.
-          }
-        }),
+        stale.map(async (pool) => this.forceClosePool(pool)),
       );
+      return;
+    }
+
+    if (!expectedPool) {
+      // If a reconnect attempt failed before obtaining a pool reference, avoid
+      // force-closing stale pools immediately because other requests could still
+      // be using them in-flight.
+      [...this.stalePools].forEach((pool) => this.queueStalePoolClose(pool));
     }
   }
 
@@ -223,16 +256,25 @@ export class DatabaseService implements OnModuleDestroy {
   }
 
   private queueStalePoolClose(pool: sql.ConnectionPool): void {
-    if (this.stalePools.has(pool)) {
+    this.queueStalePoolCloseWithDelay(pool, this.getStalePoolCloseDelayMs());
+  }
+
+  private queueStalePoolCloseWithDelay(
+    pool: sql.ConnectionPool,
+    delayMs: number,
+  ): void {
+    this.stalePools.add(pool);
+    if (this.stalePoolCloseTimers.has(pool)) {
       return;
     }
 
-    this.stalePools.add(pool);
-
     // Deferred close avoids aborting in-flight concurrent queries.
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      this.stalePoolCloseTimers.delete(pool);
       void this.closeStalePool(pool);
-    }, 30_000);
+    }, delayMs);
+    timer.unref?.();
+    this.stalePoolCloseTimers.set(pool, timer);
   }
 
   private async closeStalePool(pool: sql.ConnectionPool): Promise<void> {
@@ -240,7 +282,50 @@ export class DatabaseService implements OnModuleDestroy {
       return;
     }
 
+    const borrowedCount = this.poolBorrowCount.get(pool) ?? 0;
+    if (borrowedCount > 0) {
+      // Retry later while this stale pool is still serving in-flight work.
+      this.queueStalePoolCloseWithDelay(pool, 5_000);
+      return;
+    }
+
+    await this.forceClosePool(pool);
+  }
+
+  private clearStalePoolCloseTimer(pool: sql.ConnectionPool): void {
+    const timer = this.stalePoolCloseTimers.get(pool);
+    if (!timer) {
+      return;
+    }
+    clearTimeout(timer);
+    this.stalePoolCloseTimers.delete(pool);
+  }
+
+  private markPoolAsBorrowed(pool: sql.ConnectionPool): void {
+    this.poolBorrowCount.set(pool, (this.poolBorrowCount.get(pool) ?? 0) + 1);
+  }
+
+  private releaseBorrowedPool(pool: sql.ConnectionPool): void {
+    const currentCount = this.poolBorrowCount.get(pool) ?? 0;
+    if (currentCount <= 1) {
+      this.poolBorrowCount.delete(pool);
+    } else {
+      this.poolBorrowCount.set(pool, currentCount - 1);
+    }
+
+    if (this.stalePools.has(pool)) {
+      this.queueStalePoolCloseWithDelay(pool, 0);
+    }
+  }
+
+  private getStalePoolCloseDelayMs(): number {
+    return this.getNumberConfig('DB_STALE_POOL_CLOSE_MS', 90_000);
+  }
+
+  private async forceClosePool(pool: sql.ConnectionPool): Promise<void> {
+    this.clearStalePoolCloseTimer(pool);
     this.stalePools.delete(pool);
+    this.poolBorrowCount.delete(pool);
     try {
       await pool.close();
     } catch {
@@ -267,7 +352,11 @@ export class DatabaseService implements OnModuleDestroy {
       (value): value is string => Boolean(value),
     );
 
-    if (codes.includes('ESOCKET') || codes.includes('ECONNRESET')) {
+    if (
+      codes.includes('ESOCKET') ||
+      codes.includes('ECONNRESET') ||
+      codes.includes('ETIMEOUT')
+    ) {
       return true;
     }
 
@@ -277,7 +366,8 @@ export class DatabaseService implements OnModuleDestroy {
       message.includes('ECONNRESET') ||
       message.includes('CONNECTION LOST') ||
       message.includes('ABORTED') ||
-      message.includes('CONNECTION IS CLOSED')
+      message.includes('CONNECTION IS CLOSED') ||
+      message.includes('TIMEOUT')
     );
   }
 
@@ -295,6 +385,6 @@ export class DatabaseService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    await this.resetPool();
+    await this.resetPool(undefined, true);
   }
 }

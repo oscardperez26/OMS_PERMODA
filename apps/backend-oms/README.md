@@ -30,6 +30,9 @@ npm run test -- --runInBand
 - `DB_POOL_MIN`
 - `DB_POOL_MAX`
 - `DB_POOL_IDLE_MS`
+- `DB_RETRY_ATTEMPTS` (default `5`)
+- `DB_RETRY_BASE_DELAY_MS` (default `200`)
+- `DB_RETRY_MAX_DELAY_MS` (default `2000`)
 - `AUTH_SECRET`
 - `TRANSPORTADORA_API_CRYPTO_KEY_BASE64` (32 bytes base64, recomendado produccion)
 - `INBOUND_SYNC_JOB_ENABLED` (default `false`)
@@ -54,6 +57,10 @@ Scripts en:
 V2 transportadora API config:
 - `20260312_transportadora_api_config_v2.up.sql`
 - `20260312_transportadora_api_config_v2.down.sql`
+
+V3 integraciones entrantes multi-proveedor:
+- `20260312_integraciones_inbound_multi_provider_v3.up.sql`
+- `20260312_integraciones_inbound_multi_provider_v3.down.sql`
 
 ## Documentacion extendida
 Ver en raiz del repo:

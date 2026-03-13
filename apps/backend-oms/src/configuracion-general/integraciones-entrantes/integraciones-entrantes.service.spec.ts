@@ -1,3 +1,5 @@
+import { GenericBlockedInboundAdapter } from './adapters/generic-blocked-inbound.adapter';
+import { KoajPilotInboundAdapter } from './adapters/koaj-pilot-inbound.adapter';
 import { IntegracionesEntrantesService } from './integraciones-entrantes.service';
 import type { IntegracionesEntrantesRepository } from './integraciones-entrantes.repository';
 import type { OrdersService } from '../../orders/orders.service';
@@ -6,27 +8,33 @@ function buildInboundConfig(input?: {
   providerCode?: string;
   mode?: 'KOAJ_PILOT' | 'GENERIC';
 }) {
+  const providerCode = input?.providerCode ?? 'KOAJ';
+  const mode = input?.mode ?? 'KOAJ_PILOT';
+  const isGeneric = mode === 'GENERIC' || providerCode.toUpperCase() !== 'KOAJ';
+
   return {
     flowType: 'INBOUND',
-    providerCode: input?.providerCode ?? 'KOAJ',
-    mode: input?.mode ?? 'KOAJ_PILOT',
+    providerCode,
+    mode,
     connection: {
-      baseUrl: null,
+      baseUrl: isGeneric ? 'https://api.marketplace.test' : null,
       authType: 'API_KEY',
       timeoutMs: 15000,
     },
     endpoints: {
-      listConfirmedOrdersEndpoint: null,
-      orderDetailEndpoint: null,
+      listConfirmedOrdersEndpoint: isGeneric ? '/v1/orders/confirmed' : null,
+      orderDetailEndpoint: isGeneric ? '/v1/orders/{externalOrderId}' : null,
     },
     filters: {
-      confirmedStatuses: ['CONFIRMED'],
+      confirmedStatuses: isGeneric
+        ? ['CONFIRMED', 'READY_FOR_FULFILLMENT']
+        : ['CONFIRMED'],
     },
     mapping: {
-      externalOrderIdField: 'id',
-      externalReferenceField: 'reference',
-      customerNameField: 'customer_name',
-      totalField: 'total_paid_tax_incl',
+      externalOrderIdField: isGeneric ? 'external_order_id' : 'id',
+      externalReferenceField: isGeneric ? 'order_number' : 'reference',
+      customerNameField: isGeneric ? 'customer.full_name' : 'customer_name',
+      totalField: isGeneric ? 'payment.total' : 'total_paid_tax_incl',
       statusField: 'status',
     },
     validation: {
@@ -90,7 +98,13 @@ describe('IntegracionesEntrantesService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     repository.listActive = jest.fn().mockResolvedValue([]);
-    service = new IntegracionesEntrantesService(repository, ordersService);
+    const koajAdapter = new KoajPilotInboundAdapter(ordersService as never);
+    const genericAdapter = new GenericBlockedInboundAdapter();
+    service = new IntegracionesEntrantesService(
+      repository,
+      koajAdapter,
+      genericAdapter,
+    );
   });
 
   it('validate returns status OK for KOAJ pilot config and persists metadata', async () => {
@@ -151,6 +165,14 @@ describe('IntegracionesEntrantesService', () => {
     expect(result.status).toBe('FAILED');
     expect(result.errorCode).toBe('UPSTREAM_CONNECTION_ERROR');
     expect(result.message).toContain('conexion temporal');
+    expect(ordersService.syncPendingOrders).toHaveBeenCalledWith(
+      100,
+      expect.objectContaining({
+        integracionId: 3,
+        integracionCodigo: 'KOAJ_INBOUND',
+        dedupeByConnector: true,
+      }),
+    );
     expect(repository.update).toHaveBeenCalledTimes(1);
     expect(repository.insertOperationalLog).toHaveBeenCalledTimes(1);
   });
@@ -244,5 +266,13 @@ describe('IntegracionesEntrantesService', () => {
     expect(result.blocked).toBe(1);
     expect(result.failed).toBe(0);
     expect(result.connectors).toHaveLength(2);
+    expect(ordersService.syncPendingOrders).toHaveBeenCalledWith(
+      200,
+      expect.objectContaining({
+        integracionId: 21,
+        integracionCodigo: 'KOAJ_INBOUND',
+        dedupeByConnector: true,
+      }),
+    );
   });
 });

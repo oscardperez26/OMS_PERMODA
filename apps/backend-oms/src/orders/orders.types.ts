@@ -70,6 +70,8 @@ export type OrderListItem = {
   origenCanalNombre: string | null;
   origenConectorCodigo: string | null;
   origenProveedorCodigo: string | null;
+  origenIntegracionId: number | null;
+  origenExternalOrderId: string | null;
   tiendaOrigenId: number | null;
   tiendaOrigenCodigo: string | null;
   tiendaOrigenNombre: string | null;
@@ -94,6 +96,7 @@ export type OrdersSyncContext = {
 export type CreatePedidoInput = {
   empresaId: number;
   empresaClienteId: number | null;
+  integracionId?: number | null;
   canalVentaId: number;
   tiendaOrigenId: number | null;
   monedaId: number;
@@ -128,6 +131,8 @@ export type PedidoListRow = {
   canalVentaNombre: string | null;
   integracionCodigo: string | null;
   proveedorCodigo: string | null;
+  integracionId: number | null;
+  externalOrderId: string | null;
   origenLabel: string;
   clienteNombre: string;
   total: number;

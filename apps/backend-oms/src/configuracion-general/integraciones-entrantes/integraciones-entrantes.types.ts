@@ -44,6 +44,31 @@ export type IntegracionEntranteLastSync = {
   diagnosticsSummary: IntegracionEntranteDiagnosticsSummary | null;
 };
 
+export type IntegracionEntranteDedupeSummary = {
+  total: number;
+  ingestado: number;
+  duplicado: number;
+  failed: number;
+  lastUpdatedAt: string | null;
+};
+
+export type IntegracionEntranteRunLog = {
+  runId: string;
+  status: IntegracionEntranteOperationStatus;
+  message: string;
+  executedAt: string;
+  durationMs: number | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  summary: {
+    pendingReceived: number;
+    ingested: number;
+    duplicated: number;
+    skippedValidation: number;
+    failed: number;
+  };
+};
+
 export type IntegracionEntranteConfig = {
   flowType: 'INBOUND';
   providerCode: string;
@@ -83,6 +108,7 @@ export type IntegracionEntranteListItem = {
   nombre: string;
   activo: boolean;
   config: IntegracionEntranteConfig;
+  dedupe: IntegracionEntranteDedupeSummary | null;
   createdAt: string;
   updatedAt: string | null;
 };

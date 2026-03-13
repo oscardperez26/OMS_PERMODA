@@ -53,6 +53,8 @@ type PedidoRow = {
   EstadoCodigo: string | null;
   EstadoNombre: string | null;
   PaisNombre: string | null;
+  OrigenIntegracionId: number | null;
+  OrigenExternalOrderId: string | null;
   TiendaOrigenId: number | null;
   TiendaOrigenCodigo: string | null;
   TiendaOrigenNombre: string | null;
@@ -357,6 +359,128 @@ export class OrdersRepository {
     };
   }
 
+  async findExistingExternalOrdersByIntegracion(input: {
+    integracionId: number;
+    externalOrderIds: string[];
+  }): Promise<string[]> {
+    const externalOrderIds = [
+      ...new Set(
+        input.externalOrderIds.map((item) => item.trim()).filter(Boolean),
+      ),
+    ];
+    if (externalOrderIds.length === 0) {
+      return [];
+    }
+
+    const result = await this.databaseService.execute<
+      sql.IResult<{ ExternalOrderId: string }>
+    >(
+      (pool) => {
+        const request = pool
+          .request()
+          .input('integracionId', sql.Int, input.integracionId);
+        const params: string[] = [];
+
+        externalOrderIds.forEach((value, index) => {
+          const paramName = `externalOrderId${index}`;
+          request.input(paramName, sql.NVarChar(160), value);
+          params.push(`@${paramName}`);
+        });
+
+        return request.query<{ ExternalOrderId: string }>(`
+          IF OBJECT_ID('[oms].[IntegracionPedidoExterno]', 'U') IS NULL
+          BEGIN
+            SELECT CAST(NULL AS NVARCHAR(160)) AS [ExternalOrderId]
+            WHERE 1 = 0;
+            RETURN;
+          END;
+
+          SELECT [ExternalOrderId]
+          FROM [oms].[IntegracionPedidoExterno]
+          WHERE [IntegracionId] = @integracionId
+            AND [Estado] IN ('INGESTADO', 'DUPLICADO')
+            AND [ExternalOrderId] IN (${params.join(', ')})
+        `);
+      },
+      'orders.findExistingExternalOrdersByIntegracion',
+    );
+
+    return result.recordset
+      .map((row) => row.ExternalOrderId?.trim() ?? '')
+      .filter(Boolean);
+  }
+
+  async upsertIntegracionPedidoExterno(input: {
+    integracionId: number;
+    externalOrderId: string;
+    externalReference: string | null;
+    pedidoId: number | null;
+    estado: 'INGESTADO' | 'DUPLICADO' | 'FAILED';
+    payloadHash: string | null;
+  }): Promise<void> {
+    await this.databaseService.execute(
+      (pool) =>
+        pool
+          .request()
+          .input('IntegracionId', sql.Int, input.integracionId)
+          .input('ExternalOrderId', sql.NVarChar(160), input.externalOrderId)
+          .input(
+            'ExternalReference',
+            sql.NVarChar(200),
+            input.externalReference ?? null,
+          )
+          .input('PedidoId', sql.BigInt, input.pedidoId ?? null)
+          .input('Estado', sql.NVarChar(40), input.estado)
+          .input('PayloadHash', sql.NVarChar(128), input.payloadHash ?? null)
+          .query(`
+            IF OBJECT_ID('[oms].[IntegracionPedidoExterno]', 'U') IS NULL
+            BEGIN
+              RETURN;
+            END;
+
+            MERGE [oms].[IntegracionPedidoExterno] AS target
+            USING (
+              SELECT
+                @IntegracionId AS [IntegracionId],
+                @ExternalOrderId AS [ExternalOrderId]
+            ) AS source
+              ON target.[IntegracionId] = source.[IntegracionId]
+             AND target.[ExternalOrderId] = source.[ExternalOrderId]
+            WHEN MATCHED THEN
+              UPDATE SET
+                [ExternalReference] = @ExternalReference,
+                [PedidoId] = @PedidoId,
+                [Estado] = @Estado,
+                [PayloadHash] = @PayloadHash,
+                [UpdatedAt] = SYSUTCDATETIME()
+            WHEN NOT MATCHED THEN
+              INSERT
+              (
+                [IntegracionId],
+                [ExternalOrderId],
+                [ExternalReference],
+                [PedidoId],
+                [Estado],
+                [PayloadHash],
+                [CreatedAt],
+                [UpdatedAt]
+              )
+              VALUES
+              (
+                @IntegracionId,
+                @ExternalOrderId,
+                @ExternalReference,
+                @PedidoId,
+                @Estado,
+                @PayloadHash,
+                SYSUTCDATETIME(),
+                NULL
+              );
+          `),
+      'orders.upsertIntegracionPedidoExterno',
+    );
+  }
+
   async createPedido(input: CreatePedidoInput): Promise<{ pedidoId: number }> {
     const result = await this.databaseService.execute<
       sql.IResult<PedidoIdentityRow>
@@ -366,6 +490,7 @@ export class OrdersRepository {
           .request()
           .input('EmpresaId', sql.Int, input.empresaId)
           .input('EmpresaClienteId', sql.Int, input.empresaClienteId)
+          .input('IntegracionId', sql.Int, input.integracionId ?? null)
           .input('CanalVentaId', sql.Int, input.canalVentaId)
           .input('TiendaOrigenId', sql.Int, input.tiendaOrigenId)
           .input('MonedaId', sql.Int, input.monedaId)
@@ -395,67 +520,136 @@ export class OrdersRepository {
           .input('PagoEstadoId', sql.Int, input.pagoEstadoId)
           .input('CreatedAt', sql.DateTime2, input.createdAt)
           .query<PedidoIdentityRow>(`
-            INSERT INTO [oms].[Pedido]
-            (
-              [EmpresaId],
-              [EmpresaClienteId],
-              [CanalVentaId],
-              [TiendaOrigenId],
-              [MonedaId],
-              [NumeroPedido],
-              [NumeroExterno],
-              [EstadoId],
-              [ClienteNombre],
-              [ClienteDocumento],
-              [ClienteEmail],
-              [ClienteTelefono],
-              [ShippingPaisId],
-              [ShippingCiudadId],
-              [ShippingDireccion],
-              [ShippingBarrio],
-              [ShippingZip],
-              [Subtotal],
-              [Descuento],
-              [Impuestos],
-              [CostoEnvio],
-              [Total],
-              [PasarelaPagoId],
-              [PagoReferencia],
-              [PagoEstadoId],
-              [CreatedAt],
-              [UpdatedAt]
-            )
-            OUTPUT INSERTED.[PedidoId]
-            VALUES
-            (
-              @EmpresaId,
-              @EmpresaClienteId,
-              @CanalVentaId,
-              @TiendaOrigenId,
-              @MonedaId,
-              @NumeroPedido,
-              @NumeroExterno,
-              @EstadoId,
-              @ClienteNombre,
-              @ClienteDocumento,
-              @ClienteEmail,
-              @ClienteTelefono,
-              @ShippingPaisId,
-              @ShippingCiudadId,
-              @ShippingDireccion,
-              @ShippingBarrio,
-              @ShippingZip,
-              @Subtotal,
-              @Descuento,
-              @Impuestos,
-              @CostoEnvio,
-              @Total,
-              @PasarelaPagoId,
-              @PagoReferencia,
-              @PagoEstadoId,
-              @CreatedAt,
-              NULL
-            )
+            IF COL_LENGTH('oms.Pedido', 'IntegracionId') IS NOT NULL
+            BEGIN
+              INSERT INTO [oms].[Pedido]
+              (
+                [EmpresaId],
+                [EmpresaClienteId],
+                [IntegracionId],
+                [CanalVentaId],
+                [TiendaOrigenId],
+                [MonedaId],
+                [NumeroPedido],
+                [NumeroExterno],
+                [EstadoId],
+                [ClienteNombre],
+                [ClienteDocumento],
+                [ClienteEmail],
+                [ClienteTelefono],
+                [ShippingPaisId],
+                [ShippingCiudadId],
+                [ShippingDireccion],
+                [ShippingBarrio],
+                [ShippingZip],
+                [Subtotal],
+                [Descuento],
+                [Impuestos],
+                [CostoEnvio],
+                [Total],
+                [PasarelaPagoId],
+                [PagoReferencia],
+                [PagoEstadoId],
+                [CreatedAt],
+                [UpdatedAt]
+              )
+              OUTPUT INSERTED.[PedidoId]
+              VALUES
+              (
+                @EmpresaId,
+                @EmpresaClienteId,
+                @IntegracionId,
+                @CanalVentaId,
+                @TiendaOrigenId,
+                @MonedaId,
+                @NumeroPedido,
+                @NumeroExterno,
+                @EstadoId,
+                @ClienteNombre,
+                @ClienteDocumento,
+                @ClienteEmail,
+                @ClienteTelefono,
+                @ShippingPaisId,
+                @ShippingCiudadId,
+                @ShippingDireccion,
+                @ShippingBarrio,
+                @ShippingZip,
+                @Subtotal,
+                @Descuento,
+                @Impuestos,
+                @CostoEnvio,
+                @Total,
+                @PasarelaPagoId,
+                @PagoReferencia,
+                @PagoEstadoId,
+                @CreatedAt,
+                NULL
+              );
+            END
+            ELSE
+            BEGIN
+              INSERT INTO [oms].[Pedido]
+              (
+                [EmpresaId],
+                [EmpresaClienteId],
+                [CanalVentaId],
+                [TiendaOrigenId],
+                [MonedaId],
+                [NumeroPedido],
+                [NumeroExterno],
+                [EstadoId],
+                [ClienteNombre],
+                [ClienteDocumento],
+                [ClienteEmail],
+                [ClienteTelefono],
+                [ShippingPaisId],
+                [ShippingCiudadId],
+                [ShippingDireccion],
+                [ShippingBarrio],
+                [ShippingZip],
+                [Subtotal],
+                [Descuento],
+                [Impuestos],
+                [CostoEnvio],
+                [Total],
+                [PasarelaPagoId],
+                [PagoReferencia],
+                [PagoEstadoId],
+                [CreatedAt],
+                [UpdatedAt]
+              )
+              OUTPUT INSERTED.[PedidoId]
+              VALUES
+              (
+                @EmpresaId,
+                @EmpresaClienteId,
+                @CanalVentaId,
+                @TiendaOrigenId,
+                @MonedaId,
+                @NumeroPedido,
+                @NumeroExterno,
+                @EstadoId,
+                @ClienteNombre,
+                @ClienteDocumento,
+                @ClienteEmail,
+                @ClienteTelefono,
+                @ShippingPaisId,
+                @ShippingCiudadId,
+                @ShippingDireccion,
+                @ShippingBarrio,
+                @ShippingZip,
+                @Subtotal,
+                @Descuento,
+                @Impuestos,
+                @CostoEnvio,
+                @Total,
+                @PasarelaPagoId,
+                @PagoReferencia,
+                @PagoEstadoId,
+                @CreatedAt,
+                NULL
+              );
+            END
           `),
       'orders.createPedido',
     );
@@ -485,48 +679,110 @@ export class OrdersRepository {
           whereParts.length > 0 ? `WHERE ${whereParts.join(' AND ')}` : '';
 
         return request.query<PedidoRow>(`
-          SELECT
-            p.[PedidoId],
-            p.[NumeroPedido],
-            p.[NumeroExterno],
-            cv.[Codigo] AS [CanalVentaCodigo],
-            cv.[Nombre] AS [CanalVentaNombre],
-            ig.[Codigo] AS [IntegracionCodigo],
-            ig.[ConfigJson] AS [IntegracionConfigJson],
-            p.[ClienteNombre],
-            p.[Total],
-            p.[CreatedAt],
-            e.[Codigo] AS [EstadoCodigo],
-            e.[Nombre] AS [EstadoNombre],
-            pa.[Nombre] AS [PaisNombre],
-            p.[TiendaOrigenId],
-            ti.[Codigo] AS [TiendaOrigenCodigo],
-            ti.[Nombre] AS [TiendaOrigenNombre],
-            ti.[EmpresaClienteId] AS [TiendaOrigenEmpresaClienteId]
-          FROM [oms].[Pedido] p
-          LEFT JOIN [oms].[Estado] e
-            ON e.[EstadoId] = p.[EstadoId]
-          LEFT JOIN [oms].[Pais] pa
-            ON pa.[PaisId] = p.[ShippingPaisId]
-          LEFT JOIN [oms].[Tienda] ti
-            ON ti.[TiendaId] = p.[TiendaOrigenId]
-          LEFT JOIN [oms].[CanalVenta] cv
-            ON cv.[CanalVentaId] = p.[CanalVentaId]
-          OUTER APPLY
-          (
-            SELECT TOP 1
-              [Codigo],
-              [ConfigJson]
-            FROM [oms].[Integracion]
-            WHERE [EmpresaId] = p.[EmpresaId]
-              AND [CanalVentaId] = p.[CanalVentaId]
-            ORDER BY
-              CASE WHEN [Estado] = 'ACTIVO' THEN 0 ELSE 1 END,
-              [UpdatedAt] DESC,
-              [IntegracionId] DESC
-          ) ig
-          ${whereClause}
-          ORDER BY p.[CreatedAt] DESC, p.[PedidoId] DESC
+          IF OBJECT_ID('[oms].[IntegracionPedidoExterno]', 'U') IS NOT NULL
+          BEGIN
+            SELECT
+              p.[PedidoId],
+              p.[NumeroPedido],
+              p.[NumeroExterno],
+              cv.[Codigo] AS [CanalVentaCodigo],
+              cv.[Nombre] AS [CanalVentaNombre],
+              ig.[Codigo] AS [IntegracionCodigo],
+              ig.[ConfigJson] AS [IntegracionConfigJson],
+              p.[ClienteNombre],
+              p.[Total],
+              p.[CreatedAt],
+              e.[Codigo] AS [EstadoCodigo],
+              e.[Nombre] AS [EstadoNombre],
+              pa.[Nombre] AS [PaisNombre],
+              p.[IntegracionId] AS [OrigenIntegracionId],
+              ipe.[ExternalOrderId] AS [OrigenExternalOrderId],
+              p.[TiendaOrigenId],
+              ti.[Codigo] AS [TiendaOrigenCodigo],
+              ti.[Nombre] AS [TiendaOrigenNombre],
+              ti.[EmpresaClienteId] AS [TiendaOrigenEmpresaClienteId]
+            FROM [oms].[Pedido] p
+            LEFT JOIN [oms].[Estado] e
+              ON e.[EstadoId] = p.[EstadoId]
+            LEFT JOIN [oms].[Pais] pa
+              ON pa.[PaisId] = p.[ShippingPaisId]
+            LEFT JOIN [oms].[Tienda] ti
+              ON ti.[TiendaId] = p.[TiendaOrigenId]
+            LEFT JOIN [oms].[CanalVenta] cv
+              ON cv.[CanalVentaId] = p.[CanalVentaId]
+            OUTER APPLY
+            (
+              SELECT TOP 1
+                [Codigo],
+                [ConfigJson]
+              FROM [oms].[Integracion]
+              WHERE [EmpresaId] = p.[EmpresaId]
+                AND [CanalVentaId] = p.[CanalVentaId]
+              ORDER BY
+                CASE WHEN [Estado] = 'ACTIVO' THEN 0 ELSE 1 END,
+                [UpdatedAt] DESC,
+                [IntegracionId] DESC
+            ) ig
+            OUTER APPLY
+            (
+              SELECT TOP 1
+                [ExternalOrderId]
+              FROM [oms].[IntegracionPedidoExterno]
+              WHERE [PedidoId] = p.[PedidoId]
+              ORDER BY
+                CASE WHEN [UpdatedAt] IS NULL THEN [CreatedAt] ELSE [UpdatedAt] END DESC,
+                [IntegracionPedidoExternoId] DESC
+            ) ipe
+            ${whereClause}
+            ORDER BY p.[CreatedAt] DESC, p.[PedidoId] DESC;
+          END
+          ELSE
+          BEGIN
+            SELECT
+              p.[PedidoId],
+              p.[NumeroPedido],
+              p.[NumeroExterno],
+              cv.[Codigo] AS [CanalVentaCodigo],
+              cv.[Nombre] AS [CanalVentaNombre],
+              ig.[Codigo] AS [IntegracionCodigo],
+              ig.[ConfigJson] AS [IntegracionConfigJson],
+              p.[ClienteNombre],
+              p.[Total],
+              p.[CreatedAt],
+              e.[Codigo] AS [EstadoCodigo],
+              e.[Nombre] AS [EstadoNombre],
+              pa.[Nombre] AS [PaisNombre],
+              p.[IntegracionId] AS [OrigenIntegracionId],
+              CAST(NULL AS NVARCHAR(160)) AS [OrigenExternalOrderId],
+              p.[TiendaOrigenId],
+              ti.[Codigo] AS [TiendaOrigenCodigo],
+              ti.[Nombre] AS [TiendaOrigenNombre],
+              ti.[EmpresaClienteId] AS [TiendaOrigenEmpresaClienteId]
+            FROM [oms].[Pedido] p
+            LEFT JOIN [oms].[Estado] e
+              ON e.[EstadoId] = p.[EstadoId]
+            LEFT JOIN [oms].[Pais] pa
+              ON pa.[PaisId] = p.[ShippingPaisId]
+            LEFT JOIN [oms].[Tienda] ti
+              ON ti.[TiendaId] = p.[TiendaOrigenId]
+            LEFT JOIN [oms].[CanalVenta] cv
+              ON cv.[CanalVentaId] = p.[CanalVentaId]
+            OUTER APPLY
+            (
+              SELECT TOP 1
+                [Codigo],
+                [ConfigJson]
+              FROM [oms].[Integracion]
+              WHERE [EmpresaId] = p.[EmpresaId]
+                AND [CanalVentaId] = p.[CanalVentaId]
+              ORDER BY
+                CASE WHEN [Estado] = 'ACTIVO' THEN 0 ELSE 1 END,
+                [UpdatedAt] DESC,
+                [IntegracionId] DESC
+            ) ig
+            ${whereClause}
+            ORDER BY p.[CreatedAt] DESC, p.[PedidoId] DESC;
+          END
         `);
       },
       'orders.listPedidos',
@@ -540,6 +796,8 @@ export class OrdersRepository {
       canalVentaNombre: row.CanalVentaNombre,
       integracionCodigo: row.IntegracionCodigo,
       proveedorCodigo: this.extractProviderCode(row.IntegracionConfigJson),
+      integracionId: row.OrigenIntegracionId,
+      externalOrderId: row.OrigenExternalOrderId ?? row.NumeroExterno,
       origenLabel: this.buildOrigenLabel(
         row.CanalVentaCodigo,
         row.CanalVentaNombre,

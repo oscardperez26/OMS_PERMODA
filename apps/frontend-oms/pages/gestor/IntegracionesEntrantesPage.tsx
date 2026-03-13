@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../src/auth/useAuth';
 import {
   createIntegracionEntrante,
+  getIntegracionEntranteById,
+  getIntegracionEntranteRuns,
   getIntegracionesEntrantesBootstrap,
   syncIntegracionEntranteNow,
   updateIntegracionEntrante,
   validateIntegracionEntrante,
   type IntegracionEntranteListItem,
+  type IntegracionEntranteRunLog,
   type IntegracionesEntrantesBootstrapResponse,
 } from '../../src/configuracion-general/integraciones-entrantes.api';
 import { ROUTES } from '../../src/routes/routes';
@@ -112,6 +115,12 @@ export function IntegracionesEntrantesPage() {
   const [selectedIntegracionId, setSelectedIntegracionId] = useState<
     number | null
   >(null);
+  const [selectedIntegracionDetail, setSelectedIntegracionDetail] =
+    useState<IntegracionEntranteListItem | null>(null);
+  const [selectedIntegracionRuns, setSelectedIntegracionRuns] = useState<
+    IntegracionEntranteRunLog[]
+  >([]);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -137,6 +146,32 @@ export function IntegracionesEntrantesPage() {
     }
   }
 
+  async function loadSelectedContext(integracionId: number) {
+    if (!accessToken) {
+      return;
+    }
+
+    setIsDetailLoading(true);
+    try {
+      const [detail, runs] = await Promise.all([
+        getIntegracionEntranteById(accessToken, integracionId),
+        getIntegracionEntranteRuns(accessToken, integracionId, 20),
+      ]);
+      setSelectedIntegracionDetail(detail);
+      setSelectedIntegracionRuns(runs);
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'No se pudo cargar el detalle del conector';
+      setError(message);
+      setSelectedIntegracionDetail(null);
+      setSelectedIntegracionRuns([]);
+    } finally {
+      setIsDetailLoading(false);
+    }
+  }
+
   useEffect(() => {
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -156,6 +191,8 @@ export function IntegracionesEntrantesPage() {
       ) ?? null,
     [integracionesEntrantes, selectedIntegracionId],
   );
+  const selectedIntegracionResolved =
+    selectedIntegracionDetail ?? selectedIntegracion;
 
   useEffect(() => {
     if (integracionesEntrantes.length === 0) {
@@ -169,6 +206,17 @@ export function IntegracionesEntrantesPage() {
       setSelectedIntegracionId(integracionesEntrantes[0].integracionId);
     }
   }, [integracionesEntrantes, selectedIntegracionId]);
+
+  useEffect(() => {
+    if (!selectedIntegracionId) {
+      setSelectedIntegracionDetail(null);
+      setSelectedIntegracionRuns([]);
+      return;
+    }
+
+    void loadSelectedContext(selectedIntegracionId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedIntegracionId, accessToken]);
 
   useEffect(() => {
     if (form.empresaId || empresas.length === 0) {
@@ -277,6 +325,7 @@ export function IntegracionesEntrantesPage() {
     setSuccess('');
 
     try {
+      let persistedIntegracionId: number | null = editingIntegracionId;
       const payload = {
         empresaId,
         canalVentaId,
@@ -302,7 +351,8 @@ export function IntegracionesEntrantesPage() {
         await updateIntegracionEntrante(accessToken, editingIntegracionId, payload);
         setSuccess('Integracion entrante actualizada');
       } else {
-        await createIntegracionEntrante(accessToken, payload);
+        const created = await createIntegracionEntrante(accessToken, payload);
+        persistedIntegracionId = created.integracionId;
         setSuccess('Integracion entrante creada');
       }
 
@@ -313,6 +363,10 @@ export function IntegracionesEntrantesPage() {
         canalVentaId: previous.canalVentaId,
       }));
       await loadData();
+      if (persistedIntegracionId) {
+        setSelectedIntegracionId(persistedIntegracionId);
+        await loadSelectedContext(persistedIntegracionId);
+      }
     } catch (requestError) {
       const message =
         requestError instanceof Error
@@ -359,6 +413,7 @@ export function IntegracionesEntrantesPage() {
         setError(response.validation.message);
       }
       await loadData();
+      await loadSelectedContext(integracionId);
     } catch (requestError) {
       const message =
         requestError instanceof Error
@@ -389,6 +444,7 @@ export function IntegracionesEntrantesPage() {
         setError(response.result.message);
       }
       await loadData();
+      await loadSelectedContext(integracionId);
     } catch (requestError) {
       const message =
         requestError instanceof Error
@@ -921,13 +977,17 @@ export function IntegracionesEntrantesPage() {
         )}
       </article>
 
-      {selectedIntegracion && (
+      {selectedIntegracionResolved && (
         <article className="integraciones-entrantes-card">
           <h2>
-            Detalle ultimo sync ({selectedIntegracion.codigo} /{' '}
-            {selectedIntegracion.config.providerCode})
+            Detalle ultimo sync ({selectedIntegracionResolved.codigo} /{' '}
+            {selectedIntegracionResolved.config.providerCode})
           </h2>
-          {!selectedIntegracion.config.lastSync ? (
+          {isDetailLoading ? (
+            <p className="integraciones-entrantes-loading">
+              Cargando detalle del conector...
+            </p>
+          ) : !selectedIntegracionResolved.config.lastSync ? (
             <p className="integraciones-entrantes-loading">
               No hay ejecuciones de sincronizacion registradas para este conector.
             </p>
@@ -935,51 +995,55 @@ export function IntegracionesEntrantesPage() {
             <div className="integraciones-entrantes-detail-grid">
               <div>
                 <span>Run ID</span>
-                <strong>{selectedIntegracion.config.lastSync.runId}</strong>
+                <strong>{selectedIntegracionResolved.config.lastSync.runId}</strong>
               </div>
               <div>
                 <span>Estado</span>
-                <strong>{selectedIntegracion.config.lastSync.status}</strong>
+                <strong>{selectedIntegracionResolved.config.lastSync.status}</strong>
               </div>
               <div>
                 <span>Mensaje</span>
-                <strong>{selectedIntegracion.config.lastSync.message}</strong>
+                <strong>{selectedIntegracionResolved.config.lastSync.message}</strong>
               </div>
               <div>
                 <span>Ejecutado</span>
-                <strong>{toLocalDate(selectedIntegracion.config.lastSync.executedAt)}</strong>
+                <strong>
+                  {toLocalDate(selectedIntegracionResolved.config.lastSync.executedAt)}
+                </strong>
               </div>
               <div>
                 <span>Duracion</span>
-                <strong>{toDurationLabel(selectedIntegracion.config.lastSync.durationMs)}</strong>
+                <strong>
+                  {toDurationLabel(selectedIntegracionResolved.config.lastSync.durationMs)}
+                </strong>
               </div>
               <div>
                 <span>Ejecutado por</span>
-                <strong>{selectedIntegracion.config.lastSync.executedBy ?? '-'}</strong>
+                <strong>{selectedIntegracionResolved.config.lastSync.executedBy ?? '-'}</strong>
               </div>
               <div>
                 <span>Resumen</span>
                 <strong>
-                  Recibidos {selectedIntegracion.config.lastSync.pendingReceived} / Ingestados{' '}
-                  {selectedIntegracion.config.lastSync.ingested} / Duplicados{' '}
-                  {selectedIntegracion.config.lastSync.duplicated} / Fallidos{' '}
-                  {selectedIntegracion.config.lastSync.failed}
+                  Recibidos {selectedIntegracionResolved.config.lastSync.pendingReceived} /
+                  Ingestados {selectedIntegracionResolved.config.lastSync.ingested} /
+                  Duplicados {selectedIntegracionResolved.config.lastSync.duplicated} /
+                  Fallidos {selectedIntegracionResolved.config.lastSync.failed}
                 </strong>
               </div>
               <div>
                 <span>Diagnosticos</span>
                 <strong>
-                  {selectedIntegracion.config.lastSync.diagnosticsSummary
-                    ? `Total ${selectedIntegracion.config.lastSync.diagnosticsSummary.total}, OK ${selectedIntegracion.config.lastSync.diagnosticsSummary.ok}, Fallidos ${selectedIntegracion.config.lastSync.diagnosticsSummary.failed}`
+                  {selectedIntegracionResolved.config.lastSync.diagnosticsSummary
+                    ? `Total ${selectedIntegracionResolved.config.lastSync.diagnosticsSummary.total}, OK ${selectedIntegracionResolved.config.lastSync.diagnosticsSummary.ok}, Fallidos ${selectedIntegracionResolved.config.lastSync.diagnosticsSummary.failed}`
                     : '-'}
                 </strong>
               </div>
               <div className="integraciones-entrantes-detail-full">
                 <span>Codigos diagnostico fallidos</span>
                 <strong>
-                  {selectedIntegracion.config.lastSync.diagnosticsSummary?.failedCodes
-                    ?.length
-                    ? selectedIntegracion.config.lastSync.diagnosticsSummary.failedCodes.join(
+                  {selectedIntegracionResolved.config.lastSync.diagnosticsSummary
+                    ?.failedCodes?.length
+                    ? selectedIntegracionResolved.config.lastSync.diagnosticsSummary.failedCodes.join(
                         ', ',
                       )
                     : '-'}
@@ -988,12 +1052,86 @@ export function IntegracionesEntrantesPage() {
               <div className="integraciones-entrantes-detail-full">
                 <span>Ultimo error</span>
                 <strong>
-                  {selectedIntegracion.config.lastSync.errorMessage ?? '-'}
-                  {selectedIntegracion.config.lastSync.errorCode
-                    ? ` (${selectedIntegracion.config.lastSync.errorCode})`
+                  {selectedIntegracionResolved.config.lastSync.errorMessage ?? '-'}
+                  {selectedIntegracionResolved.config.lastSync.errorCode
+                    ? ` (${selectedIntegracionResolved.config.lastSync.errorCode})`
                     : ''}
                 </strong>
               </div>
+            </div>
+          )}
+
+          <h3>Idempotencia por conector</h3>
+          {selectedIntegracionDetail?.dedupe ? (
+            <div className="integraciones-entrantes-detail-grid">
+              <div>
+                <span>Total trazas</span>
+                <strong>{selectedIntegracionDetail.dedupe.total}</strong>
+              </div>
+              <div>
+                <span>Ingestados</span>
+                <strong>{selectedIntegracionDetail.dedupe.ingestado}</strong>
+              </div>
+              <div>
+                <span>Duplicados</span>
+                <strong>{selectedIntegracionDetail.dedupe.duplicado}</strong>
+              </div>
+              <div>
+                <span>Fallidos</span>
+                <strong>{selectedIntegracionDetail.dedupe.failed}</strong>
+              </div>
+              <div className="integraciones-entrantes-detail-full">
+                <span>Ultima actualizacion de traza</span>
+                <strong>{toLocalDate(selectedIntegracionDetail.dedupe.lastUpdatedAt)}</strong>
+              </div>
+            </div>
+          ) : (
+            <p className="integraciones-entrantes-loading">
+              Sin metadatos de deduplicacion disponibles.
+            </p>
+          )}
+
+          <h3>Historial de corridas recientes</h3>
+          {isDetailLoading ? (
+            <p className="integraciones-entrantes-loading">Cargando historial...</p>
+          ) : selectedIntegracionRuns.length === 0 ? (
+            <p className="integraciones-entrantes-loading">
+              No hay corridas recientes registradas.
+            </p>
+          ) : (
+            <div className="integraciones-entrantes-table-wrap">
+              <table className="integraciones-entrantes-table">
+                <thead>
+                  <tr>
+                    <th>Run ID</th>
+                    <th>Estado</th>
+                    <th>Ejecutado</th>
+                    <th>Duracion</th>
+                    <th>Resumen</th>
+                    <th>Error</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedIntegracionRuns.map((run) => (
+                    <tr key={run.runId}>
+                      <td>{run.runId}</td>
+                      <td>{run.status}</td>
+                      <td>{toLocalDate(run.executedAt)}</td>
+                      <td>{toDurationLabel(run.durationMs)}</td>
+                      <td>
+                        Recibidos {run.summary.pendingReceived} / Ingestados{' '}
+                        {run.summary.ingested} / Duplicados {run.summary.duplicated} /
+                        Fallidos {run.summary.failed}
+                      </td>
+                      <td>
+                        {run.errorMessage ?? '-'}
+                        <br />
+                        <small>{run.errorCode ?? '-'}</small>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </article>

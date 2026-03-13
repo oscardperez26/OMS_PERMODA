@@ -65,6 +65,14 @@ export type IntegracionEntranteConfig = {
   } | null;
 };
 
+export type IntegracionEntranteDedupeSummary = {
+  total: number;
+  ingestado: number;
+  duplicado: number;
+  failed: number;
+  lastUpdatedAt: string | null;
+};
+
 export type IntegracionEntranteListItem = {
   integracionId: number;
   empresaId: number;
@@ -77,8 +85,26 @@ export type IntegracionEntranteListItem = {
   nombre: string;
   activo: boolean;
   config: IntegracionEntranteConfig;
+  dedupe: IntegracionEntranteDedupeSummary | null;
   createdAt: string;
   updatedAt: string | null;
+};
+
+export type IntegracionEntranteRunLog = {
+  runId: string;
+  status: IntegracionEntranteOperationStatus;
+  message: string;
+  executedAt: string;
+  durationMs: number | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  summary: {
+    pendingReceived: number;
+    ingested: number;
+    duplicated: number;
+    skippedValidation: number;
+    failed: number;
+  };
 };
 
 export type IntegracionesEntrantesBootstrapResponse = {
@@ -232,6 +258,28 @@ export async function getIntegracionEntranteById(
     integracionEntrante: IntegracionEntranteListItem;
   }>(response);
   return payload.integracionEntrante;
+}
+
+export async function getIntegracionEntranteRuns(
+  accessToken: string,
+  integracionId: number,
+  limit = 20,
+): Promise<IntegracionEntranteRunLog[]> {
+  const response = await fetch(
+    `${API_URL}/configuracion-general/integraciones/entrantes/${integracionId}/runs?limit=${limit}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  const payload = await parseJsonResponse<{
+    runs: IntegracionEntranteRunLog[];
+  }>(response);
+  return payload.runs;
 }
 
 export async function createIntegracionEntrante(

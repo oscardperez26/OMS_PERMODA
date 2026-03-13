@@ -3,9 +3,11 @@ import * as sql from 'mssql';
 import { DatabaseService } from '../../database/database.service';
 import type {
   CreateIntegracionEntranteInput,
+  IntegracionEntranteDedupeSummary,
   IntegracionEntranteCanalOption,
   IntegracionEntranteEmpresaOption,
   IntegracionEntrantePersistenceRow,
+  IntegracionEntranteRunLog,
   UpdateIntegracionEntranteInput,
 } from './integraciones-entrantes.types';
 
@@ -28,6 +30,20 @@ type CanalVentaRow = {
   EmpresaId: number;
   Codigo: string;
   Nombre: string;
+};
+
+type DedupeSummaryRow = {
+  Total: number;
+  Ingestado: number;
+  Duplicado: number;
+  Failed: number;
+  LastUpdatedAt: Date | null;
+};
+
+type RunLogRow = {
+  CreatedAt: Date;
+  DataJson: string | null;
+  Mensaje: string | null;
 };
 
 @Injectable()
@@ -211,6 +227,192 @@ export class IntegracionesEntrantesRepository {
     );
 
     return result.recordset;
+  }
+
+  async getDedupeSummaryByIntegracion(
+    integracionId: number,
+  ): Promise<IntegracionEntranteDedupeSummary | null> {
+    const result = await this.databaseService.execute<sql.IResult<DedupeSummaryRow>>(
+      (pool) =>
+        pool
+          .request()
+          .input('integracionId', sql.Int, integracionId)
+          .query<DedupeSummaryRow>(`
+            BEGIN TRY
+              IF OBJECT_ID('[oms].[IntegracionPedidoExterno]', 'U') IS NULL
+                 OR COL_LENGTH('oms.IntegracionPedidoExterno', 'IntegracionId') IS NULL
+              BEGIN
+                SELECT
+                  CAST(0 AS INT) AS [Total],
+                  CAST(0 AS INT) AS [Ingestado],
+                  CAST(0 AS INT) AS [Duplicado],
+                  CAST(0 AS INT) AS [Failed],
+                  CAST(NULL AS DATETIME2(0)) AS [LastUpdatedAt];
+                RETURN;
+              END;
+
+              DECLARE @sql NVARCHAR(MAX) =
+                N'SELECT COUNT(1) AS [Total], ' +
+                N'CAST(0 AS INT) AS [Ingestado], ' +
+                N'CAST(0 AS INT) AS [Duplicado], ' +
+                N'CAST(0 AS INT) AS [Failed], ' +
+                N'CAST(NULL AS DATETIME2(0)) AS [LastUpdatedAt] ' +
+                N'FROM [oms].[IntegracionPedidoExterno] ' +
+                N'WHERE [IntegracionId] = @integracionId';
+
+              IF COL_LENGTH('oms.IntegracionPedidoExterno', 'Estado') IS NOT NULL
+                 AND COL_LENGTH('oms.IntegracionPedidoExterno', 'CreatedAt') IS NOT NULL
+                 AND COL_LENGTH('oms.IntegracionPedidoExterno', 'UpdatedAt') IS NOT NULL
+              BEGIN
+                SET @sql =
+                  N'SELECT COUNT(1) AS [Total], ' +
+                  N'SUM(CASE WHEN [Estado] = ''INGESTADO'' THEN 1 ELSE 0 END) AS [Ingestado], ' +
+                  N'SUM(CASE WHEN [Estado] = ''DUPLICADO'' THEN 1 ELSE 0 END) AS [Duplicado], ' +
+                  N'SUM(CASE WHEN [Estado] = ''FAILED'' THEN 1 ELSE 0 END) AS [Failed], ' +
+                  N'MAX(CASE WHEN [UpdatedAt] IS NULL THEN [CreatedAt] ELSE [UpdatedAt] END) AS [LastUpdatedAt] ' +
+                  N'FROM [oms].[IntegracionPedidoExterno] ' +
+                  N'WHERE [IntegracionId] = @integracionId';
+              END
+              ELSE IF COL_LENGTH('oms.IntegracionPedidoExterno', 'CreatedAt') IS NOT NULL
+              BEGIN
+                SET @sql =
+                  N'SELECT COUNT(1) AS [Total], ' +
+                  N'CAST(0 AS INT) AS [Ingestado], ' +
+                  N'CAST(0 AS INT) AS [Duplicado], ' +
+                  N'CAST(0 AS INT) AS [Failed], ' +
+                  N'MAX([CreatedAt]) AS [LastUpdatedAt] ' +
+                  N'FROM [oms].[IntegracionPedidoExterno] ' +
+                  N'WHERE [IntegracionId] = @integracionId';
+              END;
+
+              EXEC sp_executesql
+                @sql,
+                N'@integracionId INT',
+                @integracionId = @integracionId;
+            END TRY
+            BEGIN CATCH
+              SELECT
+                CAST(0 AS INT) AS [Total],
+                CAST(0 AS INT) AS [Ingestado],
+                CAST(0 AS INT) AS [Duplicado],
+                CAST(0 AS INT) AS [Failed],
+                CAST(NULL AS DATETIME2(0)) AS [LastUpdatedAt];
+            END CATCH;
+          `),
+      'integraciones-entrantes.getDedupeSummaryByIntegracion',
+    );
+
+    const row = result.recordset[0];
+    if (!row) {
+      return null;
+    }
+
+    return {
+      total: Number(row.Total ?? 0),
+      ingestado: Number(row.Ingestado ?? 0),
+      duplicado: Number(row.Duplicado ?? 0),
+      failed: Number(row.Failed ?? 0),
+      lastUpdatedAt: row.LastUpdatedAt ? row.LastUpdatedAt.toISOString() : null,
+    };
+  }
+
+  async listRecentSyncRuns(
+    integracionId: number,
+    limit: number,
+  ): Promise<IntegracionEntranteRunLog[]> {
+    const normalizedLimit = Number.isInteger(limit) && limit > 0 ? limit : 20;
+
+    const result = await this.databaseService.execute<sql.IResult<RunLogRow>>(
+      (pool) =>
+        pool
+          .request()
+          .input('integracionId', sql.BigInt, integracionId)
+          .input('limit', sql.Int, normalizedLimit)
+          .query<RunLogRow>(`
+            BEGIN TRY
+              IF OBJECT_ID('[oms].[Log]', 'U') IS NULL
+                 OR COL_LENGTH('oms.Log', 'CreatedAt') IS NULL
+                 OR COL_LENGTH('oms.Log', 'Modulo') IS NULL
+                 OR COL_LENGTH('oms.Log', 'Accion') IS NULL
+                 OR COL_LENGTH('oms.Log', 'Entidad') IS NULL
+                 OR COL_LENGTH('oms.Log', 'EntidadId') IS NULL
+              BEGIN
+                SELECT
+                  CAST(NULL AS DATETIME2(0)) AS [CreatedAt],
+                  CAST(NULL AS NVARCHAR(MAX)) AS [DataJson],
+                  CAST(NULL AS NVARCHAR(510)) AS [Mensaje]
+                WHERE 1 = 0;
+                RETURN;
+              END;
+
+              DECLARE @logSql NVARCHAR(MAX) =
+                N'SELECT TOP (@limit) [CreatedAt], ' +
+                N'CAST(NULL AS NVARCHAR(MAX)) AS [DataJson], ' +
+                N'CAST(NULL AS NVARCHAR(510)) AS [Mensaje] ' +
+                N'FROM [oms].[Log] ' +
+                N'WHERE [Modulo] = ''INTEGRACIONES_ENTRANTES'' ' +
+                N'AND [Accion] = ''integraciones.entrantes.sync-now'' ' +
+                N'AND [Entidad] = ''Integracion'' ' +
+                N'AND [EntidadId] = @integracionId ' +
+                N'ORDER BY [CreatedAt] DESC';
+
+              IF COL_LENGTH('oms.Log', 'DataJson') IS NOT NULL
+                 AND COL_LENGTH('oms.Log', 'Mensaje') IS NOT NULL
+              BEGIN
+                SET @logSql =
+                  N'SELECT TOP (@limit) [CreatedAt], [DataJson], [Mensaje] ' +
+                  N'FROM [oms].[Log] ' +
+                  N'WHERE [Modulo] = ''INTEGRACIONES_ENTRANTES'' ' +
+                  N'AND [Accion] = ''integraciones.entrantes.sync-now'' ' +
+                  N'AND [Entidad] = ''Integracion'' ' +
+                  N'AND [EntidadId] = @integracionId ' +
+                  N'ORDER BY [CreatedAt] DESC';
+              END
+              ELSE IF COL_LENGTH('oms.Log', 'DataJson') IS NOT NULL
+              BEGIN
+                SET @logSql =
+                  N'SELECT TOP (@limit) [CreatedAt], [DataJson], ' +
+                  N'CAST(NULL AS NVARCHAR(510)) AS [Mensaje] ' +
+                  N'FROM [oms].[Log] ' +
+                  N'WHERE [Modulo] = ''INTEGRACIONES_ENTRANTES'' ' +
+                  N'AND [Accion] = ''integraciones.entrantes.sync-now'' ' +
+                  N'AND [Entidad] = ''Integracion'' ' +
+                  N'AND [EntidadId] = @integracionId ' +
+                  N'ORDER BY [CreatedAt] DESC';
+              END
+              ELSE IF COL_LENGTH('oms.Log', 'Mensaje') IS NOT NULL
+              BEGIN
+                SET @logSql =
+                  N'SELECT TOP (@limit) [CreatedAt], ' +
+                  N'CAST(NULL AS NVARCHAR(MAX)) AS [DataJson], [Mensaje] ' +
+                  N'FROM [oms].[Log] ' +
+                  N'WHERE [Modulo] = ''INTEGRACIONES_ENTRANTES'' ' +
+                  N'AND [Accion] = ''integraciones.entrantes.sync-now'' ' +
+                  N'AND [Entidad] = ''Integracion'' ' +
+                  N'AND [EntidadId] = @integracionId ' +
+                  N'ORDER BY [CreatedAt] DESC';
+              END;
+
+              EXEC sp_executesql
+                @logSql,
+                N'@integracionId BIGINT, @limit INT',
+                @integracionId = @integracionId,
+                @limit = @limit;
+            END TRY
+            BEGIN CATCH
+              SELECT
+                CAST(NULL AS DATETIME2(0)) AS [CreatedAt],
+                CAST(NULL AS NVARCHAR(MAX)) AS [DataJson],
+                CAST(NULL AS NVARCHAR(510)) AS [Mensaje]
+              WHERE 1 = 0;
+            END CATCH;
+          `),
+      'integraciones-entrantes.listRecentSyncRuns',
+    );
+
+    return result.recordset
+      .map((row) => this.mapRunLogRow(row))
+      .filter((item): item is IntegracionEntranteRunLog => item !== null);
   }
 
   async existsEmpresaById(empresaId: number): Promise<boolean> {
@@ -474,5 +676,134 @@ export class IntegracionesEntrantesRepository {
           `),
       'integraciones-entrantes.insertOperationalLog',
     );
+  }
+
+  private mapRunLogRow(row: RunLogRow): IntegracionEntranteRunLog | null {
+    if (!(row.CreatedAt instanceof Date)) {
+      return null;
+    }
+
+    const payload = this.parseRunDataJson(row.DataJson);
+    if (!payload) {
+      return {
+        runId: `SYNC-${row.CreatedAt.getTime()}`,
+        status: 'FAILED',
+        message: row.Mensaje ?? 'Sin detalle',
+        executedAt: row.CreatedAt.toISOString(),
+        durationMs: null,
+        errorCode: null,
+        errorMessage: row.Mensaje ?? null,
+        summary: {
+          pendingReceived: 0,
+          ingested: 0,
+          duplicated: 0,
+          skippedValidation: 0,
+          failed: 0,
+        },
+      };
+    }
+
+    return {
+      runId: payload.runId ?? `SYNC-${row.CreatedAt.getTime()}`,
+      status: payload.status,
+      message: payload.message ?? row.Mensaje ?? 'Sin detalle',
+      executedAt: row.CreatedAt.toISOString(),
+      durationMs: payload.durationMs,
+      errorCode: payload.errorCode,
+      errorMessage: payload.errorMessage,
+      summary: payload.summary,
+    };
+  }
+
+  private parseRunDataJson(
+    value: string | null,
+  ): {
+    runId: string | null;
+    status: 'OK' | 'BLOCKED' | 'FAILED';
+    message: string | null;
+    durationMs: number | null;
+    errorCode: string | null;
+    errorMessage: string | null;
+    summary: {
+      pendingReceived: number;
+      ingested: number;
+      duplicated: number;
+      skippedValidation: number;
+      failed: number;
+    };
+  } | null {
+    if (!value) {
+      return null;
+    }
+
+    try {
+      const payload = JSON.parse(value) as {
+        runId?: string;
+        status?: string;
+        message?: string;
+        durationMs?: number;
+        errorCode?: string;
+        errorMessage?: string;
+        summary?: {
+          pendingReceived?: number;
+          ingested?: number;
+          duplicated?: number;
+          skippedValidation?: number;
+          failed?: number;
+        };
+      };
+
+      const status =
+        payload.status === 'OK' ||
+        payload.status === 'BLOCKED' ||
+        payload.status === 'FAILED'
+          ? payload.status
+          : 'FAILED';
+
+      return {
+        runId: this.trimOrNull(payload.runId, 80),
+        status,
+        message: this.trimOrNull(payload.message, 510),
+        durationMs: this.normalizePositiveInteger(payload.durationMs),
+        errorCode: this.trimOrNull(payload.errorCode, 120),
+        errorMessage: this.trimOrNull(payload.errorMessage, 510),
+        summary: {
+          pendingReceived: this.normalizeCounter(payload.summary?.pendingReceived),
+          ingested: this.normalizeCounter(payload.summary?.ingested),
+          duplicated: this.normalizeCounter(payload.summary?.duplicated),
+          skippedValidation: this.normalizeCounter(
+            payload.summary?.skippedValidation,
+          ),
+          failed: this.normalizeCounter(payload.summary?.failed),
+        },
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private normalizeCounter(value: unknown): number {
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0
+      ? Math.floor(value)
+      : 0;
+  }
+
+  private normalizePositiveInteger(value: unknown): number | null {
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0
+      ? Math.floor(value)
+      : null;
+  }
+
+  private trimOrNull(value: unknown, maxLength: number): string | null {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    const normalized = value.trim();
+    if (!normalized) {
+      return null;
+    }
+    return normalized.length > maxLength
+      ? normalized.slice(0, maxLength)
+      : normalized;
   }
 }
