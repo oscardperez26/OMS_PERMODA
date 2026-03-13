@@ -13,6 +13,8 @@ export type SidebarItem = {
   label: string;
   path: string;
   requiredPermissions?: Permission[];
+  icon?: string;
+  fixed?: boolean;
 };
 
 export type SidebarGroup = {

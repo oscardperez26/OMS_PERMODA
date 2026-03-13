@@ -1,6 +1,8 @@
 import { ROUTES } from "../../../routes/routes";
 import type { SidebarSection } from "./sidebar.types";
 
+const IMAGE_UPLOADER_URL = 'https://imagenes.koaj.co/koaj-uploader-php/public/';
+
 /**
  * sidebar.menu.ts
  * ---------------
@@ -55,6 +57,12 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
         key: "personalize_group",
         groupLabel: "Opciones",
         items: [
+          {
+            label: "Cargue de Imagenes",
+            path: IMAGE_UPLOADER_URL,
+            icon: "bi-images",
+            fixed: true,
+          },
           { label: "Modulos", path: ROUTES.PERSONALIZE_MODULES },
           { label: "Diseno", path: ROUTES.PERSONALIZE_DESIGN },
           { label: "Transporte", path: ROUTES.PERSONALIZE_TRANSPORT },

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { SIDEBAR_SECTIONS } from './SidebarMenu';
 import { getGroupsToOpenByPathname } from './sidebar.utils';
+import type { SidebarItem } from './sidebar.types';
 import { useAuth } from '../../../auth/useAuth';
 
 /**
@@ -15,6 +16,24 @@ export function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
+  const fixedItems = useMemo(
+    () =>
+      SIDEBAR_SECTIONS.flatMap((section) =>
+        section.groups.flatMap((group) =>
+          group.items.filter((item) => {
+            if (!item.fixed) {
+              return false;
+            }
+            if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
+              return true;
+            }
+            return hasPermissions(item.requiredPermissions);
+          }),
+        ),
+      ),
+    [hasPermissions],
+  );
+
   const visibleSections = useMemo(
     () =>
       SIDEBAR_SECTIONS.map((section) => ({
@@ -23,6 +42,9 @@ export function Sidebar() {
           .map((group) => ({
             ...group,
             items: group.items.filter((item) => {
+              if (item.fixed) {
+                return false;
+              }
               if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
                 return true;
               }
@@ -52,6 +74,63 @@ export function Sidebar() {
     });
   };
 
+  const isExternalLink = (path: string) => /^https?:\/\//i.test(path);
+
+  const renderFixedCollapsedItem = (item: SidebarItem) => {
+    const iconClass = item.icon || 'bi-box-arrow-up-right';
+    const title = `${item.label} (abre en nueva pestana)`;
+
+    if (isExternalLink(item.path)) {
+      return (
+        <a
+          key={`${item.label}-${item.path}`}
+          className="koaj-sidebar-item"
+          href={item.path}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={title}
+        >
+          <i className={`bi ${iconClass}`}></i>
+        </a>
+      );
+    }
+
+    return (
+      <NavLink key={`${item.label}-${item.path}`} className="koaj-sidebar-item" title={item.label} to={item.path}>
+        <i className={`bi ${iconClass}`}></i>
+      </NavLink>
+    );
+  };
+
+  const renderMenuItem = (item: SidebarItem) => {
+    if (isExternalLink(item.path)) {
+      return (
+        <a
+          key={`${item.label}-${item.path}`}
+          href={item.path}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="koaj-panel-link"
+          title={`${item.label} (abre en nueva pestana)`}
+        >
+          {item.label} <i className="bi bi-box-arrow-up-right ms-1"></i>
+        </a>
+      );
+    }
+
+    return (
+      <NavLink
+        key={item.path}
+        to={item.path}
+        className={({ isActive }: { isActive: boolean }) =>
+          isActive ? 'koaj-panel-link active' : 'koaj-panel-link'
+        }
+      >
+        {item.label}
+      </NavLink>
+    );
+  };
+
   if (!isExpanded) {
     return (
       <aside className="koaj-sidebar" style={{ transition: 'width 0.3s ease' }}>
@@ -63,6 +142,8 @@ export function Sidebar() {
         >
           <i className="bi bi-list fs-3 text-muted"></i>
         </button>
+
+        {fixedItems.map((item) => renderFixedCollapsedItem(item))}
 
         {visibleSections.map((section) => (
           <div
@@ -89,6 +170,16 @@ export function Sidebar() {
           <i className="bi bi-layout-sidebar-inset fs-5"></i>
         </button>
       </div>
+
+      {fixedItems.length > 0 && (
+        <div className="mb-4">
+          <div className="koaj-panel-group-title d-flex align-items-center gap-2">
+            <i className="bi bi-pin-angle fs-6"></i>
+            ACCESO RAPIDO
+          </div>
+          <div className="d-flex flex-column ps-3 mt-1">{fixedItems.map((item) => renderMenuItem(item))}</div>
+        </div>
+      )}
 
       {visibleSections.map((section) => (
         <div key={section.key} className="mb-4">
@@ -119,17 +210,7 @@ export function Sidebar() {
 
               {isGroupOpen(group.key) && (
                 <div className="d-flex flex-column ps-3 mt-1">
-                  {group.items.map((item) => (
-                    <NavLink
-                      key={item.path}
-                      to={item.path}
-                      className={({ isActive }: { isActive: boolean }) =>
-                        isActive ? 'koaj-panel-link active' : 'koaj-panel-link'
-                      }
-                    >
-                      {item.label}
-                    </NavLink>
-                  ))}
+                  {group.items.map((item) => renderMenuItem(item))}
                 </div>
               )}
             </div>

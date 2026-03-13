@@ -25,6 +25,12 @@ npm run lint
 - API por transportadora:
   - `/panel/order-manager/configuracion-general/transportadora/:id/api`
 
+## Modulo nuevo (personalizar)
+- Cargue de Imagenes:
+  - Ubicacion: acceso rapido fijo en el sidebar del panel.
+  - Comportamiento: abre el uploader externo de KOAJ en una pestana nueva.
+  - URL destino: `https://imagenes.koaj.co/koaj-uploader-php/public/`
+
 ## Reglas de permisos UI
 - `config.read`: puede ver.
 - `config.manage`: puede editar y guardar.
