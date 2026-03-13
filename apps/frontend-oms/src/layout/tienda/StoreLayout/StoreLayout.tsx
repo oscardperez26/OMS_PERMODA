@@ -1,6 +1,7 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../auth/useAuth';
 import { useBranding } from '../../../branding/useBranding';
+import { StoreNotificationsBell } from './StoreNotificationsBell';
 
 
 export function StoreLayout() {
@@ -31,6 +32,7 @@ export function StoreLayout() {
           )}
 
           <div className="koaj-topbar-actions gap-3">
+            <StoreNotificationsBell />
             <button className="btn-koaj-outline" title="Panel" onClick={() => window.location.href = '/panel'}>
               <i className="bi bi-grid-1x2"></i> Ir al Panel
             </button>
