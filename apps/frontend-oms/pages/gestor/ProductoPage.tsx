@@ -2,17 +2,11 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useAuth } from '../../src/auth/useAuth';
 import {
   createProducto,
-  getProductosBootstrap,
   updateProducto,
   type ProductoListItem,
 } from '../../src/configuracion-general/producto.api';
+import { useProductosBootstrap } from '../../src/configuracion-general/useProductosBootstrap';
 import './ProductoPage.css';
-
-type EmpresaOption = {
-  empresaId: number;
-  codigo: string;
-  nombre: string;
-};
 
 type FormState = {
   empresaId: string;
@@ -28,66 +22,15 @@ const INITIAL_FORM: FormState = {
   activo: true,
 };
 
-async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 3): Promise<T> {
-  let lastError: unknown;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error;
-      if (attempt === maxAttempts) {
-        break;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 150 * attempt));
-    }
-  }
-
-  throw lastError;
-}
-
 export function ProductoPage() {
   const { accessToken, hasPermissions } = useAuth();
   const canManage = hasPermissions(['config.manage']);
+  const { productos, empresas, isLoading, error, reload } = useProductosBootstrap();
 
-  const [productos, setProductos] = useState<ProductoListItem[]>([]);
-  const [empresas, setEmpresas] = useState<EmpresaOption[]>([]);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [editingProductoId, setEditingProductoId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-
-  async function loadData() {
-    if (!accessToken) {
-      setError('Sesion no disponible');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const bootstrap = await withRetry(() => getProductosBootstrap(accessToken));
-      setProductos(bootstrap.productos);
-      setEmpresas(
-        [...bootstrap.empresas].sort((a, b) => {
-          const byName = a.nombre.localeCompare(b.nombre);
-          return byName !== 0 ? byName : a.empresaId - b.empresaId;
-        }),
-      );
-      setError('');
-    } catch (requestError) {
-      const message =
-        requestError instanceof Error ? requestError.message : 'No se pudo cargar productos';
-      setError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken]);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     if (form.empresaId || empresas.length === 0) {
@@ -108,22 +51,24 @@ export function ProductoPage() {
   );
 
   const empresaMap = useMemo(() => {
-    const map = new Map<number, EmpresaOption>();
+    const map = new Map<number, { empresaId: number; codigo: string; nombre: string }>();
     empresas.forEach((empresa) => {
       map.set(empresa.empresaId, empresa);
     });
     return map;
   }, [empresas]);
 
+  const visibleError = submitError || error;
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
     if (!accessToken) {
-      setError('Sesion no disponible');
+      setSubmitError('Sesion no disponible');
       return;
     }
     if (!canManage) {
-      setError('No tienes permisos para gestionar catalogos');
+      setSubmitError('No tienes permisos para gestionar catalogos');
       return;
     }
 
@@ -132,16 +77,16 @@ export function ProductoPage() {
     const nombre = form.nombre.trim();
 
     if (!Number.isInteger(empresaId) || empresaId <= 0) {
-      setError('Empresa es obligatoria');
+      setSubmitError('Empresa es obligatoria');
       return;
     }
     if (!nombre) {
-      setError('Nombre es obligatorio');
+      setSubmitError('Nombre es obligatorio');
       return;
     }
 
     setIsSubmitting(true);
-    setError('');
+    setSubmitError('');
 
     try {
       if (editingProductoId) {
@@ -165,11 +110,11 @@ export function ProductoPage() {
         empresaId: previous.empresaId,
       }));
       setEditingProductoId(null);
-      await loadData();
+      await reload();
     } catch (requestError) {
       const message =
         requestError instanceof Error ? requestError.message : 'No se pudo guardar producto';
-      setError(message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -183,7 +128,7 @@ export function ProductoPage() {
       nombre: producto.nombre,
       activo: producto.activo,
     });
-    setError('');
+    setSubmitError('');
   }
 
   function cancelEdit() {
@@ -192,7 +137,7 @@ export function ProductoPage() {
       ...INITIAL_FORM,
       empresaId: previous.empresaId || String(empresas[0]?.empresaId ?? ''),
     }));
-    setError('');
+    setSubmitError('');
   }
 
   function formatDate(value?: string | null): string {
@@ -210,7 +155,7 @@ export function ProductoPage() {
         <p>Catalogo base para construir variantes e inventario operativo.</p>
       </header>
 
-      {error && <p className="producto-error">{error}</p>}
+      {visibleError && <p className="producto-error">{visibleError}</p>}
 
       {canManage && (
         <article className="producto-card">
@@ -346,3 +291,4 @@ export function ProductoPage() {
     </section>
   );
 }
+

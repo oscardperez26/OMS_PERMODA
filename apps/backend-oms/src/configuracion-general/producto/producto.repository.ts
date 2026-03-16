@@ -4,6 +4,7 @@ import { DatabaseService } from '../../database/database.service';
 import type {
   CreateProductoInput,
   ProductoBootstrapData,
+  ProductoCategoriaListItem,
   ProductoEmpresaListItem,
   ProductoListItem,
   UpdateProductoInput,
@@ -12,8 +13,12 @@ import type {
 type ProductoRow = {
   ProductoId: number;
   EmpresaId: number;
+  CategoriaId: number | null;
+  CategoriaNombre: string | null;
   SKUBase: string | null;
   Nombre: string;
+  Marca: string | null;
+  Descripcion: string | null;
   Activo: boolean;
   CreatedAt: Date;
   UpdatedAt: Date | null;
@@ -29,6 +34,13 @@ type EmpresaRow = {
   Nombre: string;
 };
 
+type CategoriaRow = {
+  CategoriaId: number;
+  EmpresaId: number;
+  Nombre: string;
+  Activo: boolean;
+};
+
 @Injectable()
 export class ProductoRepository {
   constructor(private readonly databaseService: DatabaseService) {}
@@ -38,15 +50,21 @@ export class ProductoRepository {
       (pool) =>
         pool.request().query<ProductoRow>(`
           SELECT
-            [ProductoId],
-            [EmpresaId],
-            [SKUBase],
-            [Nombre],
-            [Activo],
-            [CreatedAt],
-            [UpdatedAt]
-          FROM [oms].[Producto]
-          ORDER BY [Nombre] ASC, [ProductoId] ASC
+            p.[ProductoId],
+            p.[EmpresaId],
+            p.[CategoriaId],
+            c.[Nombre] AS [CategoriaNombre],
+            p.[SKUBase],
+            p.[Nombre],
+            p.[Marca],
+            p.[Descripcion],
+            p.[Activo],
+            p.[CreatedAt],
+            p.[UpdatedAt]
+          FROM [oms].[Producto] p
+          LEFT JOIN [oms].[Categoria] c
+            ON c.[CategoriaId] = p.[CategoriaId]
+          ORDER BY p.[Nombre] ASC, p.[ProductoId] ASC
         `),
       'producto.list',
     );
@@ -59,15 +77,21 @@ export class ProductoRepository {
       (pool) =>
         pool.request().query(`
           SELECT
-            [ProductoId],
-            [EmpresaId],
-            [SKUBase],
-            [Nombre],
-            [Activo],
-            [CreatedAt],
-            [UpdatedAt]
-          FROM [oms].[Producto]
-          ORDER BY [Nombre] ASC, [ProductoId] ASC;
+            p.[ProductoId],
+            p.[EmpresaId],
+            p.[CategoriaId],
+            c.[Nombre] AS [CategoriaNombre],
+            p.[SKUBase],
+            p.[Nombre],
+            p.[Marca],
+            p.[Descripcion],
+            p.[Activo],
+            p.[CreatedAt],
+            p.[UpdatedAt]
+          FROM [oms].[Producto] p
+          LEFT JOIN [oms].[Categoria] c
+            ON c.[CategoriaId] = p.[CategoriaId]
+          ORDER BY p.[Nombre] ASC, p.[ProductoId] ASC;
 
           SELECT
             [EmpresaId],
@@ -75,16 +99,27 @@ export class ProductoRepository {
             [Nombre]
           FROM [oms].[Empresa]
           ORDER BY [Nombre] ASC, [EmpresaId] ASC;
+
+          SELECT
+            [CategoriaId],
+            [EmpresaId],
+            [Nombre],
+            [Activo]
+          FROM [oms].[Categoria]
+          WHERE [Activo] = 1
+          ORDER BY [Nombre] ASC, [CategoriaId] ASC;
         `),
       'producto.listBootstrapData',
     );
 
     const productoRows = (result.recordsets?.[0] ?? []) as ProductoRow[];
     const empresaRows = (result.recordsets?.[1] ?? []) as EmpresaRow[];
+    const categoriaRows = (result.recordsets?.[2] ?? []) as CategoriaRow[];
 
     return {
       productos: productoRows.map((row) => this.mapProductoRow(row)),
       empresas: empresaRows.map((row) => this.mapEmpresaRow(row)),
+      categorias: categoriaRows.map((row) => this.mapCategoriaRow(row)),
     };
   }
 
@@ -94,15 +129,21 @@ export class ProductoRepository {
         pool.request().input('productoId', sql.Int, productoId)
           .query<ProductoRow>(`
             SELECT
-              [ProductoId],
-              [EmpresaId],
-              [SKUBase],
-              [Nombre],
-              [Activo],
-              [CreatedAt],
-              [UpdatedAt]
-            FROM [oms].[Producto]
-            WHERE [ProductoId] = @productoId
+              p.[ProductoId],
+              p.[EmpresaId],
+              p.[CategoriaId],
+              c.[Nombre] AS [CategoriaNombre],
+              p.[SKUBase],
+              p.[Nombre],
+              p.[Marca],
+              p.[Descripcion],
+              p.[Activo],
+              p.[CreatedAt],
+              p.[UpdatedAt]
+            FROM [oms].[Producto] p
+            LEFT JOIN [oms].[Categoria] c
+              ON c.[CategoriaId] = p.[CategoriaId]
+            WHERE p.[ProductoId] = @productoId
           `),
       'producto.findById',
     );
@@ -222,8 +263,12 @@ export class ProductoRepository {
     return {
       productoId: row.ProductoId,
       empresaId: row.EmpresaId,
+      categoriaId: row.CategoriaId ?? null,
+      categoriaNombre: row.CategoriaNombre ?? null,
       skuBase: row.SKUBase ?? undefined,
       nombre: row.Nombre,
+      marca: row.Marca ?? null,
+      descripcion: row.Descripcion ?? null,
       activo: row.Activo,
       createdAt: row.CreatedAt.toISOString(),
       updatedAt: row.UpdatedAt?.toISOString() ?? null,
@@ -235,6 +280,15 @@ export class ProductoRepository {
       empresaId: row.EmpresaId,
       codigo: row.Codigo,
       nombre: row.Nombre,
+    };
+  }
+
+  private mapCategoriaRow(row: CategoriaRow): ProductoCategoriaListItem {
+    return {
+      categoriaId: row.CategoriaId,
+      empresaId: row.EmpresaId,
+      nombre: row.Nombre,
+      activo: row.Activo,
     };
   }
 }

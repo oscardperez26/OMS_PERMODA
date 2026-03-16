@@ -17,20 +17,20 @@ export class ProductoController {
   constructor(private readonly productoService: ProductoService) {}
 
   @Get()
-  @Permissions('config.read')
+  @Permissions('orders.read')
   async list() {
     const productos = await this.productoService.listProductos();
     return { productos };
   }
 
   @Get('bootstrap')
-  @Permissions('config.read')
+  @Permissions('orders.read')
   async bootstrap() {
     return this.productoService.getBootstrapData();
   }
 
   @Get(':id')
-  @Permissions('config.read')
+  @Permissions('orders.read')
   async getById(@Param('id', ParseIntPipe) id: number) {
     const producto = await this.productoService.getProductoById(id);
     return { producto };

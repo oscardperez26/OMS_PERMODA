@@ -5,16 +5,28 @@ const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 export type ProductoListItem = {
   productoId: number;
   empresaId: number;
+  categoriaId?: number | null;
+  categoriaNombre?: string | null;
   skuBase?: string;
   nombre: string;
+  marca?: string | null;
+  descripcion?: string | null;
   activo: boolean;
   createdAt: string;
   updatedAt?: string | null;
 };
 
+export type ProductoCategoriaListItem = {
+  categoriaId: number;
+  empresaId: number;
+  nombre: string;
+  activo: boolean;
+};
+
 export type ProductoBootstrapResponse = {
   productos: ProductoListItem[];
   empresas: Pick<EmpresaListItem, 'empresaId' | 'codigo' | 'nombre'>[];
+  categorias: ProductoCategoriaListItem[];
 };
 
 export type CreateProductoRequest = {
