@@ -47,6 +47,7 @@ export const ROUTES = {
     '/panel/order-manager/configuracion-general/comercial',
   ORDER_MANAGER_GENERAL_CONFIG_PARAMETROS_BASE:
     '/panel/order-manager/configuracion-general/parametros-base',
+  // @deprecated - migrar a CATALOG_PRODUCTS (fuente ZI)
   ORDER_MANAGER_GENERAL_CONFIG_CATALOGO_INVENTARIO:
     '/panel/order-manager/configuracion-general/catalogo-inventario',
   ORDER_MANAGER_GENERAL_CONFIG_PAGOS_INTEGRACIONES:

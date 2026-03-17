@@ -1,4 +1,10 @@
 import { useMemo, useState } from 'react';
+import { useAuth } from '../../src/auth/useAuth';
+import {
+  fetchZiPrices,
+  fetchZiProducts,
+  fetchZiStock,
+} from '../../src/configuracion-general/catalogo-zi.api';
 import { useProductosBootstrap } from '../../src/configuracion-general/useProductosBootstrap';
 import '../gestor/ProductoPage.css';
 import './ProductsPage.css';
@@ -17,9 +23,28 @@ const INITIAL_FILTERS: CatalogFilters = {
   search: '',
 };
 
+type ZiSearchResult = {
+  referencia: string;
+  nombre: string;
+  marca: string;
+  canalesPrecio: Array<{ canal: string; precioBase: number }>;
+  stockPorTienda: Array<{ tiendaId: string; stockTotal: number }>;
+};
+
 export function ProductsPage() {
-  const { productos, empresas, categorias, isLoading, error } = useProductosBootstrap();
+  const { accessToken } = useAuth();
+  const {
+    productos,
+    empresas,
+    categorias,
+    isLoading: isBootstrapLoading,
+    error: bootstrapError,
+  } = useProductosBootstrap();
   const [filters, setFilters] = useState<CatalogFilters>(INITIAL_FILTERS);
+  const [productCode, setProductCode] = useState('');
+  const [result, setResult] = useState<ZiSearchResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const empresaMap = useMemo(() => {
     const map = new Map<number, { empresaId: number; codigo: string; nombre: string }>();
@@ -108,6 +133,83 @@ export function ProductsPage() {
     filters.status !== 'all' ||
     filters.search.trim().length > 0;
 
+  function formatPrecio(value: number): string {
+    return new Intl.NumberFormat('es-CO').format(value);
+  }
+
+  async function handleZiSearch(): Promise<void> {
+    const code = productCode.trim();
+    if (!code) {
+      setError('Ingresa un codigo de producto');
+      setResult(null);
+      return;
+    }
+    if (!accessToken) {
+      setError('Sesion no disponible');
+      setResult(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const [products, prices, stock] = await Promise.all([
+        fetchZiProducts(accessToken, code),
+        fetchZiPrices(accessToken, code),
+        fetchZiStock(accessToken, code),
+      ]);
+
+      const producto = products[0];
+      if (!producto) {
+        setResult(null);
+        setError(`No se encontro informacion del producto ${code} en ZI`);
+        return;
+      }
+
+      const canalesPrecio = prices
+        .flatMap((item) => item.tarifas)
+        .map((tarifa) => ({
+          canal: tarifa.comercialChannel,
+          precioBase: Number.parseFloat(tarifa.precio_base),
+        }));
+
+      const stockAcumulado = new Map<string, number>();
+      for (const item of stock) {
+        for (const tienda of item.stock) {
+          const totalTienda = tienda.tallas
+            .flat()
+            .reduce((acc, talla) => acc + Number.parseInt(talla.unidades, 10), 0);
+          stockAcumulado.set(
+            tienda.id_tienda,
+            (stockAcumulado.get(tienda.id_tienda) ?? 0) + totalTienda,
+          );
+        }
+      }
+
+      const stockPorTienda = [...stockAcumulado.entries()]
+        .map(([tiendaId, stockTotal]) => ({ tiendaId, stockTotal }))
+        .sort((a, b) => a.tiendaId.localeCompare(b.tiendaId));
+
+      setResult({
+        referencia: producto.referencia,
+        nombre: producto.nombre.es,
+        marca: producto.marca,
+        canalesPrecio,
+        stockPorTienda,
+      });
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'No se pudo consultar catalogo ZI';
+      setError(message);
+      setResult(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <section className="producto-page">
       <header className="producto-header">
@@ -115,7 +217,75 @@ export function ProductsPage() {
         <p>Consulta de catalogo con filtros por categoria, empresa, estado y busqueda.</p>
       </header>
 
-      {error && <p className="producto-error">{error}</p>}
+      {bootstrapError && <p className="producto-error">{bootstrapError}</p>}
+
+      <article className="producto-card">
+        <h2>Consulta ZI por codigo</h2>
+        <div className="catalog-products-zi-search">
+          <input
+            type="text"
+            value={productCode}
+            onChange={(event) => setProductCode(event.target.value)}
+            placeholder="Codigo de producto ZI"
+            maxLength={120}
+          />
+          <button type="button" onClick={() => void handleZiSearch()} disabled={isLoading}>
+            Buscar
+          </button>
+        </div>
+
+        {isLoading && <p className="producto-loading">Consultando ZI...</p>}
+        {error && <p className="producto-error">{error}</p>}
+
+        {result && (
+          <div className="producto-table-wrap">
+            <table className="producto-table">
+              <thead>
+                <tr>
+                  <th>Referencia</th>
+                  <th>Nombre</th>
+                  <th>Marca</th>
+                  <th>Canales de precio</th>
+                  <th>Stock total por tienda</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{result.referencia}</td>
+                  <td>{result.nombre}</td>
+                  <td>{result.marca || '-'}</td>
+                  <td>
+                    {result.canalesPrecio.length === 0 ? (
+                      <span>Sin precios</span>
+                    ) : (
+                      <div className="catalog-products-list-cell">
+                        {result.canalesPrecio.map((canal) => (
+                          <span key={`${canal.canal}-${canal.precioBase}`}>
+                            {canal.canal}: {formatPrecio(canal.precioBase)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {result.stockPorTienda.length === 0 ? (
+                      <span>Sin stock</span>
+                    ) : (
+                      <div className="catalog-products-list-cell">
+                        {result.stockPorTienda.map((item) => (
+                          <span key={item.tiendaId}>
+                            Tienda {item.tiendaId}: {item.stockTotal}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </article>
 
       <article className="producto-card">
         <div className="catalog-products-filters-header">
@@ -208,7 +378,7 @@ export function ProductsPage() {
 
       <article className="producto-card">
         <h2>Listado de productos ({filteredProductos.length})</h2>
-        {isLoading ? (
+        {isBootstrapLoading ? (
           <p className="producto-loading">Cargando productos...</p>
         ) : (
           <div className="producto-table-wrap">

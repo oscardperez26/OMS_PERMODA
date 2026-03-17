@@ -95,3 +95,24 @@ Ejemplo PATCH:
   "apiKeyPlaintext": "nuevo-token-opcional"
 }
 ```
+
+## Configuracion General - Catalogo ZI (Fase 1)
+
+Base: `/configuracion-general/catalogo-zi`
+
+- `GET /configuracion-general/catalogo-zi/change`
+  - Permiso: `config.read`
+- `POST /configuracion-general/catalogo-zi/products`
+  - Permiso: `config.read`
+  - Body: `{ "product": "4" }`
+- `POST /configuracion-general/catalogo-zi/prices`
+  - Permiso: `config.read`
+  - Body: `{ "product": "23031" }`
+- `POST /configuracion-general/catalogo-zi/stock`
+  - Permiso: `config.read`
+  - Body: `{ "product": "3" }`
+- `GET /configuracion-general/catalogo-zi/categories/:id`
+  - Permiso: `config.read`
+- `POST /configuracion-general/catalogo-zi/auth/refresh`
+  - Permiso: `config.manage`
+  - Requiere `ZI_ALLOW_MANUAL_REFRESH=true`, si no responde `403`.

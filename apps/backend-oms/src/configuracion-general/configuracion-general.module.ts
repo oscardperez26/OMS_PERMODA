@@ -1,17 +1,18 @@
 import { Module } from '@nestjs/common';
+import { BodegaModule } from './bodega/bodega.module';
+import { CatalogoZiModule } from './catalogo-zi/catalogo-zi.module';
+import { CiudadModule } from './ciudad/ciudad.module';
 import { ConfiguracionGeneralController } from './configuracion-general.controller';
 import { ConfiguracionGeneralRepository } from './configuracion-general.repository';
 import { ConfiguracionGeneralService } from './configuracion-general.service';
-import { CiudadModule } from './ciudad/ciudad.module';
 import { CostoTransporteModule } from './costo-transporte/costo-transporte.module';
-import { BodegaModule } from './bodega/bodega.module';
-import { EmpresaModule } from './empresa/empresa.module';
 import { EmpresaClienteModule } from './empresa-cliente/empresa-cliente.module';
-import { InventarioModule } from './inventario/inventario.module';
+import { EmpresaModule } from './empresa/empresa.module';
 import { IntegracionesEntrantesModule } from './integraciones-entrantes/integraciones-entrantes.module';
+import { InventarioModule } from './inventario/inventario.module';
 import { MonedaModule } from './moneda/moneda.module';
-import { PasarelaPagoModule } from './pasarela-pago/pasarela-pago.module';
 import { PaisModule } from './pais/pais.module';
+import { PasarelaPagoModule } from './pasarela-pago/pasarela-pago.module';
 import { ProductoModule } from './producto/producto.module';
 import { ProductoVarianteModule } from './producto-variante/producto-variante.module';
 import { TiendaModule } from './tienda/tienda.module';
@@ -21,22 +22,23 @@ import { ZonaTransporteModule } from './zona-transporte/zona-transporte.module';
 
 @Module({
   imports: [
+    BodegaModule,
+    CatalogoZiModule,
     CiudadModule,
-    PaisModule,
-    MonedaModule,
+    CostoTransporteModule,
     EmpresaModule,
     EmpresaClienteModule,
+    IntegracionesEntrantesModule,
+    InventarioModule,
+    MonedaModule,
+    PaisModule,
     PasarelaPagoModule,
-    TiendaModule,
-    BodegaModule,
     ProductoModule,
     ProductoVarianteModule,
-    InventarioModule,
-    IntegracionesEntrantesModule,
+    TiendaModule,
     TransportadoraModule,
-    ZonaTransporteModule,
     ZonaCiudadModule,
-    CostoTransporteModule,
+    ZonaTransporteModule,
   ],
   controllers: [ConfiguracionGeneralController],
   providers: [ConfiguracionGeneralService, ConfiguracionGeneralRepository],
