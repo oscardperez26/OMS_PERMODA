@@ -1,19 +1,40 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '../../src/auth/useAuth';
-import {
-  fetchZiPrices,
-  fetchZiProducts,
-  fetchZiStock,
-} from '../../src/configuracion-general/catalogo-zi.api';
 import { useProductosBootstrap } from '../../src/configuracion-general/useProductosBootstrap';
 import '../gestor/ProductoPage.css';
 import './ProductsPage.css';
+
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 type CatalogFilters = {
   empresaId: string;
   categoriaId: string;
   status: 'all' | 'active' | 'inactive';
   search: string;
+};
+
+type ProductoSearchItem = {
+  productoId: number;
+  empresaId: number;
+  categoriaId?: number | null;
+  categoriaNombre?: string | null;
+  skuBase?: string;
+  nombre: string;
+  marca?: string | null;
+  descripcion?: string | null;
+  activo: boolean;
+  createdAt: string;
+  updatedAt?: string | null;
+  ziSyncedAt?: string | null;
+};
+
+type ProductosSearchResponse = {
+  productos: ProductoSearchItem[];
+};
+
+type FreshnessBadge = {
+  className: 'is-unsynced' | 'is-fresh' | 'is-stale';
+  label: string;
 };
 
 const INITIAL_FILTERS: CatalogFilters = {
@@ -23,13 +44,62 @@ const INITIAL_FILTERS: CatalogFilters = {
   search: '',
 };
 
-type ZiSearchResult = {
-  referencia: string;
-  nombre: string;
-  marca: string;
-  canalesPrecio: Array<{ canal: string; precioBase: number }>;
-  stockPorTienda: Array<{ tiendaId: string; stockTotal: number }>;
-};
+async function parseJsonResponse<T>(response: Response): Promise<T> {
+  const payload = (await response.json().catch(() => null)) as
+    | { message?: string | string[] }
+    | null;
+
+  if (!response.ok) {
+    const fallback = 'No se pudo completar la operacion';
+    const message = Array.isArray(payload?.message)
+      ? payload.message.join(', ')
+      : payload?.message ?? fallback;
+    throw new Error(message);
+  }
+
+  return payload as T;
+}
+
+function getFreshnessBadge(ziSyncedAt?: string | null): FreshnessBadge {
+  if (!ziSyncedAt) {
+    return {
+      className: 'is-unsynced',
+      label: 'Sin sincronizar',
+    };
+  }
+
+  const syncedAt = new Date(ziSyncedAt);
+  if (Number.isNaN(syncedAt.getTime())) {
+    return {
+      className: 'is-unsynced',
+      label: 'Sin sincronizar',
+    };
+  }
+
+  const ageMs = Date.now() - syncedAt.getTime();
+  const sixHoursMs = 6 * 60 * 60 * 1000;
+
+  if (ageMs < sixHoursMs) {
+    const totalMinutes = Math.max(1, Math.floor(ageMs / 60000));
+    if (totalMinutes < 60) {
+      return {
+        className: 'is-fresh',
+        label: `Actualizado hace ${totalMinutes} min`,
+      };
+    }
+
+    const totalHours = Math.max(1, Math.floor(totalMinutes / 60));
+    return {
+      className: 'is-fresh',
+      label: `Actualizado hace ${totalHours} h`,
+    };
+  }
+
+  return {
+    className: 'is-stale',
+    label: 'Datos pueden estar desactualizados',
+  };
+}
 
 export function ProductsPage() {
   const { accessToken } = useAuth();
@@ -42,7 +112,7 @@ export function ProductsPage() {
   } = useProductosBootstrap();
   const [filters, setFilters] = useState<CatalogFilters>(INITIAL_FILTERS);
   const [productCode, setProductCode] = useState('');
-  const [result, setResult] = useState<ZiSearchResult | null>(null);
+  const [searchResult, setSearchResult] = useState<ProductoSearchItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -133,20 +203,16 @@ export function ProductsPage() {
     filters.status !== 'all' ||
     filters.search.trim().length > 0;
 
-  function formatPrecio(value: number): string {
-    return new Intl.NumberFormat('es-CO').format(value);
-  }
-
-  async function handleZiSearch(): Promise<void> {
+  async function handleDbSearch(): Promise<void> {
     const code = productCode.trim();
     if (!code) {
       setError('Ingresa un codigo de producto');
-      setResult(null);
+      setSearchResult([]);
       return;
     }
     if (!accessToken) {
       setError('Sesion no disponible');
-      setResult(null);
+      setSearchResult([]);
       return;
     }
 
@@ -154,57 +220,30 @@ export function ProductsPage() {
     setError('');
 
     try {
-      const [products, prices, stock] = await Promise.all([
-        fetchZiProducts(accessToken, code),
-        fetchZiPrices(accessToken, code),
-        fetchZiStock(accessToken, code),
-      ]);
+      const response = await fetch(
+        `${API_URL}/configuracion-general/producto?search=${encodeURIComponent(code)}`,
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
 
-      const producto = products[0];
-      if (!producto) {
-        setResult(null);
-        setError(`No se encontro informacion del producto ${code} en ZI`);
-        return;
+      const payload = await parseJsonResponse<ProductosSearchResponse>(response);
+      setSearchResult(payload.productos);
+
+      if (payload.productos.length === 0) {
+        setError(`No se encontro informacion del producto ${code} en BD`);
       }
-
-      const canalesPrecio = prices
-        .flatMap((item) => item.tarifas)
-        .map((tarifa) => ({
-          canal: tarifa.comercialChannel,
-          precioBase: Number.parseFloat(tarifa.precio_base),
-        }));
-
-      const stockAcumulado = new Map<string, number>();
-      for (const item of stock) {
-        for (const tienda of item.stock) {
-          const totalTienda = tienda.tallas
-            .flat()
-            .reduce((acc, talla) => acc + Number.parseInt(talla.unidades, 10), 0);
-          stockAcumulado.set(
-            tienda.id_tienda,
-            (stockAcumulado.get(tienda.id_tienda) ?? 0) + totalTienda,
-          );
-        }
-      }
-
-      const stockPorTienda = [...stockAcumulado.entries()]
-        .map(([tiendaId, stockTotal]) => ({ tiendaId, stockTotal }))
-        .sort((a, b) => a.tiendaId.localeCompare(b.tiendaId));
-
-      setResult({
-        referencia: producto.referencia,
-        nombre: producto.nombre.es,
-        marca: producto.marca,
-        canalesPrecio,
-        stockPorTienda,
-      });
     } catch (requestError) {
       const message =
         requestError instanceof Error
           ? requestError.message
-          : 'No se pudo consultar catalogo ZI';
+          : 'No se pudo consultar productos en BD';
       setError(message);
-      setResult(null);
+      setSearchResult([]);
     } finally {
       setIsLoading(false);
     }
@@ -220,67 +259,52 @@ export function ProductsPage() {
       {bootstrapError && <p className="producto-error">{bootstrapError}</p>}
 
       <article className="producto-card">
-        <h2>Consulta ZI por codigo</h2>
+        <h2>Consulta BD por codigo</h2>
         <div className="catalog-products-zi-search">
           <input
             type="text"
             value={productCode}
             onChange={(event) => setProductCode(event.target.value)}
-            placeholder="Codigo de producto ZI"
+            placeholder="Codigo de producto (SKU base o nombre)"
             maxLength={120}
           />
-          <button type="button" onClick={() => void handleZiSearch()} disabled={isLoading}>
+          <button type="button" onClick={() => void handleDbSearch()} disabled={isLoading}>
             Buscar
           </button>
         </div>
 
-        {isLoading && <p className="producto-loading">Consultando ZI...</p>}
+        {isLoading && <p className="producto-loading">Consultando BD...</p>}
         {error && <p className="producto-error">{error}</p>}
 
-        {result && (
+        {searchResult.length > 0 && (
           <div className="producto-table-wrap">
             <table className="producto-table">
               <thead>
                 <tr>
-                  <th>Referencia</th>
+                  <th>ID</th>
+                  <th>SKU base</th>
                   <th>Nombre</th>
                   <th>Marca</th>
-                  <th>Canales de precio</th>
-                  <th>Stock total por tienda</th>
+                  <th>Frescura ZI</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>{result.referencia}</td>
-                  <td>{result.nombre}</td>
-                  <td>{result.marca || '-'}</td>
-                  <td>
-                    {result.canalesPrecio.length === 0 ? (
-                      <span>Sin precios</span>
-                    ) : (
-                      <div className="catalog-products-list-cell">
-                        {result.canalesPrecio.map((canal) => (
-                          <span key={`${canal.canal}-${canal.precioBase}`}>
-                            {canal.canal}: {formatPrecio(canal.precioBase)}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </td>
-                  <td>
-                    {result.stockPorTienda.length === 0 ? (
-                      <span>Sin stock</span>
-                    ) : (
-                      <div className="catalog-products-list-cell">
-                        {result.stockPorTienda.map((item) => (
-                          <span key={item.tiendaId}>
-                            Tienda {item.tiendaId}: {item.stockTotal}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </td>
-                </tr>
+                {searchResult.map((producto) => {
+                  const freshness = getFreshnessBadge(producto.ziSyncedAt);
+                  return (
+                    <tr key={`search-${producto.productoId}`}>
+                      <td>{producto.productoId}</td>
+                      <td>{producto.skuBase ?? '-'}</td>
+                      <td>{producto.nombre}</td>
+                      <td>{producto.marca ?? '-'}</td>
+                      <td>
+                        <span className={`catalog-products-sync-badge ${freshness.className}`}>
+                          {freshness.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -394,12 +418,13 @@ export function ProductsPage() {
                   <th>Activo</th>
                   <th>Creado</th>
                   <th>Actualizado</th>
+                  <th>Frescura ZI</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredProductos.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="producto-empty-cell">
+                    <td colSpan={10} className="producto-empty-cell">
                       {productos.length === 0
                         ? 'No hay productos registrados'
                         : 'No se encontraron productos con los filtros actuales'}
@@ -414,6 +439,10 @@ export function ProductsPage() {
                         : null) ??
                       producto.categoriaNombre ??
                       'Sin categoria';
+
+                    const freshness = getFreshnessBadge(
+                      (producto as ProductoSearchItem).ziSyncedAt,
+                    );
 
                     return (
                       <tr key={producto.productoId}>
@@ -430,6 +459,11 @@ export function ProductsPage() {
                         <td>{producto.activo ? 'Si' : 'No'}</td>
                         <td>{formatDate(producto.createdAt)}</td>
                         <td>{formatDate(producto.updatedAt)}</td>
+                        <td>
+                          <span className={`catalog-products-sync-badge ${freshness.className}`}>
+                            {freshness.label}
+                          </span>
+                        </td>
                       </tr>
                     );
                   })

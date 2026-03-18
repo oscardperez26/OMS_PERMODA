@@ -6,6 +6,8 @@ import request from 'supertest';
 import { ZiTokenManagerService } from './auth/zi-token-manager.service';
 import { CatalogoZiController } from './catalogo-zi.controller';
 import { CatalogoZiService } from './catalogo-zi.service';
+import { ZiSyncSchedulerService } from './scheduler/zi-sync.scheduler';
+import { ZiPersistService } from './zi-persist.service';
 
 describe('CatalogoZiController', () => {
   const catalogoZiService = {
@@ -24,6 +26,17 @@ describe('CatalogoZiController', () => {
     forceRefresh: jest.fn(),
   } as unknown as ZiTokenManagerService;
 
+  const persistService = {
+    persistProducto: jest.fn(),
+    persistPrecios: jest.fn(),
+    persistStock: jest.fn(),
+    persistCategorias: jest.fn(),
+  } as unknown as ZiPersistService;
+
+  const scheduler = {
+    runFullSync: jest.fn(),
+  } as unknown as ZiSyncSchedulerService;
+
   let app: INestApplication;
 
   beforeEach(async () => {
@@ -34,6 +47,8 @@ describe('CatalogoZiController', () => {
         { provide: CatalogoZiService, useValue: catalogoZiService },
         { provide: ConfigService, useValue: configService },
         { provide: ZiTokenManagerService, useValue: tokenManager },
+        { provide: ZiPersistService, useValue: persistService },
+        { provide: ZiSyncSchedulerService, useValue: scheduler },
       ],
     }).compile();
 
@@ -110,5 +125,29 @@ describe('CatalogoZiController', () => {
 
     expect(response.status).toBe(403);
     expect(tokenManager.forceRefresh).not.toHaveBeenCalled();
+  });
+
+  it('POST /sync/full llama scheduler.runFullSync()', async () => {
+    scheduler.runFullSync = jest.fn().mockResolvedValue({ total: 1 });
+
+    const response = await request(app.getHttpServer()).post(
+      '/configuracion-general/catalogo-zi/sync/full',
+    );
+
+    expect(response.status).toBe(201);
+    expect(scheduler.runFullSync).toHaveBeenCalledTimes(1);
+  });
+
+  it('POST /sync/categorias llama persistService.persistCategorias(1,809)', async () => {
+    persistService.persistCategorias = jest
+      .fn()
+      .mockResolvedValue({ categoriasUpserted: 10 });
+
+    const response = await request(app.getHttpServer()).post(
+      '/configuracion-general/catalogo-zi/sync/categorias',
+    );
+
+    expect(response.status).toBe(201);
+    expect(persistService.persistCategorias).toHaveBeenCalledWith(1, 809);
   });
 });

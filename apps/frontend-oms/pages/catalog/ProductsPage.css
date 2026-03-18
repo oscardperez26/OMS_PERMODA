@@ -37,6 +37,31 @@
   gap: 4px;
 }
 
+.catalog-products-sync-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.catalog-products-sync-badge.is-unsynced {
+  background: #edf1f5;
+  color: #5c6876;
+}
+
+.catalog-products-sync-badge.is-fresh {
+  background: #dff7e6;
+  color: #1f7a36;
+}
+
+.catalog-products-sync-badge.is-stale {
+  background: #fff4ce;
+  color: #8d6400;
+}
+
 .catalog-products-clear-btn {
   border: 1px solid #c8d2de;
   border-radius: 8px;

@@ -22,6 +22,7 @@ type ProductoRow = {
   Activo: boolean;
   CreatedAt: Date;
   UpdatedAt: Date | null;
+  ZiSyncedAt: Date | null;
 };
 
 type ProductoIdentityRow = {
@@ -45,10 +46,14 @@ type CategoriaRow = {
 export class ProductoRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async list(): Promise<ProductoListItem[]> {
+  async list(search?: string): Promise<ProductoListItem[]> {
+    const searchParam = search && search.length > 0 ? `%${search}%` : null;
     const result = await this.databaseService.execute<sql.IResult<ProductoRow>>(
       (pool) =>
-        pool.request().query<ProductoRow>(`
+        pool
+          .request()
+          .input('search', sql.NVarChar(255), searchParam)
+          .query<ProductoRow>(`
           SELECT
             p.[ProductoId],
             p.[EmpresaId],
@@ -60,10 +65,17 @@ export class ProductoRepository {
             p.[Descripcion],
             p.[Activo],
             p.[CreatedAt],
-            p.[UpdatedAt]
+            p.[UpdatedAt],
+            p.[ZiSyncedAt]
           FROM [oms].[Producto] p
           LEFT JOIN [oms].[Categoria] c
             ON c.[CategoriaId] = p.[CategoriaId]
+          WHERE (
+            @search IS NULL
+            OR p.[SKUBase] LIKE @search
+            OR p.[Nombre] LIKE @search
+            OR ISNULL(p.[Marca], '') LIKE @search
+          )
           ORDER BY p.[Nombre] ASC, p.[ProductoId] ASC
         `),
       'producto.list',
@@ -87,7 +99,8 @@ export class ProductoRepository {
             p.[Descripcion],
             p.[Activo],
             p.[CreatedAt],
-            p.[UpdatedAt]
+            p.[UpdatedAt],
+            p.[ZiSyncedAt]
           FROM [oms].[Producto] p
           LEFT JOIN [oms].[Categoria] c
             ON c.[CategoriaId] = p.[CategoriaId]
@@ -139,7 +152,8 @@ export class ProductoRepository {
               p.[Descripcion],
               p.[Activo],
               p.[CreatedAt],
-              p.[UpdatedAt]
+              p.[UpdatedAt],
+              p.[ZiSyncedAt]
             FROM [oms].[Producto] p
             LEFT JOIN [oms].[Categoria] c
               ON c.[CategoriaId] = p.[CategoriaId]
@@ -272,6 +286,7 @@ export class ProductoRepository {
       activo: row.Activo,
       createdAt: row.CreatedAt.toISOString(),
       updatedAt: row.UpdatedAt?.toISOString() ?? null,
+      ziSyncedAt: row.ZiSyncedAt?.toISOString() ?? null,
     };
   }
 

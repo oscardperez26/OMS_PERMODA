@@ -10,11 +10,13 @@ import { ConfiguracionGeneralModule } from './configuracion-general/configuracio
 import { OrdersModule } from './orders/orders.module';
 import { BrandingModule } from './branding/branding.module';
 import { SecurityPermissionsModule } from './security-permissions/security-permissions.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     AuthModule,
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     HealthModule,
     UsersModule,

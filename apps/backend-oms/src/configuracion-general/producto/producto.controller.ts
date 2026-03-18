@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { Permissions } from '../../auth/auth.decorators';
 import { CreateProductoDto } from './dto/create-producto.dto';
@@ -18,8 +19,8 @@ export class ProductoController {
 
   @Get()
   @Permissions('orders.read')
-  async list() {
-    const productos = await this.productoService.listProductos();
+  async list(@Query('search') search?: string) {
+    const productos = await this.productoService.listProductos(search);
     return { productos };
   }
 

@@ -4,6 +4,8 @@ import { CatalogoZiController } from './catalogo-zi.controller';
 import { CatalogoZiService } from './catalogo-zi.service';
 import { ZiApiClientService } from './client/zi-api-client.service';
 import { ZiSyncSchedulerService } from './scheduler/zi-sync.scheduler';
+import { ZiSyncRepository } from './repository/zi-sync.repository';
+import { ZiPersistService } from './zi-persist.service';
 
 @Module({
   controllers: [CatalogoZiController],
@@ -12,7 +14,9 @@ import { ZiSyncSchedulerService } from './scheduler/zi-sync.scheduler';
     ZiTokenManagerService,
     ZiApiClientService,
     ZiSyncSchedulerService,
+    ZiPersistService,
+    ZiSyncRepository,
   ],
-  exports: [CatalogoZiService],
+  exports: [CatalogoZiService, ZiPersistService],
 })
 export class CatalogoZiModule {}

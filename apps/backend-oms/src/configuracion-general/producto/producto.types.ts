@@ -10,6 +10,7 @@ export type ProductoListItem = {
   activo: boolean;
   createdAt: string;
   updatedAt?: string | null;
+  ziSyncedAt?: string | null;
 };
 
 export type ProductoEmpresaListItem = {

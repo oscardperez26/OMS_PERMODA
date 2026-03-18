@@ -25,8 +25,9 @@ type UpdateProductoParams = {
 export class ProductoService {
   constructor(private readonly productoRepository: ProductoRepository) {}
 
-  async listProductos(): Promise<ProductoListItem[]> {
-    return this.productoRepository.list();
+  async listProductos(search?: string): Promise<ProductoListItem[]> {
+    const normalizedSearch = search?.trim();
+    return this.productoRepository.list(normalizedSearch);
   }
 
   async getBootstrapData(): Promise<ProductoBootstrapData> {
