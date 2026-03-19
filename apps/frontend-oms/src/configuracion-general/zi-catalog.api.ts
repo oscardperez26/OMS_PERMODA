@@ -23,6 +23,9 @@ export type ZiCatalogProductoListItem = {
   totalVariantes: number;
   precioBaseMin: number | null;
   precioBaseMax: number | null;
+  precioPrioritario?: number | null;
+  monedaPrioritaria?: string | null;
+  canalPrioritario?: string | null;
   stockTotal: number;
   ziSyncedAt: string | null;
 };
@@ -83,6 +86,14 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   return payload as T;
 }
 
+function normalizeId(value: number | string): number | string {
+  if (typeof value === 'number') {
+    return value;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : value;
+}
+
 export async function listZiCatalogo(
   accessToken: string,
   params: {
@@ -95,10 +106,15 @@ export async function listZiCatalogo(
   },
 ): Promise<ZiCatalogListResult> {
   const qs = new URLSearchParams();
-  if (params.search) qs.set('search', params.search);
-  if (params.categoriaId) qs.set('categoriaId', params.categoriaId);
-  if (params.marca) qs.set('marca', params.marca);
-  if (params.soloConStock) qs.set('soloConStock', 'true');
+
+  const search = params.search?.trim();
+  const categoriaId = params.categoriaId?.trim();
+  const marca = params.marca?.trim();
+
+  if (search) qs.set('search', search);
+  if (categoriaId) qs.set('categoriaId', categoriaId);
+  if (marca) qs.set('marca', marca);
+  if (params.soloConStock === true) qs.set('soloConStock', 'true');
   if (params.page != null) qs.set('page', String(params.page));
   if (params.pageSize != null) qs.set('pageSize', String(params.pageSize));
 
@@ -121,7 +137,18 @@ export async function getZiProductoDetalle(
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
-  return parseJsonResponse<ZiCatalogProductoDetalle>(response);
+  const payload = await parseJsonResponse<ZiCatalogProductoDetalle>(response);
+  return {
+    ...payload,
+    variantes: payload.variantes.map((item) => ({
+      ...item,
+      varianteId: normalizeId(item.varianteId),
+    })),
+    tarifas: payload.tarifas.map((item) => ({
+      ...item,
+      tarifaId: normalizeId(item.tarifaId),
+    })),
+  };
 }
 
 export async function getZiMarcas(accessToken: string): Promise<string[]> {

@@ -40,6 +40,9 @@ Response (ejemplo):
       "totalVariantes": 4,
       "precioBaseMin": 229900,
       "precioBaseMax": 259900,
+      "precioPrioritario": 229900,
+      "monedaPrioritaria": "COP",
+      "canalPrioritario": "COLOMBIA",
       "stockTotal": 80,
       "ziSyncedAt": "2026-03-19T13:20:00.000Z"
     }
@@ -103,6 +106,12 @@ El endpoint `/catalog` permite filtrar por:
 - marca exacta (`marca`),
 - solo con stock (`soloConStock=true`),
 - y paginación (`page`, `pageSize`).
+
+Regla de precio priorizado del listado:
+
+- `COLOMBIA` + `COP`
+- `UNICO` + `COP`
+- si no existe ninguno, `precioPrioritario`/`monedaPrioritaria`/`canalPrioritario` retornan `null`.
 
 ## 4) Por que CTEs y no JOINs directos
 

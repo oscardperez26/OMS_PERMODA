@@ -9,6 +9,9 @@ export type ZiCatalogProductoListItem = {
   totalVariantes: number;
   precioBaseMin: number | null;
   precioBaseMax: number | null;
+  precioPrioritario: number | null;
+  monedaPrioritaria: string | null;
+  canalPrioritario: string | null;
   stockTotal: number;
   ziSyncedAt: string | null;
 };

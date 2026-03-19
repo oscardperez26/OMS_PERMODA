@@ -18,6 +18,9 @@ type ListProductoRow = {
   TotalVariantes: number;
   PrecioMin: number | string | null;
   PrecioMax: number | string | null;
+  PrecioPrioritario: number | string | null;
+  MonedaPrioritaria: string | null;
+  CanalPrioritario: string | null;
   StockTotal: number;
   ZiSyncedAt: Date | null;
 };
@@ -126,6 +129,67 @@ export class ZiCatalogRepository {
         WHERE tp.[EmpresaId] = @EmpresaId
           AND tp.[Activo] = 1
         GROUP BY pv.[ProductoId]
+      ),
+      PrecioCanalCTE AS (
+        SELECT
+          pv.[ProductoId],
+          tp.[ComercialChannel],
+          tp.[MonedaCodigo],
+          MIN(CAST(tpd.[Precio] AS DECIMAL(18,2))) AS [PrecioBase]
+        FROM [oms].[TarifaPrecio] tp
+        INNER JOIN [oms].[TarifaPrecioDetalle] tpd
+          ON tpd.[TarifaPrecioId] = tp.[TarifaPrecioId]
+        INNER JOIN [oms].[ProductoVariante] pv
+          ON pv.[VarianteId] = tpd.[VarianteId]
+          AND pv.[EmpresaId] = @EmpresaId
+          AND pv.[OrigenDatos] = 'ZI'
+        WHERE tp.[EmpresaId] = @EmpresaId
+          AND tp.[Activo] = 1
+        GROUP BY
+          pv.[ProductoId],
+          tp.[ComercialChannel],
+          tp.[MonedaCodigo]
+      ),
+      PrecioPrioritarioCTE AS (
+        SELECT
+          ranked.[ProductoId],
+          ranked.[ComercialChannel] AS [CanalPrioritario],
+          ranked.[MonedaCodigo] AS [MonedaPrioritaria],
+          ranked.[PrecioBase] AS [PrecioPrioritario]
+        FROM (
+          SELECT
+            pc.[ProductoId],
+            pc.[ComercialChannel],
+            pc.[MonedaCodigo],
+            pc.[PrecioBase],
+            ROW_NUMBER() OVER (
+              PARTITION BY pc.[ProductoId]
+              ORDER BY
+                CASE
+                  WHEN UPPER(pc.[ComercialChannel]) = 'COLOMBIA'
+                    AND UPPER(pc.[MonedaCodigo]) = 'COP'
+                    THEN 0
+                  WHEN UPPER(pc.[ComercialChannel]) = 'UNICO'
+                    AND UPPER(pc.[MonedaCodigo]) = 'COP'
+                    THEN 1
+                  ELSE 99
+                END,
+                pc.[PrecioBase] ASC,
+                pc.[ComercialChannel] ASC,
+                pc.[MonedaCodigo] ASC
+            ) AS [Rank]
+          FROM PrecioCanalCTE pc
+          WHERE
+            (
+              UPPER(pc.[ComercialChannel]) = 'COLOMBIA'
+              AND UPPER(pc.[MonedaCodigo]) = 'COP'
+            )
+            OR (
+              UPPER(pc.[ComercialChannel]) = 'UNICO'
+              AND UPPER(pc.[MonedaCodigo]) = 'COP'
+            )
+        ) AS ranked
+        WHERE ranked.[Rank] = 1
       )
     `;
 
@@ -142,7 +206,10 @@ export class ZiCatalogRepository {
         ISNULL(v.[TotalVariantes], 0) AS [TotalVariantes],
         ISNULL(s.[StockTotal], 0) AS [StockTotal],
         pr.[PrecioMin],
-        pr.[PrecioMax]
+        pr.[PrecioMax],
+        pp.[PrecioPrioritario],
+        pp.[MonedaPrioritaria],
+        pp.[CanalPrioritario]
       FROM [oms].[Producto] p
       LEFT JOIN [oms].[Categoria] c
         ON c.[CategoriaId] = p.[CategoriaId]
@@ -152,6 +219,8 @@ export class ZiCatalogRepository {
         ON s.[ProductoId] = p.[ProductoId]
       LEFT JOIN PrecioCTE pr
         ON pr.[ProductoId] = p.[ProductoId]
+      LEFT JOIN PrecioPrioritarioCTE pp
+        ON pp.[ProductoId] = p.[ProductoId]
       WHERE p.[EmpresaId] = @EmpresaId
         AND p.[OrigenDatos] = 'ZI'
         AND (
@@ -240,6 +309,9 @@ export class ZiCatalogRepository {
         totalVariantes: row.TotalVariantes ?? 0,
         precioBaseMin: this.toNumberOrNull(row.PrecioMin),
         precioBaseMax: this.toNumberOrNull(row.PrecioMax),
+        precioPrioritario: this.toNumberOrNull(row.PrecioPrioritario),
+        monedaPrioritaria: row.MonedaPrioritaria ?? null,
+        canalPrioritario: row.CanalPrioritario ?? null,
         stockTotal: row.StockTotal ?? 0,
         ziSyncedAt: row.ZiSyncedAt?.toISOString() ?? null,
       })),

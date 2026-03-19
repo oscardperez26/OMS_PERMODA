@@ -206,6 +206,16 @@
   table-layout: auto;
 }
 
+.catalog-products-main-table th,
+.catalog-products-main-table td {
+  vertical-align: middle;
+}
+
+.catalog-products-sub-table th,
+.catalog-products-sub-table td {
+  white-space: nowrap;
+}
+
 /* Pagination */
 .catalog-products-pagination {
   display: flex;
@@ -254,5 +264,9 @@
   .catalog-products-filters-grid {
     grid-template-columns: 1fr;
   }
-}
 
+  .catalog-products-detail {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
