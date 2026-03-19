@@ -540,12 +540,13 @@ export class ZiSyncRepository {
             USING (
               SELECT
                 @EmpresaId AS [EmpresaId],
-                @ExternalTarifaId AS [ExternalTarifaId]
+                @ComercialChannel AS [ComercialChannel]
             ) AS source
               ON target.[EmpresaId] = source.[EmpresaId]
-             AND target.[ExternalTarifaId] = source.[ExternalTarifaId]
+             AND target.[ComercialChannel] = source.[ComercialChannel]
             WHEN MATCHED THEN
               UPDATE SET
+                [ExternalTarifaId] = @ExternalTarifaId,
                 [ComercialChannel] = @ComercialChannel,
                 [MonedaCodigo] = @MonedaCodigo,
                 [ImpuestoPct] = @ImpuestoPct,
@@ -562,8 +563,7 @@ export class ZiSyncRepository {
                 [ImpuestoPct],
                 [Activo],
                 [SourceTs],
-                [CreatedAt],
-                [UpdatedAt]
+                [CreatedAt]
               )
               VALUES
               (
@@ -574,8 +574,7 @@ export class ZiSyncRepository {
                 @ImpuestoPct,
                 1,
                 SYSUTCDATETIME(),
-                SYSUTCDATETIME(),
-                NULL
+                SYSUTCDATETIME()
               )
             OUTPUT INSERTED.[TarifaPrecioId] AS [TarifaPrecioId];
           `),

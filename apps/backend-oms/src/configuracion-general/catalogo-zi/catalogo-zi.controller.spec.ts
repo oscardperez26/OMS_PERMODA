@@ -1,9 +1,10 @@
-import { ValidationPipe } from '@nestjs/common';
+import { NotFoundException, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { ZiTokenManagerService } from './auth/zi-token-manager.service';
+import { ZiCatalogService } from './catalog/zi-catalog.service';
 import { CatalogoZiController } from './catalogo-zi.controller';
 import { CatalogoZiService } from './catalogo-zi.service';
 import { ZiSyncSchedulerService } from './scheduler/zi-sync.scheduler';
@@ -37,6 +38,13 @@ describe('CatalogoZiController', () => {
     runFullSync: jest.fn(),
   } as unknown as ZiSyncSchedulerService;
 
+  const catalogService = {
+    listProductos: jest.fn(),
+    getProductoDetalle: jest.fn(),
+    getMarcas: jest.fn(),
+    getCategorias: jest.fn(),
+  } as unknown as ZiCatalogService;
+
   let app: INestApplication;
 
   beforeEach(async () => {
@@ -49,6 +57,7 @@ describe('CatalogoZiController', () => {
         { provide: ZiTokenManagerService, useValue: tokenManager },
         { provide: ZiPersistService, useValue: persistService },
         { provide: ZiSyncSchedulerService, useValue: scheduler },
+        { provide: ZiCatalogService, useValue: catalogService },
       ],
     }).compile();
 
@@ -149,5 +158,85 @@ describe('CatalogoZiController', () => {
 
     expect(response.status).toBe(201);
     expect(persistService.persistCategorias).toHaveBeenCalledWith(1, 809);
+  });
+
+  it('GET /catalog responde 200 con ZiCatalogListResult', async () => {
+    catalogService.listProductos = jest.fn().mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 50,
+      totalPages: 1,
+    });
+
+    const response = await request(app.getHttpServer()).get(
+      '/configuracion-general/catalogo-zi/catalog?page=1&pageSize=50',
+    );
+
+    expect(response.status).toBe(200);
+    expect(catalogService.listProductos).toHaveBeenCalledTimes(1);
+  });
+
+  it('GET /catalog/filters/marcas responde 200 con string[]', async () => {
+    catalogService.getMarcas = jest.fn().mockResolvedValue(['KOAJ']);
+
+    const response = await request(app.getHttpServer()).get(
+      '/configuracion-general/catalogo-zi/catalog/filters/marcas',
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(['KOAJ']);
+  });
+
+  it('GET /catalog/filters/categorias responde 200 con array', async () => {
+    catalogService.getCategorias = jest.fn().mockResolvedValue([
+      { categoriaId: 1, nombre: 'Mujer', total: 100 },
+    ]);
+
+    const response = await request(app.getHttpServer()).get(
+      '/configuracion-general/catalogo-zi/catalog/filters/categorias',
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([{ categoriaId: 1, nombre: 'Mujer', total: 100 }]);
+  });
+
+  it('GET /catalog/:id valido responde 200 con detalle', async () => {
+    catalogService.getProductoDetalle = jest.fn().mockResolvedValue({
+      productoId: 13,
+      skuBase: '105243',
+      nombre: 'Falda',
+      marca: 'KOAJ',
+      activo: true,
+      descripcion: null,
+      descripcionCorta: null,
+      metaTitulo: null,
+      metaDescripcion: null,
+      url: null,
+      categoriaNombre: 'Mujer',
+      instruccionesCuidado: null,
+      ziSyncedAt: null,
+      variantes: [],
+      tarifas: [],
+    });
+
+    const response = await request(app.getHttpServer()).get(
+      '/configuracion-general/catalogo-zi/catalog/13',
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.productoId).toBe(13);
+  });
+
+  it('GET /catalog/:id inexistente responde 404', async () => {
+    catalogService.getProductoDetalle = jest
+      .fn()
+      .mockRejectedValue(new NotFoundException('Producto 99999 no encontrado'));
+
+    const response = await request(app.getHttpServer()).get(
+      '/configuracion-general/catalogo-zi/catalog/99999',
+    );
+
+    expect(response.status).toBe(404);
   });
 });

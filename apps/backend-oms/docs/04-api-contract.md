@@ -27,6 +27,35 @@ Base path: `/configuracion-general/catalogo-zi`
   - Permission: `config.manage`
   - Ejecuta sync de categorias del rango `1..809`.
 
+### Endpoints nuevos Fase 3A (catalogo panel)
+
+- `GET /catalog`
+  - Permission: `config.read`
+  - Query params:
+    - `search?: string`
+    - `categoriaId?: string`
+    - `marca?: string`
+    - `soloConStock?: boolean`
+    - `page?: number` (default `1`)
+    - `pageSize?: number` (default `50`, max `100`)
+  - Retorna listado paginado de productos ZI con agregados de variantes, stock y precios.
+
+- `GET /catalog/filters/marcas`
+  - Permission: `config.read`
+  - Retorna `string[]` con marcas disponibles en productos ZI.
+
+- `GET /catalog/filters/categorias`
+  - Permission: `config.read`
+  - Retorna categorías activas con conteo de productos ZI:
+    - `{ categoriaId: number; nombre: string; total: number }[]`
+
+- `GET /catalog/:productoId`
+  - Permission: `config.read`
+  - Retorna detalle de producto ZI:
+    - datos del producto,
+    - variantes (talla/color/stock),
+    - tarifas activas y oferta vigente en UTC.
+
 ## Producto
 
 Base path: `/configuracion-general/producto`

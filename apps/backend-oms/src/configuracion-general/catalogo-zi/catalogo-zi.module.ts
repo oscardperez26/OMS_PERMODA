@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ZiTokenManagerService } from './auth/zi-token-manager.service';
+import { ZiCatalogRepository } from './catalog/zi-catalog.repository';
+import { ZiCatalogService } from './catalog/zi-catalog.service';
 import { CatalogoZiController } from './catalogo-zi.controller';
 import { CatalogoZiService } from './catalogo-zi.service';
 import { ZiApiClientService } from './client/zi-api-client.service';
@@ -16,7 +18,9 @@ import { ZiPersistService } from './zi-persist.service';
     ZiSyncSchedulerService,
     ZiPersistService,
     ZiSyncRepository,
+    ZiCatalogService,
+    ZiCatalogRepository,
   ],
-  exports: [CatalogoZiService, ZiPersistService],
+  exports: [CatalogoZiService, ZiPersistService, ZiCatalogService],
 })
 export class CatalogoZiModule {}

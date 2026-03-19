@@ -109,6 +109,35 @@ describe('ZiSyncRepository', () => {
     expect(db.invocations[0].inputs.SKU).toBe('4-2-134');
   });
 
+  it('upsertTarifa usa clave EmpresaId + ComercialChannel (no ExternalTarifaId)', async () => {
+    const db = createDbMock();
+    db.setResponder(() => ({
+      recordset: [{ TarifaPrecioId: 500 }],
+    }));
+    const repository = new ZiSyncRepository(db.databaseService);
+
+    const result = await repository.upsertTarifa({
+      empresaId: 1,
+      comercialChannel: 'COLOMBIA',
+      externalTarifaId: 'TAR-123',
+      monedaCodigo: ' cop ',
+      impuestoPct: 19,
+    });
+
+    expect(result).toEqual({ tarifaId: 500 });
+    expect(db.invocations[0].inputs.ComercialChannel).toBe('COLOMBIA');
+    expect(db.invocations[0].inputs.ExternalTarifaId).toBe('TAR-123');
+    expect(db.invocations[0].inputs.MonedaCodigo).toBe('COP');
+
+    const sqlText = db.invocations[0].query;
+    expect(sqlText).toContain(
+      'ON target.[EmpresaId] = source.[EmpresaId]\n             AND target.[ComercialChannel] = source.[ComercialChannel]',
+    );
+    expect(sqlText).not.toContain(
+      'AND target.[ExternalTarifaId] = source.[ExternalTarifaId]',
+    );
+  });
+
   it('upsertInventario -> NO modifica StockReservado', async () => {
     const db = createDbMock();
     db.setResponder(() => ({ recordset: [] }));
