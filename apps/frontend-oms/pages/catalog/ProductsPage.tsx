@@ -1,475 +1,441 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../src/auth/useAuth';
-import { useProductosBootstrap } from '../../src/configuracion-general/useProductosBootstrap';
+import {
+  getZiCategorias,
+  getZiMarcas,
+  getZiProductoDetalle,
+  listZiCatalogo,
+} from '../../src/configuracion-general/zi-catalog.api';
+import type {
+  ZiCatalogListResult,
+  ZiCatalogProductoDetalle,
+  ZiCatalogTarifaItem,
+} from '../../src/configuracion-general/zi-catalog.api';
 import '../gestor/ProductoPage.css';
 import './ProductsPage.css';
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
-
-type CatalogFilters = {
-  empresaId: string;
-  categoriaId: string;
-  status: 'all' | 'active' | 'inactive';
-  search: string;
-};
-
-type ProductoSearchItem = {
-  productoId: number;
-  empresaId: number;
-  categoriaId?: number | null;
-  categoriaNombre?: string | null;
-  skuBase?: string;
-  nombre: string;
-  marca?: string | null;
-  descripcion?: string | null;
-  activo: boolean;
-  createdAt: string;
-  updatedAt?: string | null;
-  ziSyncedAt?: string | null;
-};
-
-type ProductosSearchResponse = {
-  productos: ProductoSearchItem[];
-};
 
 type FreshnessBadge = {
   className: 'is-unsynced' | 'is-fresh' | 'is-stale';
   label: string;
 };
 
-const INITIAL_FILTERS: CatalogFilters = {
-  empresaId: '0',
-  categoriaId: '0',
-  status: 'all',
-  search: '',
-};
-
-async function parseJsonResponse<T>(response: Response): Promise<T> {
-  const payload = (await response.json().catch(() => null)) as
-    | { message?: string | string[] }
-    | null;
-
-  if (!response.ok) {
-    const fallback = 'No se pudo completar la operacion';
-    const message = Array.isArray(payload?.message)
-      ? payload.message.join(', ')
-      : payload?.message ?? fallback;
-    throw new Error(message);
-  }
-
-  return payload as T;
-}
-
 function getFreshnessBadge(ziSyncedAt?: string | null): FreshnessBadge {
-  if (!ziSyncedAt) {
-    return {
-      className: 'is-unsynced',
-      label: 'Sin sincronizar',
-    };
-  }
+  if (!ziSyncedAt) return { className: 'is-unsynced', label: 'Sin sync' };
 
   const syncedAt = new Date(ziSyncedAt);
-  if (Number.isNaN(syncedAt.getTime())) {
-    return {
-      className: 'is-unsynced',
-      label: 'Sin sincronizar',
-    };
-  }
+  if (Number.isNaN(syncedAt.getTime())) return { className: 'is-unsynced', label: 'Sin sync' };
 
   const ageMs = Date.now() - syncedAt.getTime();
   const sixHoursMs = 6 * 60 * 60 * 1000;
 
   if (ageMs < sixHoursMs) {
-    const totalMinutes = Math.max(1, Math.floor(ageMs / 60000));
-    if (totalMinutes < 60) {
-      return {
-        className: 'is-fresh',
-        label: `Actualizado hace ${totalMinutes} min`,
-      };
-    }
-
-    const totalHours = Math.max(1, Math.floor(totalMinutes / 60));
-    return {
-      className: 'is-fresh',
-      label: `Actualizado hace ${totalHours} h`,
-    };
+    const totalMinutes = Math.max(1, Math.floor(ageMs / 60_000));
+    const label =
+      totalMinutes < 60
+        ? `Hace ${totalMinutes} min`
+        : `Hace ${Math.floor(totalMinutes / 60)} h`;
+    return { className: 'is-fresh', label };
   }
 
-  return {
-    className: 'is-stale',
-    label: 'Datos pueden estar desactualizados',
-  };
+  return { className: 'is-stale', label: '⚠ Desactualizado' };
 }
+
+function sortTarifas(tarifas: ZiCatalogTarifaItem[]): ZiCatalogTarifaItem[] {
+  const order = (canal: string) => (canal === 'COLOMBIA' ? 0 : canal === 'UNICO' ? 1 : 2);
+  return [...tarifas].sort((a, b) => order(a.comercialChannel) - order(b.comercialChannel));
+}
+
+function formatPrice(value: number | null): string {
+  if (value === null) return '-';
+  return `$${value.toLocaleString('es-CO')}`;
+}
+
+const INITIAL_FILTROS = {
+  search: '',
+  categoriaId: '',
+  marca: '',
+  soloConStock: false,
+  page: 1,
+  pageSize: 50,
+};
+
+type Filtros = typeof INITIAL_FILTROS;
 
 export function ProductsPage() {
   const { accessToken } = useAuth();
-  const {
-    productos,
-    empresas,
-    categorias,
-    isLoading: isBootstrapLoading,
-    error: bootstrapError,
-  } = useProductosBootstrap();
-  const [filters, setFilters] = useState<CatalogFilters>(INITIAL_FILTERS);
-  const [productCode, setProductCode] = useState('');
-  const [searchResult, setSearchResult] = useState<ProductoSearchItem[]>([]);
+
+  const [productos, setProductos] = useState<ZiCatalogListResult | null>(null);
+  const [marcas, setMarcas] = useState<string[]>([]);
+  const [categorias, setCategorias] = useState<
+    { categoriaId: number; nombre: string; total: number }[]
+  >([]);
+  const [filtros, setFiltros] = useState<Filtros>(INITIAL_FILTROS);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [detalleId, setDetalleId] = useState<number | null>(null);
+  const [detalle, setDetalle] = useState<ZiCatalogProductoDetalle | null>(null);
+  const [detalleLoading, setDetalleLoading] = useState(false);
 
-  const empresaMap = useMemo(() => {
-    const map = new Map<number, { empresaId: number; codigo: string; nombre: string }>();
-    empresas.forEach((empresa) => {
-      map.set(empresa.empresaId, empresa);
-    });
-    return map;
-  }, [empresas]);
+  // Keep a ref to always access latest filtros inside debounce timeout
+  const filtrosRef = useRef<Filtros>(INITIAL_FILTROS);
+  filtrosRef.current = filtros;
 
-  const categoriaMap = useMemo(() => {
-    const map = new Map<number, { categoriaId: number; empresaId: number; nombre: string }>();
-    categorias.forEach((categoria) => {
-      map.set(categoria.categoriaId, categoria);
-    });
-    return map;
-  }, [categorias]);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const categoriasFiltrables = useMemo(() => {
-    const selectedEmpresaId = Number(filters.empresaId);
-    if (!Number.isInteger(selectedEmpresaId) || selectedEmpresaId <= 0) {
-      return categorias;
-    }
-    return categorias.filter((categoria) => categoria.empresaId === selectedEmpresaId);
-  }, [categorias, filters.empresaId]);
-
-  const selectedCategoriaId = useMemo(() => {
-    const categoriaId = Number(filters.categoriaId);
-    const categoriaValida = categoriasFiltrables.some(
-      (categoria) => categoria.categoriaId === categoriaId,
-    );
-    return categoriaValida ? categoriaId : 0;
-  }, [categoriasFiltrables, filters.categoriaId]);
-
-  const filteredProductos = useMemo(() => {
-    const selectedEmpresaId = Number(filters.empresaId);
-    const search = filters.search.trim().toLowerCase();
-
-    return [...productos]
-      .filter((producto) => {
-        if (Number.isInteger(selectedEmpresaId) && selectedEmpresaId > 0) {
-          return producto.empresaId === selectedEmpresaId;
-        }
-        return true;
-      })
-      .filter((producto) => {
-        if (Number.isInteger(selectedCategoriaId) && selectedCategoriaId > 0) {
-          return producto.categoriaId === selectedCategoriaId;
-        }
-        return true;
-      })
-      .filter((producto) => {
-        if (filters.status === 'active') {
-          return producto.activo;
-        }
-        if (filters.status === 'inactive') {
-          return !producto.activo;
-        }
-        return true;
-      })
-      .filter((producto) => {
-        if (!search) {
-          return true;
-        }
-        const searchIndex = `${producto.nombre} ${producto.skuBase ?? ''} ${
-          producto.marca ?? ''
-        }`.toLowerCase();
-        return searchIndex.includes(search);
-      })
-      .sort((a, b) => {
-        const byNombre = a.nombre.localeCompare(b.nombre);
-        return byNombre !== 0 ? byNombre : a.productoId - b.productoId;
-      });
-  }, [filters.empresaId, filters.search, filters.status, productos, selectedCategoriaId]);
-
-  function formatDate(value?: string | null): string {
-    if (!value) {
-      return '-';
-    }
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('es-CO');
-  }
-
-  const hasActiveFilters =
-    filters.empresaId !== '0' ||
-    selectedCategoriaId !== 0 ||
-    filters.status !== 'all' ||
-    filters.search.trim().length > 0;
-
-  async function handleDbSearch(): Promise<void> {
-    const code = productCode.trim();
-    if (!code) {
-      setError('Ingresa un codigo de producto');
-      setSearchResult([]);
-      return;
-    }
-    if (!accessToken) {
-      setError('Sesion no disponible');
-      setSearchResult([]);
-      return;
-    }
-
+  function fetchList(params: Filtros) {
+    if (!accessToken) return;
     setIsLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch(
-        `${API_URL}/configuracion-general/producto?search=${encodeURIComponent(code)}`,
-        {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
-
-      const payload = await parseJsonResponse<ProductosSearchResponse>(response);
-      setSearchResult(payload.productos);
-
-      if (payload.productos.length === 0) {
-        setError(`No se encontro informacion del producto ${code} en BD`);
-      }
-    } catch (requestError) {
-      const message =
-        requestError instanceof Error
-          ? requestError.message
-          : 'No se pudo consultar productos en BD';
-      setError(message);
-      setSearchResult([]);
-    } finally {
-      setIsLoading(false);
-    }
+    setError(null);
+    listZiCatalogo(accessToken, params)
+      .then((result) => setProductos(result))
+      .catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : 'Error cargando datos'),
+      )
+      .finally(() => setIsLoading(false));
   }
+
+  // Initial load
+  useEffect(() => {
+    if (!accessToken) return;
+    let cancelled = false;
+    setIsLoading(true);
+
+    Promise.all([
+      listZiCatalogo(accessToken, { page: 1, pageSize: 50 }),
+      getZiMarcas(accessToken),
+      getZiCategorias(accessToken),
+    ])
+      .then(([result, marcasData, categoriasData]) => {
+        if (cancelled) return;
+        setProductos(result);
+        setMarcas(marcasData);
+        setCategorias(categoriasData);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'Error cargando catalogo');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Detail load
+  useEffect(() => {
+    if (detalleId === null) {
+      setDetalle(null);
+      return;
+    }
+    if (!accessToken) return;
+
+    let cancelled = false;
+    setDetalleLoading(true);
+
+    getZiProductoDetalle(accessToken, detalleId)
+      .then((d) => {
+        if (!cancelled) setDetalle(d);
+      })
+      .catch(() => {
+        if (!cancelled) setDetalle(null);
+      })
+      .finally(() => {
+        if (!cancelled) setDetalleLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [detalleId, accessToken]);
+
+  function handleSearchChange(value: string) {
+    setFiltros((prev) => ({ ...prev, search: value }));
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      const newFiltros = { ...filtrosRef.current, page: 1 };
+      setFiltros(newFiltros);
+      fetchList(newFiltros);
+    }, 400);
+  }
+
+  function handleFilterChange(
+    key: 'categoriaId' | 'marca' | 'soloConStock',
+    value: string | boolean,
+  ) {
+    const newFiltros = { ...filtros, [key]: value, page: 1 };
+    setFiltros(newFiltros);
+    fetchList(newFiltros);
+  }
+
+  function handlePageChange(newPage: number) {
+    const newFiltros = { ...filtros, page: newPage };
+    setFiltros(newFiltros);
+    fetchList(newFiltros);
+  }
+
+  function handleRowClick(productoId: number) {
+    setDetalleId((prev) => (prev === productoId ? null : productoId));
+  }
+
+  function handleClearFiltros() {
+    setFiltros(INITIAL_FILTROS);
+    fetchList(INITIAL_FILTROS);
+  }
+
+  const totalPages = productos?.totalPages ?? 1;
+  const currentPage = filtros.page;
 
   return (
     <section className="producto-page">
       <header className="producto-header">
-        <h1>Productos</h1>
-        <p>Consulta de catalogo con filtros por categoria, empresa, estado y busqueda.</p>
+        <h1>Catalogo ZI</h1>
+        <p>Productos sincronizados desde ZI. Filtros, paginacion y detalle por variante.</p>
       </header>
 
-      {bootstrapError && <p className="producto-error">{bootstrapError}</p>}
+      {error && <p className="producto-error">{error}</p>}
 
-      <article className="producto-card">
-        <h2>Consulta BD por codigo</h2>
-        <div className="catalog-products-zi-search">
-          <input
-            type="text"
-            value={productCode}
-            onChange={(event) => setProductCode(event.target.value)}
-            placeholder="Codigo de producto (SKU base o nombre)"
-            maxLength={120}
-          />
-          <button type="button" onClick={() => void handleDbSearch()} disabled={isLoading}>
-            Buscar
-          </button>
-        </div>
-
-        {isLoading && <p className="producto-loading">Consultando BD...</p>}
-        {error && <p className="producto-error">{error}</p>}
-
-        {searchResult.length > 0 && (
-          <div className="producto-table-wrap">
-            <table className="producto-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>SKU base</th>
-                  <th>Nombre</th>
-                  <th>Marca</th>
-                  <th>Frescura ZI</th>
-                </tr>
-              </thead>
-              <tbody>
-                {searchResult.map((producto) => {
-                  const freshness = getFreshnessBadge(producto.ziSyncedAt);
-                  return (
-                    <tr key={`search-${producto.productoId}`}>
-                      <td>{producto.productoId}</td>
-                      <td>{producto.skuBase ?? '-'}</td>
-                      <td>{producto.nombre}</td>
-                      <td>{producto.marca ?? '-'}</td>
-                      <td>
-                        <span className={`catalog-products-sync-badge ${freshness.className}`}>
-                          {freshness.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </article>
-
+      {/* Filtros */}
       <article className="producto-card">
         <div className="catalog-products-filters-header">
           <h2>Filtros</h2>
-          <button
-            type="button"
-            className="catalog-products-clear-btn"
-            onClick={() => setFilters(INITIAL_FILTERS)}
-            disabled={!hasActiveFilters}
-          >
+          <button type="button" className="catalog-products-clear-btn" onClick={handleClearFiltros}>
             Limpiar filtros
           </button>
         </div>
 
         <div className="catalog-products-filters-grid">
           <label>
-            Empresa
-            <select
-              value={filters.empresaId}
-              onChange={(event) =>
-                setFilters((previous) => ({
-                  ...previous,
-                  empresaId: event.target.value,
-                }))
-              }
-            >
-              <option value="0">Todas</option>
-              {empresas.map((empresa) => (
-                <option key={empresa.empresaId} value={String(empresa.empresaId)}>
-                  {empresa.nombre} ({empresa.codigo})
-                </option>
-              ))}
-            </select>
+            Buscar
+            <input
+              type="text"
+              value={filtros.search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Referencia, nombre..."
+              maxLength={255}
+            />
           </label>
 
           <label>
             Categoria
             <select
-              value={String(selectedCategoriaId)}
-              onChange={(event) =>
-                setFilters((previous) => ({
-                  ...previous,
-                  categoriaId: event.target.value,
-                }))
-              }
+              value={filtros.categoriaId}
+              onChange={(e) => handleFilterChange('categoriaId', e.target.value)}
             >
-              <option value="0">Todas</option>
-              {categoriasFiltrables.map((categoria) => (
-                <option key={categoria.categoriaId} value={String(categoria.categoriaId)}>
-                  {categoria.nombre}
+              <option value="">Todas</option>
+              {categorias.map((cat) => (
+                <option key={cat.categoriaId} value={String(cat.categoriaId)}>
+                  {cat.nombre} ({cat.total})
                 </option>
               ))}
             </select>
           </label>
 
           <label>
-            Estado
+            Marca
             <select
-              value={filters.status}
-              onChange={(event) =>
-                setFilters((previous) => ({
-                  ...previous,
-                  status: event.target.value as CatalogFilters['status'],
-                }))
-              }
+              value={filtros.marca}
+              onChange={(e) => handleFilterChange('marca', e.target.value)}
             >
-              <option value="all">Todos</option>
-              <option value="active">Activos</option>
-              <option value="inactive">Inactivos</option>
+              <option value="">Todas</option>
+              {marcas.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
             </select>
           </label>
 
-          <label>
-            Buscar
+          <label className="catalog-products-checkbox-label">
             <input
-              type="text"
-              value={filters.search}
-              onChange={(event) =>
-                setFilters((previous) => ({
-                  ...previous,
-                  search: event.target.value,
-                }))
-              }
-              placeholder="Nombre, SKU o marca"
-              maxLength={255}
+              type="checkbox"
+              checked={filtros.soloConStock}
+              onChange={(e) => handleFilterChange('soloConStock', e.target.checked)}
             />
+            Solo con stock
           </label>
         </div>
       </article>
 
+      {/* Tabla */}
       <article className="producto-card">
-        <h2>Listado de productos ({filteredProductos.length})</h2>
-        {isBootstrapLoading ? (
-          <p className="producto-loading">Cargando productos...</p>
+        <h2>
+          Productos{' '}
+          {productos && (
+            <span className="catalog-products-count">
+              ({productos.total.toLocaleString('es-CO')})
+            </span>
+          )}
+        </h2>
+
+        {isLoading ? (
+          <p className="producto-loading">Cargando...</p>
         ) : (
           <div className="producto-table-wrap">
-            <table className="producto-table">
+            <table className="producto-table catalog-products-main-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Empresa</th>
-                  <th>Categoria</th>
-                  <th>SKU base</th>
+                  <th>Referencia</th>
                   <th>Nombre</th>
-                  <th>Marca</th>
-                  <th>Activo</th>
-                  <th>Creado</th>
-                  <th>Actualizado</th>
-                  <th>Frescura ZI</th>
+                  <th>Categoria</th>
+                  <th>Precio</th>
+                  <th>Stock</th>
+                  <th>Sync</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredProductos.length === 0 ? (
+                {!productos || productos.items.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="producto-empty-cell">
-                      {productos.length === 0
-                        ? 'No hay productos registrados'
-                        : 'No se encontraron productos con los filtros actuales'}
+                    <td colSpan={6} className="producto-empty-cell">
+                      No hay productos con los filtros actuales
                     </td>
                   </tr>
                 ) : (
-                  filteredProductos.map((producto) => {
-                    const empresa = empresaMap.get(producto.empresaId);
-                    const categoria =
-                      (producto.categoriaId
-                        ? categoriaMap.get(producto.categoriaId)?.nombre
-                        : null) ??
-                      producto.categoriaNombre ??
-                      'Sin categoria';
-
-                    const freshness = getFreshnessBadge(
-                      (producto as ProductoSearchItem).ziSyncedAt,
-                    );
+                  productos.items.map((producto) => {
+                    const isExpanded = detalleId === producto.productoId;
+                    const freshness = getFreshnessBadge(producto.ziSyncedAt);
 
                     return (
-                      <tr key={producto.productoId}>
-                        <td>{producto.productoId}</td>
-                        <td>
-                          {empresa
-                            ? `${empresa.nombre} (${empresa.codigo})`
-                            : `EmpresaId ${producto.empresaId}`}
-                        </td>
-                        <td>{categoria}</td>
-                        <td>{producto.skuBase ?? '-'}</td>
-                        <td>{producto.nombre}</td>
-                        <td>{producto.marca ?? '-'}</td>
-                        <td>{producto.activo ? 'Si' : 'No'}</td>
-                        <td>{formatDate(producto.createdAt)}</td>
-                        <td>{formatDate(producto.updatedAt)}</td>
-                        <td>
-                          <span className={`catalog-products-sync-badge ${freshness.className}`}>
-                            {freshness.label}
-                          </span>
-                        </td>
-                      </tr>
+                      <Fragment key={producto.productoId}>
+                        <tr
+                          className={`catalog-products-row${isExpanded ? ' is-expanded' : ''}`}
+                          onClick={() => handleRowClick(producto.productoId)}
+                        >
+                          <td>
+                            <span className="catalog-products-sku">{producto.skuBase}</span>
+                          </td>
+                          <td className="catalog-products-nombre">{producto.nombre}</td>
+                          <td>{producto.categoriaNombre ?? '-'}</td>
+                          <td>{formatPrice(producto.precioBaseMin)}</td>
+                          <td>
+                            {producto.stockTotal > 0 ? (
+                              <span className="catalog-products-badge is-stock">Con stock</span>
+                            ) : (
+                              <span className="catalog-products-badge is-no-stock">Sin stock</span>
+                            )}
+                          </td>
+                          <td>
+                            {freshness.className !== 'is-fresh' ? (
+                              <span
+                                className={`catalog-products-sync-badge ${freshness.className}`}
+                              >
+                                {freshness.label}
+                              </span>
+                            ) : (
+                              <span
+                                className="catalog-products-dot-fresh"
+                                title={freshness.label}
+                              />
+                            )}
+                          </td>
+                        </tr>
+
+                        {isExpanded && (
+                          <tr className="catalog-products-detail-row">
+                            <td colSpan={6}>
+                              {detalleLoading ? (
+                                <p className="producto-loading">Cargando detalle...</p>
+                              ) : detalle ? (
+                                <div className="catalog-products-detail">
+                                  {/* Variantes */}
+                                  <div className="catalog-products-detail-section">
+                                    <h4>Variantes ({detalle.variantes.length})</h4>
+                                    <table className="producto-table catalog-products-sub-table">
+                                      <thead>
+                                        <tr>
+                                          <th>SKU</th>
+                                          <th>Talla</th>
+                                          <th>Color</th>
+                                          <th>EAN</th>
+                                          <th>Stock disp.</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {detalle.variantes.map((v) => (
+                                          <tr key={String(v.varianteId)}>
+                                            <td>{v.sku}</td>
+                                            <td>{v.nombreTalla ?? v.talla ?? '-'}</td>
+                                            <td>{v.nombreColor ?? v.color ?? '-'}</td>
+                                            <td>{v.ean}</td>
+                                            <td>{v.stockDisponible}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+
+                                  {/* Tarifas */}
+                                  <div className="catalog-products-detail-section">
+                                    <h4>Tarifas ({detalle.tarifas.length})</h4>
+                                    <table className="producto-table catalog-products-sub-table">
+                                      <thead>
+                                        <tr>
+                                          <th>Canal</th>
+                                          <th>Moneda</th>
+                                          <th>Precio base</th>
+                                          <th>Oferta</th>
+                                          <th>Impuesto</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {sortTarifas(detalle.tarifas).map((t) => (
+                                          <tr key={String(t.tarifaId)}>
+                                            <td>{t.comercialChannel}</td>
+                                            <td>{t.monedaCodigo}</td>
+                                            <td>{formatPrice(t.precioBase)}</td>
+                                            <td>
+                                              {t.tieneOfertaActiva && t.precioOferta !== null ? (
+                                                <strong className="catalog-products-oferta">
+                                                  {formatPrice(t.precioOferta)}
+                                                </strong>
+                                              ) : (
+                                                '-'
+                                              )}
+                                            </td>
+                                            <td>{t.impuestoPct}%</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              ) : null}
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     );
                   })
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Paginacion */}
+        {productos && productos.totalPages > 1 && (
+          <div className="catalog-products-pagination">
+            <button
+              type="button"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1 || isLoading}
+            >
+              Anterior
+            </button>
+            <span>
+              Pagina {currentPage} de {totalPages} ({productos.total.toLocaleString('es-CO')}{' '}
+              productos)
+            </span>
+            <button
+              type="button"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages || isLoading}
+            >
+              Siguiente
+            </button>
           </div>
         )}
       </article>
