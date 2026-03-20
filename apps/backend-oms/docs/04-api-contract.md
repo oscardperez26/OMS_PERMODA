@@ -64,6 +64,21 @@ Base path: `/configuracion-general/catalogo-zi`
     - variantes (talla/color/stock),
     - tarifas activas y oferta vigente en UTC.
 
+- `GET /ops/status`
+  - Permission: `config.read`
+  - Retorna estado operativo de Zona de Integracion para ZI:
+    - `jobs` (ZI autosync, Entrantes autosync, Orders legacy),
+    - `alerts` (incluye `WARN` cuando `INBOUND_SYNC_JOB_ENABLED=true` y `ORDERS_SYNC_FULL_JOB_ENABLED=true`),
+    - `healthSummary` (corridas 24h + ultimo estado),
+    - `ziLastRuns` (ultimas corridas registradas en `oms.ZiSyncLog`).
+
+### Politica operativa recomendada
+
+- Operacion normal: usar un solo orquestador de autosync para pedidos entrantes.
+- Recomendado:
+  - `INBOUND_SYNC_JOB_ENABLED=true`
+  - `ORDERS_SYNC_FULL_JOB_ENABLED=false`
+
 ## Producto
 
 Base path: `/configuracion-general/producto`

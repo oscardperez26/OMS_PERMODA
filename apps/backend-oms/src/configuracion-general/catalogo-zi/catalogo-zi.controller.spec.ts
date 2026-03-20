@@ -7,6 +7,7 @@ import { ZiTokenManagerService } from './auth/zi-token-manager.service';
 import { ZiCatalogService } from './catalog/zi-catalog.service';
 import { CatalogoZiController } from './catalogo-zi.controller';
 import { CatalogoZiService } from './catalogo-zi.service';
+import { ZiOpsService } from './ops/zi-ops.service';
 import { ZiSyncSchedulerService } from './scheduler/zi-sync.scheduler';
 import { ZiPersistService } from './zi-persist.service';
 
@@ -38,6 +39,10 @@ describe('CatalogoZiController', () => {
     runFullSync: jest.fn(),
   } as unknown as ZiSyncSchedulerService;
 
+  const opsService = {
+    getStatus: jest.fn(),
+  } as unknown as ZiOpsService;
+
   const catalogService = {
     listProductos: jest.fn(),
     getProductoDetalle: jest.fn(),
@@ -57,6 +62,7 @@ describe('CatalogoZiController', () => {
         { provide: ZiTokenManagerService, useValue: tokenManager },
         { provide: ZiPersistService, useValue: persistService },
         { provide: ZiSyncSchedulerService, useValue: scheduler },
+        { provide: ZiOpsService, useValue: opsService },
         { provide: ZiCatalogService, useValue: catalogService },
       ],
     }).compile();
@@ -238,5 +244,59 @@ describe('CatalogoZiController', () => {
     );
 
     expect(response.status).toBe(404);
+  });
+
+  it('GET /ops/status responde 200 con estado operativo', async () => {
+    opsService.getStatus = jest.fn().mockResolvedValue({
+      status: 'WARN',
+      message: 'Zona de Integracion operando con alertas.',
+      jobs: {
+        zi: {
+          enabled: true,
+          cron: {
+            stock: '*/20 * * * *',
+            precios: '0 */2 * * *',
+            productos: '0 */6 * * *',
+            categorias: '0 0 * * *',
+          },
+          config: { empresaId: 1, batchSize: 100 },
+        },
+        inbound: {
+          enabled: true,
+          cron: '*/5 * * * *',
+          initialDelayMs: 15000,
+          limit: 200,
+          maxConnectors: 10,
+        },
+        ordersLegacy: {
+          enabled: true,
+          intervalMs: 300000,
+          initialDelayMs: 15000,
+          limit: 200,
+        },
+      },
+      alerts: [
+        {
+          level: 'WARN',
+          code: 'DUPLICATE_ORDERS_SYNC_JOBS',
+          message: 'Duplicidad de jobs',
+        },
+      ],
+      healthSummary: {
+        lastRunAt: null,
+        lastStatus: 'UNKNOWN',
+        lastError: null,
+        runs24h: { total: 0, ok: 0, error: 0 },
+      },
+      ziLastRuns: [],
+    });
+
+    const response = await request(app.getHttpServer()).get(
+      '/configuracion-general/catalogo-zi/ops/status',
+    );
+
+    expect(response.status).toBe(200);
+    expect(opsService.getStatus).toHaveBeenCalledTimes(1);
+    expect(response.body.status).toBe('WARN');
   });
 });

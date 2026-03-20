@@ -13,6 +13,13 @@ import {
   type IntegracionEntranteRunLog,
   type IntegracionesEntrantesBootstrapResponse,
 } from '../../src/configuracion-general/integraciones-entrantes.api';
+import {
+  getZiOpsStatus,
+  syncZiCategorias,
+  syncZiFull,
+  syncZiProducto,
+  type ZiOpsStatus,
+} from '../../src/configuracion-general/zi-catalog.api';
 import { ROUTES } from '../../src/routes/routes';
 import './IntegracionesEntrantesPage.css';
 
@@ -74,6 +81,19 @@ function toDurationLabel(value?: number | null): string {
   return `${Math.floor(value)} ms`;
 }
 
+function toOpsBadgeClass(status?: string | null): string {
+  if (status === 'OK') {
+    return 'integraciones-ops-badge-ok';
+  }
+  if (status === 'WARN') {
+    return 'integraciones-ops-badge-warn';
+  }
+  if (status === 'ERROR') {
+    return 'integraciones-ops-badge-error';
+  }
+  return 'integraciones-ops-badge-neutral';
+}
+
 function mapItemToForm(item: IntegracionEntranteListItem): FormState {
   return {
     empresaId: String(item.empresaId),
@@ -123,6 +143,13 @@ export function IntegracionesEntrantesPage() {
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [ziOps, setZiOps] = useState<ZiOpsStatus | null>(null);
+  const [ziOpsLoading, setZiOpsLoading] = useState(false);
+  const [ziOpsError, setZiOpsError] = useState('');
+  const [ziActionLoading, setZiActionLoading] = useState<
+    'full' | 'categorias' | 'producto' | null
+  >(null);
+  const [ziProductoId, setZiProductoId] = useState('');
 
   async function loadData() {
     if (!accessToken) {
@@ -143,6 +170,29 @@ export function IntegracionesEntrantesPage() {
       setError(message);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function loadZiOpsStatus() {
+    if (!accessToken) {
+      setZiOps(null);
+      setZiOpsLoading(false);
+      return;
+    }
+
+    setZiOpsLoading(true);
+    setZiOpsError('');
+    try {
+      const payload = await getZiOpsStatus(accessToken);
+      setZiOps(payload);
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'No se pudo cargar el estado operativo de ZI';
+      setZiOpsError(message);
+    } finally {
+      setZiOpsLoading(false);
     }
   }
 
@@ -174,6 +224,7 @@ export function IntegracionesEntrantesPage() {
 
   useEffect(() => {
     void loadData();
+    void loadZiOpsStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
@@ -453,6 +504,79 @@ export function IntegracionesEntrantesPage() {
       setError(message);
     } finally {
       setSyncingById(null);
+    }
+  }
+
+  async function handleZiSyncFull() {
+    if (!accessToken || !canManage) {
+      return;
+    }
+    setZiActionLoading('full');
+    setError('');
+    setSuccess('');
+    try {
+      await syncZiFull(accessToken);
+      setSuccess('Sincronizacion ZI full ejecutada correctamente.');
+      await loadZiOpsStatus();
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'No se pudo ejecutar sincronizacion ZI full';
+      setError(message);
+    } finally {
+      setZiActionLoading(null);
+    }
+  }
+
+  async function handleZiSyncCategorias() {
+    if (!accessToken || !canManage) {
+      return;
+    }
+    setZiActionLoading('categorias');
+    setError('');
+    setSuccess('');
+    try {
+      await syncZiCategorias(accessToken);
+      setSuccess('Sincronizacion de categorias ZI ejecutada correctamente.');
+      await loadZiOpsStatus();
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'No se pudo sincronizar categorias de ZI';
+      setError(message);
+    } finally {
+      setZiActionLoading(null);
+    }
+  }
+
+  async function handleZiSyncProducto() {
+    if (!accessToken || !canManage) {
+      return;
+    }
+
+    const productoId = Number(ziProductoId);
+    if (!Number.isInteger(productoId) || productoId <= 0) {
+      setError('Producto ZI debe ser un numero entero mayor a 0.');
+      return;
+    }
+
+    setZiActionLoading('producto');
+    setError('');
+    setSuccess('');
+    try {
+      await syncZiProducto(accessToken, productoId);
+      setSuccess(`Sincronizacion puntual del producto ZI ${productoId} completada.`);
+      await loadZiOpsStatus();
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : `No se pudo sincronizar el producto ZI ${productoId}`;
+      setError(message);
+    } finally {
+      setZiActionLoading(null);
     }
   }
 
@@ -1138,8 +1262,178 @@ export function IntegracionesEntrantesPage() {
       )}
 
       <article className="integraciones-entrantes-card">
-        <h2>Zona de Integracion (placeholder)</h2>
-        <p>{bootstrap?.zonaIntegracion.message ?? 'Pendiente de implementacion.'}</p>
+        <div className="integraciones-ops-header">
+          <h2>Zona de Integracion (ZI + Entrantes)</h2>
+          <span className={`integraciones-ops-badge ${toOpsBadgeClass(ziOps?.status)}`}>
+            {ziOps?.status ?? 'Cargando'}
+          </span>
+        </div>
+
+        {ziOpsLoading ? (
+          <p className="integraciones-entrantes-loading">
+            Cargando estado operativo de la zona de integracion...
+          </p>
+        ) : ziOpsError ? (
+          <p className="integraciones-entrantes-error">{ziOpsError}</p>
+        ) : !ziOps ? (
+          <p className="integraciones-entrantes-loading">
+            Estado operativo no disponible.
+          </p>
+        ) : (
+          <>
+            <p className="integraciones-entrantes-help">{ziOps.message}</p>
+
+            <div className="integraciones-entrantes-detail-grid">
+              <div>
+                <span>Autosync Entrantes</span>
+                <strong>{ziOps.jobs.inbound.enabled ? 'Activo' : 'Inactivo'}</strong>
+                <small>
+                  Cron {ziOps.jobs.inbound.cron} | Limit {ziOps.jobs.inbound.limit} |
+                  Max conectores {ziOps.jobs.inbound.maxConnectors}
+                </small>
+              </div>
+              <div>
+                <span>Autosync ZI</span>
+                <strong>{ziOps.jobs.zi.enabled ? 'Activo' : 'Inactivo'}</strong>
+                <small>
+                  Stock {ziOps.jobs.zi.cron.stock} | Precios {ziOps.jobs.zi.cron.precios}
+                </small>
+              </div>
+              <div>
+                <span>Orders Legacy Job</span>
+                <strong>{ziOps.jobs.ordersLegacy.enabled ? 'Activo' : 'Inactivo'}</strong>
+                <small>
+                  Intervalo {ziOps.jobs.ordersLegacy.intervalMs} ms | Limit{' '}
+                  {ziOps.jobs.ordersLegacy.limit}
+                </small>
+              </div>
+              <div>
+                <span>Ultima corrida ZI</span>
+                <strong>{toLocalDate(ziOps.healthSummary.lastRunAt)}</strong>
+                <small>Estado: {ziOps.healthSummary.lastStatus}</small>
+              </div>
+              <div>
+                <span>Resumen 24h</span>
+                <strong>
+                  Total {ziOps.healthSummary.runs24h.total} | OK{' '}
+                  {ziOps.healthSummary.runs24h.ok} | Error{' '}
+                  {ziOps.healthSummary.runs24h.error}
+                </strong>
+              </div>
+              <div>
+                <span>Configuracion ZI</span>
+                <strong>
+                  Empresa {ziOps.jobs.zi.config.empresaId} | Batch{' '}
+                  {ziOps.jobs.zi.config.batchSize}
+                </strong>
+              </div>
+              <div className="integraciones-entrantes-detail-full">
+                <span>Ultimo error ZI</span>
+                <strong>{ziOps.healthSummary.lastError ?? '-'}</strong>
+              </div>
+            </div>
+
+            {ziOps.alerts.length > 0 && (
+              <div className="integraciones-ops-alerts">
+                {ziOps.alerts.map((alert) => (
+                  <div key={`${alert.code}-${alert.level}`} className="integraciones-ops-alert-item">
+                    <span className={`integraciones-ops-badge ${toOpsBadgeClass(alert.level)}`}>
+                      {alert.level}
+                    </span>
+                    <strong>{alert.code}</strong>
+                    <span>{alert.message}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {canManage && (
+              <div className="integraciones-ops-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={ziActionLoading !== null}
+                  onClick={() => void handleZiSyncFull()}
+                >
+                  {ziActionLoading === 'full' ? 'Sincronizando...' : 'Sync ZI Full'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={ziActionLoading !== null}
+                  onClick={() => void handleZiSyncCategorias()}
+                >
+                  {ziActionLoading === 'categorias'
+                    ? 'Sincronizando...'
+                    : 'Sync ZI Categorias'}
+                </button>
+                <div className="integraciones-ops-product-sync">
+                  <input
+                    type="number"
+                    min={1}
+                    placeholder="Producto ZI ID"
+                    value={ziProductoId}
+                    onChange={(event) => setZiProductoId(event.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    disabled={ziActionLoading !== null}
+                    onClick={() => void handleZiSyncProducto()}
+                  >
+                    {ziActionLoading === 'producto'
+                      ? 'Sincronizando...'
+                      : 'Sync ZI Producto'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <h3>Ultimas corridas ZI</h3>
+            {ziOps.ziLastRuns.length === 0 ? (
+              <p className="integraciones-entrantes-loading">
+                No hay corridas ZI registradas.
+              </p>
+            ) : (
+              <div className="integraciones-entrantes-table-wrap">
+                <table className="integraciones-entrantes-table">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Entidad</th>
+                      <th>Producto ZI</th>
+                      <th>Estado</th>
+                      <th>Duracion</th>
+                      <th>Registros</th>
+                      <th>Error</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ziOps.ziLastRuns.map((run) => (
+                      <tr key={`${run.createdAt}-${run.entity}-${run.productoZiId}`}>
+                        <td>{toLocalDate(run.createdAt)}</td>
+                        <td>{run.entity}</td>
+                        <td>{run.productoZiId}</td>
+                        <td>
+                          <span
+                            className={`integraciones-ops-badge ${toOpsBadgeClass(
+                              run.status === 'ok' ? 'OK' : 'ERROR',
+                            )}`}
+                          >
+                            {run.status === 'ok' ? 'OK' : 'ERROR'}
+                          </span>
+                        </td>
+                        <td>{toDurationLabel(run.durationMs)}</td>
+                        <td>{run.recordsUpdated}</td>
+                        <td>{run.error ?? '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
       </article>
     </section>
   );

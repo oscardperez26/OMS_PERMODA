@@ -70,6 +70,65 @@ export type ZiCatalogProductoDetalle = {
   tarifas: ZiCatalogTarifaItem[];
 };
 
+export type ZiOpsStatus = {
+  status: 'OK' | 'WARN' | 'ERROR';
+  message: string;
+  jobs: {
+    zi: {
+      enabled: boolean;
+      cron: {
+        stock: string;
+        precios: string;
+        productos: string;
+        categorias: string;
+      };
+      config: {
+        empresaId: number;
+        batchSize: number;
+      };
+    };
+    inbound: {
+      enabled: boolean;
+      cron: string;
+      initialDelayMs: number;
+      limit: number;
+      maxConnectors: number;
+    };
+    ordersLegacy: {
+      enabled: boolean;
+      intervalMs: number;
+      initialDelayMs: number;
+      limit: number;
+    };
+  };
+  alerts: Array<{
+    level: 'INFO' | 'WARN' | 'ERROR';
+    code: string;
+    message: string;
+  }>;
+  healthSummary: {
+    lastRunAt: string | null;
+    lastStatus: 'OK' | 'ERROR' | 'UNKNOWN';
+    lastError: string | null;
+    runs24h: {
+      total: number;
+      ok: number;
+      error: number;
+    };
+  };
+  ziLastRuns: Array<{
+    entity: string;
+    productoZiId: number;
+    status: 'ok' | 'error';
+    error: string | null;
+    recordsUpdated: number;
+    startedAt: string;
+    finishedAt: string;
+    createdAt: string;
+    durationMs: number;
+  }>;
+};
+
 async function parseJsonResponse<T>(response: Response): Promise<T> {
   const payload = (await response.json().catch(() => null)) as
     | { message?: string | string[] }
@@ -171,4 +230,57 @@ export async function getZiCategorias(
   });
 
   return parseJsonResponse<{ categoriaId: number; nombre: string; total: number }[]>(response);
+}
+
+export async function getZiOpsStatus(accessToken: string): Promise<ZiOpsStatus> {
+  const response = await fetch(`${API_URL}/configuracion-general/catalogo-zi/ops/status`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  return parseJsonResponse<ZiOpsStatus>(response);
+}
+
+export async function syncZiFull(
+  accessToken: string,
+): Promise<Record<string, unknown>> {
+  const response = await fetch(`${API_URL}/configuracion-general/catalogo-zi/sync/full`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  return parseJsonResponse<Record<string, unknown>>(response);
+}
+
+export async function syncZiCategorias(
+  accessToken: string,
+): Promise<Record<string, unknown>> {
+  const response = await fetch(
+    `${API_URL}/configuracion-general/catalogo-zi/sync/categorias`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+
+  return parseJsonResponse<Record<string, unknown>>(response);
+}
+
+export async function syncZiProducto(
+  accessToken: string,
+  productoId: number,
+): Promise<Record<string, unknown>> {
+  const response = await fetch(
+    `${API_URL}/configuracion-general/catalogo-zi/sync/producto/${productoId}`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+
+  return parseJsonResponse<Record<string, unknown>>(response);
 }

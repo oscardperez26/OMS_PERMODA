@@ -39,6 +39,26 @@ type ZiLogHashesRow = {
   HashStock: string | null;
 };
 
+type ZiSyncRecentLogRow = {
+  Entity: string;
+  ProductoZiId: number;
+  Status: string;
+  Error: string | null;
+  RecordsUpdated: number;
+  StartedAt: Date;
+  FinishedAt: Date;
+  CreatedAt: Date;
+};
+
+type ZiSyncSummaryRow = {
+  Total: number;
+  OkCount: number;
+  ErrorCount: number;
+  LastRunAt: Date | null;
+  LastStatus: string | null;
+  LastError: string | null;
+};
+
 type UpsertCategoriaInput = {
   empresaId: number;
   externalCategoryId: string;
@@ -878,6 +898,135 @@ export class ZiSyncRepository {
     };
   }
 
+  async listRecentLogs(
+    limit: number,
+  ): Promise<
+    Array<{
+      entity: string;
+      productoZiId: number;
+      status: 'ok' | 'error';
+      error: string | null;
+      recordsUpdated: number;
+      startedAt: string;
+      finishedAt: string;
+      createdAt: string;
+      durationMs: number;
+    }>
+  > {
+    const normalizedLimit = this.normalizePositiveInt(limit, 20, 100);
+    const result = await this.databaseService.execute<
+      sql.IResult<ZiSyncRecentLogRow>
+    >(
+      (pool) =>
+        pool
+          .request()
+          .input('Limit', sql.Int, normalizedLimit)
+          .query<ZiSyncRecentLogRow>(`
+            SET NOCOUNT ON;
+            SELECT TOP (@Limit)
+              [Entity],
+              [ProductoZiId],
+              [Status],
+              [Error],
+              [RecordsUpdated],
+              [StartedAt],
+              [FinishedAt],
+              [CreatedAt]
+            FROM [oms].[ZiSyncLog]
+            ORDER BY [CreatedAt] DESC;
+          `),
+      'zi.listRecentLogs',
+    );
+
+    return result.recordset
+      .filter((row) => row.Status === 'ok' || row.Status === 'error')
+      .map((row) => ({
+        entity: row.Entity,
+        productoZiId: row.ProductoZiId,
+        status: row.Status as 'ok' | 'error',
+        error: row.Error ?? null,
+        recordsUpdated: row.RecordsUpdated,
+        startedAt: row.StartedAt.toISOString(),
+        finishedAt: row.FinishedAt.toISOString(),
+        createdAt: row.CreatedAt.toISOString(),
+        durationMs: Math.max(
+          0,
+          row.FinishedAt.getTime() - row.StartedAt.getTime(),
+        ),
+      }));
+  }
+
+  async getSummaryLastHours(hours: number): Promise<{
+    total: number;
+    ok: number;
+    error: number;
+    lastRunAt: string | null;
+    lastStatus: 'ok' | 'error' | null;
+    lastError: string | null;
+  }> {
+    const normalizedHours = this.normalizePositiveInt(hours, 24, 168);
+    const result = await this.databaseService.execute<
+      sql.IResult<ZiSyncSummaryRow>
+    >(
+      (pool) =>
+        pool
+          .request()
+          .input('Hours', sql.Int, normalizedHours)
+          .query<ZiSyncSummaryRow>(`
+            SET NOCOUNT ON;
+            SELECT
+              (
+                SELECT COUNT(1)
+                FROM [oms].[ZiSyncLog]
+                WHERE [CreatedAt] >= DATEADD(HOUR, -@Hours, SYSUTCDATETIME())
+              ) AS [Total],
+              (
+                SELECT COUNT(1)
+                FROM [oms].[ZiSyncLog]
+                WHERE [CreatedAt] >= DATEADD(HOUR, -@Hours, SYSUTCDATETIME())
+                  AND [Status] = 'ok'
+              ) AS [OkCount],
+              (
+                SELECT COUNT(1)
+                FROM [oms].[ZiSyncLog]
+                WHERE [CreatedAt] >= DATEADD(HOUR, -@Hours, SYSUTCDATETIME())
+                  AND [Status] = 'error'
+              ) AS [ErrorCount],
+              (
+                SELECT TOP 1 [CreatedAt]
+                FROM [oms].[ZiSyncLog]
+                ORDER BY [CreatedAt] DESC
+              ) AS [LastRunAt],
+              (
+                SELECT TOP 1 [Status]
+                FROM [oms].[ZiSyncLog]
+                ORDER BY [CreatedAt] DESC
+              ) AS [LastStatus],
+              (
+                SELECT TOP 1 [Error]
+                FROM [oms].[ZiSyncLog]
+                ORDER BY [CreatedAt] DESC
+              ) AS [LastError];
+          `),
+      'zi.getSummaryLastHours',
+    );
+
+    const row = result.recordset[0];
+    const lastStatus =
+      row?.LastStatus === 'ok' || row?.LastStatus === 'error'
+        ? row.LastStatus
+        : null;
+
+    return {
+      total: row?.Total ?? 0,
+      ok: row?.OkCount ?? 0,
+      error: row?.ErrorCount ?? 0,
+      lastRunAt: row?.LastRunAt ? row.LastRunAt.toISOString() : null,
+      lastStatus,
+      lastError: row?.LastError ?? null,
+    };
+  }
+
   async saveLog(input: SaveZiLogInput): Promise<void> {
     await this.databaseService.execute(
       (pool) =>
@@ -926,6 +1075,17 @@ export class ZiSyncRepository {
           `),
       'zi.saveLog',
     );
+  }
+
+  private normalizePositiveInt(
+    value: number,
+    fallback: number,
+    maxValue: number,
+  ): number {
+    if (!Number.isFinite(value) || value <= 0) {
+      return fallback;
+    }
+    return Math.min(Math.floor(value), maxValue);
   }
 
   private toInt(value: string, field: string): number {

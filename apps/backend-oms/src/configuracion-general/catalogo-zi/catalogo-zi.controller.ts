@@ -15,6 +15,7 @@ import { ZiCatalogService } from './catalog/zi-catalog.service';
 import { ZiTokenManagerService } from './auth/zi-token-manager.service';
 import { CatalogoZiService } from './catalogo-zi.service';
 import { ZiProductQueryDto } from './dto/zi-product-query.dto';
+import { ZiOpsService } from './ops/zi-ops.service';
 import { ZiSyncSchedulerService } from './scheduler/zi-sync.scheduler';
 import { ZiPersistService } from './zi-persist.service';
 
@@ -27,6 +28,7 @@ export class CatalogoZiController {
     private readonly tokenManager: ZiTokenManagerService,
     private readonly persistService: ZiPersistService,
     private readonly scheduler: ZiSyncSchedulerService,
+    private readonly opsService: ZiOpsService,
   ) {}
 // Endpoint para verificar cambios en el catálogo Zi
   @Get('change')
@@ -81,6 +83,12 @@ export class CatalogoZiController {
   @Permissions('config.read')
   getProductoDetalle(@Param('productoId', ParseIntPipe) productoId: number) {
     return this.catalogService.getProductoDetalle(productoId);
+  }
+
+  @Get('ops/status')
+  @Permissions('config.read')
+  getOpsStatus() {
+    return this.opsService.getStatus();
   }
 
   @Post('auth/refresh')
