@@ -58,6 +58,7 @@ import { CatalogoInventarioPage } from '../../pages/gestor/CatalogoInventarioPag
 import { PagosIntegracionesPage } from '../../pages/gestor/PagosIntegracionesPage';
 import { SeguridadAccesosPage } from '../../pages/gestor/SeguridadAccesosPage';
 import { IntegracionesEntrantesPage } from '../../pages/gestor/IntegracionesEntrantesPage';
+import { ZiSyncPage } from '../../pages/gestor/ZiSyncPage';
 
 
 /**
@@ -260,6 +261,18 @@ export function AppRouter() {
                 requiredPermissions={['config.read']}
               >
                 <IntegracionesEntrantesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.ORDER_MANAGER_GENERAL_CONFIG_ZI_SYNC}
+            element={
+              <ProtectedRoute
+                loginPath="/panel/login"
+                requiredPermissions={['config.read']}
+              >
+                <ZiSyncPage />
               </ProtectedRoute>
             }
           />

@@ -56,6 +56,8 @@ export const ROUTES = {
     '/panel/order-manager/configuracion-general/pagos-integraciones/integraciones',
   ORDER_MANAGER_GENERAL_CONFIG_INTEGRACIONES_ENTRANTES:
     '/panel/order-manager/configuracion-general/pagos-integraciones/integraciones/entrantes',
+  ORDER_MANAGER_GENERAL_CONFIG_ZI_SYNC:
+    '/panel/order-manager/configuracion-general/pagos-integraciones/zi-sync',
   ORDER_MANAGER_GENERAL_CONFIG_COMERCIAL_STORE_PARAMS:
     '/panel/order-manager/configuracion-general/comercial/store-params',
   ORDER_MANAGER_SEGURIDAD_ACCESOS:

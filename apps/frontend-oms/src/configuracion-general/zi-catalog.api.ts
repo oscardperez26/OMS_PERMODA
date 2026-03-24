@@ -4,6 +4,16 @@ const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 const CATALOG_BASE = `${API_URL}/configuracion-general/catalogo-zi/catalog`;
 
+export class ZiCatalogApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'ZiCatalogApiError';
+    this.status = status;
+  }
+}
+
 export type ZiCatalogListResult = {
   items: ZiCatalogProductoListItem[];
   total: number;
@@ -139,7 +149,7 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
     const message = Array.isArray(payload?.message)
       ? payload.message.join(', ')
       : payload?.message ?? fallback;
-    throw new Error(message);
+    throw new ZiCatalogApiError(response.status, message);
   }
 
   return payload as T;

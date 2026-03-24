@@ -33,6 +33,15 @@ export function PagosIntegracionesPage() {
       permission: 'config.read',
       enabled: true,
     },
+    {
+      id: 'zi-sync',
+      title: 'Sincronizacion ZI',
+      description:
+        'Ejecucion one-click de sincronizacion ZI (full, categorias y producto).',
+      path: ROUTES.ORDER_MANAGER_GENERAL_CONFIG_ZI_SYNC,
+      permission: 'config.read',
+      enabled: true,
+    },
   ];
 
   return (
