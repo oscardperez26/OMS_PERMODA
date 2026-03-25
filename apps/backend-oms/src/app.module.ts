@@ -11,6 +11,7 @@ import { OrdersModule } from './orders/orders.module';
 import { BrandingModule } from './branding/branding.module';
 import { SecurityPermissionsModule } from './security-permissions/security-permissions.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ShopifyModule } from './shopify/shopify.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     SecurityPermissionsModule,
     ConfiguracionGeneralModule,
     OrdersModule,
+    ShopifyModule,
   ],
   controllers: [AppController],
   providers: [AppService],
