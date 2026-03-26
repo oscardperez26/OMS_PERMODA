@@ -14,7 +14,11 @@ import { CreateShopifyTestProductDto } from './dto/create-shopify-test-product.d
 import { SyncShopifyProductDto } from './dto/sync-shopify-product.dto';
 import { ShopifyAuthService } from './shopify-auth.service';
 import { ShopifyProductsService } from './shopify-products.service';
-import type { ShopifySyncProductResult } from './shopify-sync.types';
+import type {
+  ShopifyArchiveProductResult,
+  ShopifySyncInventoryResult,
+  ShopifySyncProductResult,
+} from './shopify-sync.types';
 import { ShopifyService } from './shopify.service';
 
 type RequestWithUser = Request & { user: SafeUser };
@@ -87,5 +91,41 @@ export class ShopifyController {
     @Req() req: RequestWithUser,
   ): Promise<ShopifySyncProductResult> {
     return this.shopifyProductsService.syncProduct(productoId, body, req.user);
+  }
+
+  /**
+   * Archiva un producto en Shopify (estado ARCHIVED).
+   * El producto debe tener un mapping SINCRONIZADO previo.
+   * Las variantes se conservan en Shopify para preservar historial de pedidos.
+   *
+   * @param productoId  ID del producto en oms.Producto
+   * @param body        { empresaId }
+   */
+  @Post('products/archive/:productoId')
+  @Permissions('config.manage')
+  async archiveProduct(
+    @Param('productoId', ParseIntPipe) productoId: number,
+    @Body() body: SyncShopifyProductDto,
+    @Req() req: RequestWithUser,
+  ): Promise<ShopifyArchiveProductResult> {
+    return this.shopifyProductsService.archiveProduct(productoId, body, req.user);
+  }
+
+  /**
+   * Sincroniza el inventario disponible de un producto OMS a Shopify.
+   * Requiere que el producto tenga variantes ya mapeadas con InventoryItemId.
+   * El locationId se toma de config.inventory.locationId (ConfigJson) o de SHOPIFY_LOCATION_ID (env).
+   *
+   * @param productoId  ID del producto en oms.Producto
+   * @param body        { empresaId }
+   */
+  @Post('inventory/sync/:productoId')
+  @Permissions('config.manage')
+  async syncInventory(
+    @Param('productoId', ParseIntPipe) productoId: number,
+    @Body() body: SyncShopifyProductDto,
+    @Req() req: RequestWithUser,
+  ): Promise<ShopifySyncInventoryResult> {
+    return this.shopifyProductsService.syncInventory(productoId, body, req.user);
   }
 }

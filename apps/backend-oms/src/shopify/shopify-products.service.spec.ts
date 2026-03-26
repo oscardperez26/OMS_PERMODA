@@ -104,6 +104,8 @@ describe('ShopifyProductsService — createTestProduct', () => {
       {} as ShopifyIntegracionSalienteRepository,
       {} as ShopifyOmsCatalogRepository,
       {} as ShopifyExternalMappingRepository,
+      {} as any, // ShopifyInventoryWriter (no usado en Phase 1 tests)
+      {} as any, // ConfigService (no usado en Phase 1 tests)
     );
   });
 
@@ -207,15 +209,20 @@ describe('ShopifyProductsService — syncProduct', () => {
     } as unknown as jest.Mocked<ShopifyOmsCatalogRepository>;
 
     mappingRepoMock = {
-      findProductMapping: jest.fn(),
+      reserveProductMapping: jest.fn().mockResolvedValue(null),
+      findProductMapping: jest.fn().mockResolvedValue(null),
       findVariantMappings: jest.fn(),
       upsertProductMapping: jest.fn().mockResolvedValue(undefined),
       upsertVariantMappings: jest.fn().mockResolvedValue(undefined),
+      markProductAndVariantsArchived: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ShopifyExternalMappingRepository>;
 
     writerMock = {
       create: jest.fn(),
       update: jest.fn(),
+      getProductVariants: jest.fn(),
+      addVariants: jest.fn().mockResolvedValue({ variants: [], warnings: [] }),
+      archiveProduct: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ShopifyProductWriter>;
 
     service = new ShopifyProductsService(
@@ -224,6 +231,8 @@ describe('ShopifyProductsService — syncProduct', () => {
       integracionRepoMock,
       catalogRepoMock,
       mappingRepoMock,
+      { setQuantities: jest.fn() } as any, // ShopifyInventoryWriter mock
+      { get: jest.fn().mockReturnValue(undefined) } as any, // ConfigService mock
     );
   });
 
@@ -272,9 +281,9 @@ describe('ShopifyProductsService — syncProduct', () => {
   });
 
   it('ejecuta path CREATED y persiste mapping cuando no existe mapping previo', async () => {
+    // reserveProductMapping devuelve null → sin mapping previo → path CREATED
     integracionRepoMock.findActiveForEmpresa.mockResolvedValue(ACTIVE_INTEGRACION);
     catalogRepoMock.findProductForSync.mockResolvedValue(OMS_AGGREGATE);
-    mappingRepoMock.findProductMapping.mockResolvedValue(null);
     writerMock.create.mockResolvedValue(WRITER_CREATE_RESULT);
 
     const result = await service.syncProduct(42, BASE_DTO, ADMIN_USER);
@@ -287,8 +296,46 @@ describe('ShopifyProductsService — syncProduct', () => {
     expect(result.variants[0].shopifyVariantId).toBe('gid://shopify/ProductVariant/2');
 
     expect(writerMock.create).toHaveBeenCalledTimes(1);
-    expect(mappingRepoMock.upsertProductMapping).toHaveBeenCalledTimes(1);
+    // Llamado dos veces: PENDIENTE (post-write inmediato) + SINCRONIZADO (post-variantes)
+    expect(mappingRepoMock.upsertProductMapping).toHaveBeenCalledTimes(2);
+    expect(mappingRepoMock.upsertProductMapping).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ estado: 'PENDIENTE', externalProductId: 'gid://shopify/Product/1' }),
+    );
+    expect(mappingRepoMock.upsertProductMapping).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ estado: 'SINCRONIZADO', externalProductId: 'gid://shopify/Product/1' }),
+    );
     expect(mappingRepoMock.upsertVariantMappings).toHaveBeenCalledTimes(1);
+  });
+
+  it('ejecuta path RECOVERY si existe PENDIENTE con GID real en Shopify', async () => {
+    const pendingMapping = {
+      integracionProductoExternoId: 5,
+      integracionSalienteId: 1,
+      productoId: 42,
+      externalProductId: 'gid://shopify/Product/1', // GID real — el write ya ocurrió
+      estado: 'PENDIENTE',
+      createdAt: new Date(),
+      updatedAt: null,
+    };
+
+    integracionRepoMock.findActiveForEmpresa.mockResolvedValue(ACTIVE_INTEGRACION);
+    catalogRepoMock.findProductForSync.mockResolvedValue(OMS_AGGREGATE);
+    mappingRepoMock.reserveProductMapping.mockResolvedValue(pendingMapping);
+    writerMock.getProductVariants.mockResolvedValue(WRITER_CREATE_RESULT);
+
+    const result = await service.syncProduct(42, BASE_DTO, ADMIN_USER);
+
+    expect(result.ok).toBe(true);
+    expect(result.mode).toBe('CREATED');
+    expect(writerMock.getProductVariants).toHaveBeenCalledWith('gid://shopify/Product/1');
+    expect(writerMock.create).not.toHaveBeenCalled();
+    // Solo llama SINCRONIZADO al final (no vuelve a llamar PENDIENTE)
+    expect(mappingRepoMock.upsertProductMapping).toHaveBeenCalledTimes(1);
+    expect(mappingRepoMock.upsertProductMapping).toHaveBeenCalledWith(
+      expect.objectContaining({ estado: 'SINCRONIZADO' }),
+    );
   });
 
   it('ejecuta path UPDATED y persiste mapping cuando ya existe mapping previo', async () => {
@@ -315,7 +362,7 @@ describe('ShopifyProductsService — syncProduct', () => {
 
     integracionRepoMock.findActiveForEmpresa.mockResolvedValue(ACTIVE_INTEGRACION);
     catalogRepoMock.findProductForSync.mockResolvedValue(OMS_AGGREGATE);
-    mappingRepoMock.findProductMapping.mockResolvedValue(existingMapping);
+    mappingRepoMock.reserveProductMapping.mockResolvedValue(existingMapping);
     mappingRepoMock.findVariantMappings.mockResolvedValue([existingVariantMapping]);
     writerMock.update.mockResolvedValue(WRITER_CREATE_RESULT);
 
@@ -325,6 +372,11 @@ describe('ShopifyProductsService — syncProduct', () => {
     expect(result.mode).toBe('UPDATED');
     expect(writerMock.update).toHaveBeenCalledTimes(1);
     expect(writerMock.create).not.toHaveBeenCalled();
+    // Solo SINCRONIZADO al final (no hay PENDIENTE en path UPDATE)
+    expect(mappingRepoMock.upsertProductMapping).toHaveBeenCalledTimes(1);
+    expect(mappingRepoMock.upsertProductMapping).toHaveBeenCalledWith(
+      expect.objectContaining({ estado: 'SINCRONIZADO' }),
+    );
   });
 
   it('devuelve 409 si existe mapping de producto pero no hay variantes mapeadas para update', async () => {
@@ -340,7 +392,7 @@ describe('ShopifyProductsService — syncProduct', () => {
 
     integracionRepoMock.findActiveForEmpresa.mockResolvedValue(ACTIVE_INTEGRACION);
     catalogRepoMock.findProductForSync.mockResolvedValue(OMS_AGGREGATE);
-    mappingRepoMock.findProductMapping.mockResolvedValue(existingMapping);
+    mappingRepoMock.reserveProductMapping.mockResolvedValue(existingMapping);
     mappingRepoMock.findVariantMappings.mockResolvedValue([]);
 
     await expect(
@@ -350,10 +402,113 @@ describe('ShopifyProductsService — syncProduct', () => {
     expect(writerMock.update).not.toHaveBeenCalled();
   });
 
+  it('B1: crea variantes nuevas via addVariants en path UPDATED', async () => {
+    const existingMapping = {
+      integracionProductoExternoId: 1,
+      integracionSalienteId: 1,
+      productoId: 42,
+      externalProductId: 'gid://shopify/Product/1',
+      estado: 'SINCRONIZADO',
+      createdAt: new Date(),
+      updatedAt: null,
+    };
+    // El aggregate tiene 2 variantes: 101 (ya mapeada) y 102 (nueva)
+    const aggregateConVarianteNueva = {
+      ...OMS_AGGREGATE,
+      variants: [
+        { varianteId: 101, sku: 'SKU-001', ean: null, nombre: null, price: '99900.00', stockDisponible: 5 },
+        { varianteId: 102, sku: 'SKU-002', ean: null, nombre: null, price: '89900.00', stockDisponible: 3 },
+      ],
+    };
+    const existingVariantMapping = {
+      integracionVarianteExternaId: 1,
+      integracionSalienteId: 1,
+      productoId: 42,
+      varianteId: 101,
+      externalVariantId: 'gid://shopify/ProductVariant/2',
+      inventoryItemId: 'gid://shopify/InventoryItem/3',
+      estado: 'SINCRONIZADO',
+      createdAt: new Date(),
+      updatedAt: null,
+    };
+    const addVariantsResult = {
+      variants: [{ variantId: 'gid://shopify/ProductVariant/99', inventoryItemId: 'gid://shopify/InventoryItem/99' }],
+      warnings: [],
+    };
+
+    integracionRepoMock.findActiveForEmpresa.mockResolvedValue(ACTIVE_INTEGRACION);
+    catalogRepoMock.findProductForSync.mockResolvedValue(aggregateConVarianteNueva);
+    mappingRepoMock.reserveProductMapping.mockResolvedValue(existingMapping);
+    mappingRepoMock.findVariantMappings.mockResolvedValue([existingVariantMapping]);
+    writerMock.update.mockResolvedValue(WRITER_CREATE_RESULT);
+    writerMock.addVariants.mockResolvedValue(addVariantsResult);
+
+    const result = await service.syncProduct(42, BASE_DTO, ADMIN_USER);
+
+    expect(result.ok).toBe(true);
+    expect(result.mode).toBe('UPDATED');
+    // Debe haber llamado addVariants con la variante nueva
+    expect(writerMock.addVariants).toHaveBeenCalledWith(
+      'gid://shopify/Product/1',
+      [{ sku: 'SKU-002', price: '89900.00' }],
+    );
+    // El resultado debe incluir ambas variantes (1 de update + 1 de addVariants)
+    expect(result.variants).toHaveLength(2);
+    expect(result.variants.map((v) => v.varianteId)).toEqual(
+      expect.arrayContaining([101, 102]),
+    );
+  });
+
+  it('B1: warnings de addVariants llegan al resultado sin lanzar excepción', async () => {
+    const existingMapping = {
+      integracionProductoExternoId: 1,
+      integracionSalienteId: 1,
+      productoId: 42,
+      externalProductId: 'gid://shopify/Product/1',
+      estado: 'SINCRONIZADO',
+      createdAt: new Date(),
+      updatedAt: null,
+    };
+    const aggregateConVarianteNueva = {
+      ...OMS_AGGREGATE,
+      variants: [
+        { varianteId: 101, sku: 'SKU-001', ean: null, nombre: null, price: '99900.00', stockDisponible: 5 },
+        { varianteId: 102, sku: 'SKU-002', ean: null, nombre: null, price: '89900.00', stockDisponible: 0 },
+      ],
+    };
+    const existingVariantMapping = {
+      integracionVarianteExternaId: 1,
+      integracionSalienteId: 1,
+      productoId: 42,
+      varianteId: 101,
+      externalVariantId: 'gid://shopify/ProductVariant/2',
+      inventoryItemId: null,
+      estado: 'SINCRONIZADO',
+      createdAt: new Date(),
+      updatedAt: null,
+    };
+
+    integracionRepoMock.findActiveForEmpresa.mockResolvedValue(ACTIVE_INTEGRACION);
+    catalogRepoMock.findProductForSync.mockResolvedValue(aggregateConVarianteNueva);
+    mappingRepoMock.reserveProductMapping.mockResolvedValue(existingMapping);
+    mappingRepoMock.findVariantMappings.mockResolvedValue([existingVariantMapping]);
+    writerMock.update.mockResolvedValue(WRITER_CREATE_RESULT);
+    writerMock.addVariants.mockResolvedValue({
+      variants: [],
+      warnings: ['variants.optionValues: Option SKU not found on product'],
+    });
+
+    const result = await service.syncProduct(42, BASE_DTO, ADMIN_USER);
+
+    expect(result.ok).toBe(true);
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain('Option SKU not found');
+  });
+
   it('usuario de tienda puede sincronizar su propia empresa', async () => {
     integracionRepoMock.findActiveForEmpresa.mockResolvedValue(ACTIVE_INTEGRACION);
     catalogRepoMock.findProductForSync.mockResolvedValue(OMS_AGGREGATE);
-    mappingRepoMock.findProductMapping.mockResolvedValue(null);
+    // reserveProductMapping ya devuelve null por defecto en beforeEach
     writerMock.create.mockResolvedValue(WRITER_CREATE_RESULT);
 
     // STORE_USER tiene storeId='10', BASE_DTO tiene empresaId=10 → debe funcionar

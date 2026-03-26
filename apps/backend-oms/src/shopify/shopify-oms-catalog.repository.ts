@@ -181,6 +181,20 @@ export class ShopifyOmsCatalogRepository {
     return result.recordset;
   }
 
+  /**
+   * Devuelve un mapa varianteId → stockDisponible para el array de IDs recibido.
+   * Variantes sin registro en oms.Inventario se omiten del mapa (stock = 0 implícito).
+   * Método público para que syncInventory pueda consultarlo sin cargar el agregado completo.
+   */
+  async findVariantStockMap(varianteIds: number[]): Promise<Map<number, number>> {
+    const rows = await this.queryStock(varianteIds);
+    const map = new Map<number, number>();
+    for (const row of rows) {
+      map.set(Number(row.VarianteId), row.StockDisponible);
+    }
+    return map;
+  }
+
   private async queryStock(varianteIds: number[]): Promise<StockRow[]> {
     if (varianteIds.length === 0) return [];
 

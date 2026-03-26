@@ -90,6 +90,8 @@ export class ZiPersistService {
       });
 
       for (const combinacion of producto.combinaciones) {
+        const tallaAtributo = combinacion.atributos.find((a) => a.id === 'talla');
+        const colorAtributo = combinacion.atributos.find((a) => a.id === 'color');
         await this.repository.upsertVariante({
           empresaId: this.empresaId,
           productoId: productoUpsert.productoId,
@@ -98,6 +100,8 @@ export class ZiPersistService {
           activo: mapped.producto.Activo,
           origenDatos: 'ZI',
           ziSyncedAt: new Date(),
+          externalTallaId: tallaAtributo?.valor ?? '',
+          externalColorId: colorAtributo?.valor ?? '',
         });
         variantesUpserted += 1;
       }
@@ -182,6 +186,7 @@ export class ZiPersistService {
 
             await this.repository.upsertOfertaDetalle({
               ofertaId: ofertaUpsert.ofertaId,
+              varianteId,
               externalTallaId: detalleOferta.ExternalTallaId,
               externalColorId: detalleOferta.ExternalColorId,
               precio: detalleOferta.Precio,

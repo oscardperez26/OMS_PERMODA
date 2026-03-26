@@ -103,6 +103,8 @@ describe('ZiSyncRepository', () => {
       activo: true,
       origenDatos: 'ZI',
       ziSyncedAt: new Date(),
+      externalTallaId: '2',
+      externalColorId: '134',
     });
 
     expect(result).toEqual({ varianteId: 9001, created: true });

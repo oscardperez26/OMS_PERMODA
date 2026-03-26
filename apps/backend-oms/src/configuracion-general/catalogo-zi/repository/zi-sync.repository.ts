@@ -101,6 +101,8 @@ type UpsertVarianteInput = {
   activo: boolean;
   origenDatos: string;
   ziSyncedAt: Date;
+  externalTallaId: string;
+  externalColorId: string;
 };
 
 type UpsertTarifaInput = {
@@ -130,6 +132,7 @@ type UpsertOfertaInput = {
 
 type UpsertOfertaDetalleInput = {
   ofertaId: number;
+  varianteId: number;
   externalTallaId: string;
   externalColorId: string;
   precio: number;
@@ -480,6 +483,8 @@ export class ZiSyncRepository {
           .input('Activo', sql.Bit, input.activo)
           .input('OrigenDatos', sql.NVarChar(20), input.origenDatos)
           .input('ZiSyncedAt', sql.DateTime2, input.ziSyncedAt)
+          .input('ExternalTallaId', sql.NVarChar(40), input.externalTallaId || null)
+          .input('ExternalColorId', sql.NVarChar(40), input.externalColorId || null)
           .query<VarianteMergeRow>(`
             SET NOCOUNT ON;
 
@@ -497,6 +502,8 @@ export class ZiSyncRepository {
                 [Activo] = @Activo,
                 [OrigenDatos] = @OrigenDatos,
                 [ZiSyncedAt] = @ZiSyncedAt,
+                [ExternalTallaId] = @ExternalTallaId,
+                [ExternalColorId] = @ExternalColorId,
                 [UpdatedAt] = SYSUTCDATETIME()
             WHEN NOT MATCHED THEN
               INSERT
@@ -509,7 +516,9 @@ export class ZiSyncRepository {
                 [CreatedAt],
                 [UpdatedAt],
                 [OrigenDatos],
-                [ZiSyncedAt]
+                [ZiSyncedAt],
+                [ExternalTallaId],
+                [ExternalColorId]
               )
               VALUES
               (
@@ -521,7 +530,9 @@ export class ZiSyncRepository {
                 SYSUTCDATETIME(),
                 NULL,
                 @OrigenDatos,
-                @ZiSyncedAt
+                @ZiSyncedAt,
+                @ExternalTallaId,
+                @ExternalColorId
               )
             OUTPUT
               $action AS [MergeAction],
@@ -621,15 +632,14 @@ export class ZiSyncRepository {
             USING (
               SELECT
                 @TarifaPrecioId AS [TarifaPrecioId],
-                @ExternalTallaId AS [ExternalTallaId],
-                @ExternalColorId AS [ExternalColorId]
+                @VarianteId AS [VarianteId]
             ) AS source
               ON target.[TarifaPrecioId] = source.[TarifaPrecioId]
-             AND target.[ExternalTallaId] = source.[ExternalTallaId]
-             AND target.[ExternalColorId] = source.[ExternalColorId]
+             AND target.[VarianteId]     = source.[VarianteId]
             WHEN MATCHED THEN
               UPDATE SET
-                [VarianteId] = @VarianteId,
+                [ExternalTallaId] = @ExternalTallaId,
+                [ExternalColorId] = @ExternalColorId,
                 [Precio] = @Precio,
                 [UpdatedAt] = SYSUTCDATETIME()
             WHEN NOT MATCHED THEN
@@ -728,6 +738,7 @@ export class ZiSyncRepository {
         pool
           .request()
           .input('OfertaPrecioId', sql.BigInt, input.ofertaId)
+          .input('VarianteId', sql.Int, input.varianteId)
           .input('ExternalTallaId', sql.NVarChar(60), input.externalTallaId)
           .input('ExternalColorId', sql.NVarChar(60), input.externalColorId)
           .input('Precio', sql.Decimal(18, 2), input.precio)
@@ -738,20 +749,21 @@ export class ZiSyncRepository {
             USING (
               SELECT
                 @OfertaPrecioId AS [OfertaPrecioId],
-                @ExternalTallaId AS [ExternalTallaId],
-                @ExternalColorId AS [ExternalColorId]
+                @VarianteId AS [VarianteId]
             ) AS source
               ON target.[OfertaPrecioId] = source.[OfertaPrecioId]
-             AND target.[ExternalTallaId] = source.[ExternalTallaId]
-             AND target.[ExternalColorId] = source.[ExternalColorId]
+             AND target.[VarianteId]     = source.[VarianteId]
             WHEN MATCHED THEN
               UPDATE SET
+                [ExternalTallaId] = @ExternalTallaId,
+                [ExternalColorId] = @ExternalColorId,
                 [Precio] = @Precio,
                 [UpdatedAt] = SYSUTCDATETIME()
             WHEN NOT MATCHED THEN
               INSERT
               (
                 [OfertaPrecioId],
+                [VarianteId],
                 [ExternalTallaId],
                 [ExternalColorId],
                 [Precio],
@@ -761,6 +773,7 @@ export class ZiSyncRepository {
               VALUES
               (
                 @OfertaPrecioId,
+                @VarianteId,
                 @ExternalTallaId,
                 @ExternalColorId,
                 @Precio,

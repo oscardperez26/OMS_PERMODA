@@ -121,6 +121,45 @@ export class ShopifyExternalMappingRepository {
   // Escrituras — MERGE (idempotente)
   // ----------------------------------------------------------
 
+  /**
+   * Reserva un slot PENDIENTE para el producto antes de escribir en Shopify.
+   * Solo inserta si no existe ningún registro previo — nunca sobreescribe.
+   * Devuelve el estado actual del mapping (el recién insertado o el pre-existente).
+   *
+   * Propósito: si el proceso muere entre la escritura en Shopify y el guardado
+   * del mapping, el retry encuentra el registro PENDIENTE en lugar de null
+   * y puede recuperarse sin crear un producto duplicado.
+   */
+  async reserveProductMapping(
+    integracionSalienteId: number,
+    productoId: number,
+  ): Promise<ExternalProductMappingRow | null> {
+    await this.databaseService.execute(
+      (pool) =>
+        pool
+          .request()
+          .input('integracionSalienteId', sql.Int, integracionSalienteId)
+          .input('productoId', sql.Int, productoId)
+          .query(`
+            SET NOCOUNT ON;
+            IF NOT EXISTS (
+              SELECT 1 FROM [oms].[IntegracionProductoExterno]
+              WHERE [IntegracionSalienteId] = @integracionSalienteId
+                AND [ProductoId]            = @productoId
+            )
+            BEGIN
+              INSERT INTO [oms].[IntegracionProductoExterno]
+                ([IntegracionSalienteId], [ProductoId], [ExternalProductId], [Estado])
+              VALUES
+                (@integracionSalienteId, @productoId, N'', N'PENDIENTE');
+            END;
+          `),
+      'shopifyMapping.reserveProductMapping',
+    );
+
+    return this.findProductMapping(integracionSalienteId, productoId);
+  }
+
   async upsertProductMapping(input: UpsertProductMappingInput): Promise<void> {
     await this.databaseService.execute(
       (pool) =>
@@ -224,6 +263,37 @@ export class ShopifyExternalMappingRepository {
               );
           `),
       'shopifyMapping.upsertVariantMapping',
+    );
+  }
+
+  /**
+   * Marca el producto y todas sus variantes como ARCHIVADO en OMS.
+   * Se llama después de archivar el producto en Shopify.
+   */
+  async markProductAndVariantsArchived(
+    integracionSalienteId: number,
+    productoId: number,
+  ): Promise<void> {
+    await this.databaseService.execute(
+      (pool) =>
+        pool
+          .request()
+          .input('integracionSalienteId', sql.Int, integracionSalienteId)
+          .input('productoId', sql.Int, productoId)
+          .query(`
+            UPDATE [oms].[IntegracionProductoExterno]
+            SET    [Estado]    = N'ARCHIVADO',
+                   [UpdatedAt] = SYSUTCDATETIME()
+            WHERE  [IntegracionSalienteId] = @integracionSalienteId
+              AND  [ProductoId]            = @productoId;
+
+            UPDATE [oms].[IntegracionVarianteExterna]
+            SET    [Estado]    = N'ARCHIVADO',
+                   [UpdatedAt] = SYSUTCDATETIME()
+            WHERE  [IntegracionSalienteId] = @integracionSalienteId
+              AND  [ProductoId]            = @productoId;
+          `),
+      'shopifyMapping.markProductAndVariantsArchived',
     );
   }
 

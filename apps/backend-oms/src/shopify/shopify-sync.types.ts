@@ -147,3 +147,32 @@ export type ShopifySyncProductResult = {
   variants: ShopifySyncVariantResult[];
   warnings: string[];
 };
+
+// ------------------------------------------------------------
+// Respuesta pública del endpoint POST /shopify/products/archive/:productoId
+// ------------------------------------------------------------
+
+export type ShopifyArchiveProductResult = {
+  ok: true;
+  productoId: number;
+  shopifyProductId: string;
+};
+
+// ------------------------------------------------------------
+// Respuesta pública del endpoint POST /shopify/inventory/sync/:productoId
+// ------------------------------------------------------------
+
+export type ShopifySyncInventoryVariantResult = {
+  varianteId: number;
+  inventoryItemId: string;
+  quantity: number;
+};
+
+export type ShopifySyncInventoryResult = {
+  ok: true;
+  productoId: number;
+  locationId: string;
+  quantitiesSet: number;
+  variants: ShopifySyncInventoryVariantResult[];
+  warnings: string[];
+};

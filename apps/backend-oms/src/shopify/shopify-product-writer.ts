@@ -89,6 +89,22 @@ type GqlProductCreateResponse = {
   };
 };
 
+type GqlProductVariantsQueryVariables = {
+  productId: string;
+};
+
+type GqlProductVariantsQueryResponse = {
+  product: {
+    id: string;
+    variants: {
+      nodes: Array<{
+        id: string;
+        inventoryItem: { id: string } | null;
+      }>;
+    };
+  } | null;
+};
+
 type GqlProductUpdateVariables = {
   product: {
     id: string;
@@ -96,6 +112,7 @@ type GqlProductUpdateVariables = {
     descriptionHtml: string;
     vendor: string;
     productType: string;
+    status?: 'ACTIVE' | 'ARCHIVED' | 'DRAFT';
   };
 };
 
@@ -188,6 +205,34 @@ export class ShopifyProductWriter {
   }
 
   /**
+   * Recupera los IDs de variante de un producto ya existente en Shopify.
+   * Se usa en el path de recovery cuando el producto fue creado pero los
+   * mappings no se confirmaron (estado PENDIENTE con GID real en OMS).
+   */
+  async getProductVariants(
+    shopifyProductId: string,
+  ): Promise<ProductWriterResult> {
+    const data = await this.shopifyService.graphql<
+      GqlProductVariantsQueryResponse,
+      GqlProductVariantsQueryVariables
+    >(QUERY_PRODUCT_VARIANTS, { productId: shopifyProductId });
+
+    if (!data.product) {
+      throw new BadGatewayException(
+        `Shopify: producto ${shopifyProductId} no encontrado al recuperar variantes`,
+      );
+    }
+
+    return {
+      productId: shopifyProductId,
+      variants: data.product.variants.nodes.map((v) => ({
+        variantId: v.id,
+        inventoryItemId: v.inventoryItem?.id ?? null,
+      })),
+    };
+  }
+
+  /**
    * Actualiza un producto existente en Shopify (path UPDATED).
    * 1. productUpdate - actualiza campos del producto base.
    * 2. productVariantsBulkUpdate - actualiza SKU y precio de cada variante.
@@ -264,6 +309,112 @@ export class ShopifyProductWriter {
         inventoryItemId: variant.inventoryItem?.id ?? null,
       })),
     };
+  }
+
+  /**
+   * Añade variantes nuevas a un producto ya existente en Shopify (B1).
+   *
+   * Usa productVariantsBulkCreate con optionValues referenciando la opción
+   * sintética 'SKU' creada durante el create multi-variante.
+   *
+   * Si Shopify devuelve userErrors (ej. el producto no tiene la opción 'SKU'
+   * porque fue creado como single-variant), NO lanza excepción: devuelve los
+   * errores como warnings para no bloquear el sync de variantes ya mapeadas.
+   */
+  async addVariants(
+    shopifyProductId: string,
+    variants: ProductWriterVariantInput[],
+  ): Promise<{ variants: ProductWriterVariantResult[]; warnings: string[] }> {
+    this.logger.log(
+      `Añadiendo ${variants.length} variante(s) nueva(s) a productId=${shopifyProductId}`,
+    );
+
+    const bulkCreateData =
+      await this.shopifyService.graphql<
+        GqlVariantsBulkCreateResponse,
+        GqlVariantsBulkCreateVariables
+      >(MUTATION_VARIANTS_BULK_CREATE, {
+        productId: shopifyProductId,
+        variants: variants.map((v) => ({
+          price: v.price,
+          inventoryItem: { sku: v.sku },
+          optionValues: [{ name: v.sku, optionName: this.syntheticOptionName }],
+        })),
+      });
+
+    if (
+      Array.isArray(bulkCreateData.productVariantsBulkCreate.userErrors) &&
+      bulkCreateData.productVariantsBulkCreate.userErrors.length > 0
+    ) {
+      const warnings =
+        bulkCreateData.productVariantsBulkCreate.userErrors.map((e) => {
+          const field = Array.isArray(e.field) ? e.field.join('.') : null;
+          return field ? `${field}: ${e.message}` : e.message;
+        });
+      this.logger.warn(
+        `addVariants userErrors para productId=${shopifyProductId}: ${warnings.join(' | ')}`,
+      );
+      return { variants: [], warnings };
+    }
+
+    const createdBySku = new Map(
+      bulkCreateData.productVariantsBulkCreate.productVariants
+        .filter((v) => v.inventoryItem?.sku)
+        .map((v) => [v.inventoryItem!.sku!, v]),
+    );
+
+    const results: ProductWriterVariantResult[] = [];
+    const warnings: string[] = [];
+
+    for (const input of variants) {
+      const created = createdBySku.get(input.sku);
+      if (!created?.id) {
+        warnings.push(
+          `Shopify no devolvio variante para SKU=${input.sku} en addVariants`,
+        );
+        continue;
+      }
+      results.push({
+        variantId: created.id,
+        inventoryItemId: created.inventoryItem?.id ?? null,
+      });
+    }
+
+    this.logger.log(
+      `addVariants completado. productId=${shopifyProductId}, creadas=${results.length}`,
+    );
+
+    return { variants: results, warnings };
+  }
+
+  /**
+   * Archiva un producto en Shopify (estado ARCHIVED).
+   * No elimina el producto ni sus variantes — preserva historial de pedidos.
+   */
+  async archiveProduct(shopifyProductId: string): Promise<void> {
+    this.logger.log(`Archivando producto en Shopify. productId=${shopifyProductId}`);
+
+    const data = await this.shopifyService.graphql<
+      GqlProductUpdateResponse,
+      GqlProductUpdateVariables
+    >(MUTATION_PRODUCT_UPDATE, {
+      product: {
+        id: shopifyProductId,
+        title: '',
+        descriptionHtml: '',
+        vendor: '',
+        productType: '',
+        status: 'ARCHIVED',
+      },
+    });
+
+    this.assertNoUserErrors(data.productUpdate.userErrors, 'productUpdate (archive)');
+
+    if (!data.productUpdate.product?.id) {
+      throw new BadGatewayException(
+        `Shopify productUpdate (archive) no devolvio el ID del producto ${shopifyProductId}`,
+      );
+    }
   }
 
   private async createSingleVariantProduct(
@@ -623,6 +774,22 @@ const MUTATION_VARIANTS_BULK_CREATE = `
       userErrors {
         field
         message
+      }
+    }
+  }
+`;
+
+const QUERY_PRODUCT_VARIANTS = `
+  query ShopifyGetProductVariants($productId: ID!) {
+    product(id: $productId) {
+      id
+      variants(first: 100) {
+        nodes {
+          id
+          inventoryItem {
+            id
+          }
+        }
       }
     }
   }
