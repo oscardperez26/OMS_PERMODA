@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { OrdersModule } from '../orders/orders.module';
 import { ShopifyExternalMappingRepository } from './shopify-external-mapping.repository';
 import { ShopifyIntegracionSalienteRepository } from './shopify-integracion-saliente.repository';
 import { ShopifyInventoryWriter } from './shopify-inventory-writer';
@@ -6,12 +7,17 @@ import { ShopifyOmsCatalogRepository } from './shopify-oms-catalog.repository';
 import { ShopifyProductWriter } from './shopify-product-writer';
 import { ShopifyAuthService } from './shopify-auth.service';
 import { ShopifyController } from './shopify.controller';
+import { ShopifyOrdersRepository } from './shopify-orders.repository';
+import { ShopifyOrdersService } from './shopify-orders.service';
 import { ShopifyProductsService } from './shopify-products.service';
+import { ShopifySchedulerService } from './scheduler/shopify-sync.scheduler';
 import { ShopifyService } from './shopify.service';
+import { ShopifyWebhookGuard } from './guards/shopify-webhook.guard';
 
 // DatabaseService y ConfigService son @Global() — no es necesario importar sus módulos aquí.
 
 @Module({
+  imports: [OrdersModule],
   controllers: [ShopifyController],
   providers: [
     // Capa de transporte Shopify
@@ -26,6 +32,12 @@ import { ShopifyService } from './shopify.service';
     ShopifyExternalMappingRepository,
     // Orquestador de casos de uso
     ShopifyProductsService,
+    // Scheduler automático OMS → Shopify
+    ShopifySchedulerService,
+    // Webhook orders/paid (Shopify → OMS)
+    ShopifyWebhookGuard,
+    ShopifyOrdersRepository,
+    ShopifyOrdersService,
   ],
   exports: [
     ShopifyAuthService,

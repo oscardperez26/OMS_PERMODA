@@ -176,3 +176,36 @@ export type ShopifySyncInventoryResult = {
   variants: ShopifySyncInventoryVariantResult[];
   warnings: string[];
 };
+
+// ------------------------------------------------------------
+// Respuesta pública de los endpoints bulk sync-all
+// ------------------------------------------------------------
+
+export type ShopifySyncAllProductEntry = {
+  productoId: number;
+  ok: boolean;
+  mode?: 'CREATED' | 'UPDATED';
+  warnings?: string[];
+  error?: string;
+};
+
+export type ShopifySyncAllProductsResult = {
+  total: number;
+  sincronizados: number;
+  errores: number;
+  resultados: ShopifySyncAllProductEntry[];
+};
+
+export type ShopifySyncAllInventoryEntry = {
+  productoId: number;
+  ok: boolean;
+  quantitiesSet?: number;
+  error?: string;
+};
+
+export type ShopifySyncAllInventoryResult = {
+  total: number;
+  sincronizados: number;
+  errores: number;
+  resultados: ShopifySyncAllInventoryEntry[];
+};

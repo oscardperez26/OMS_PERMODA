@@ -182,6 +182,28 @@ export class ShopifyOmsCatalogRepository {
   }
 
   /**
+   * Devuelve todos los ProductoId activos de una empresa, ordenados ascendente.
+   * Usado por syncAllProducts para iterar el catálogo completo.
+   */
+  async findAllProductIds(empresaId: number): Promise<number[]> {
+    const result = await this.databaseService.execute<sql.IResult<{ ProductoId: number }>>(
+      (pool) =>
+        pool
+          .request()
+          .input('empresaId', sql.Int, empresaId)
+          .query<{ ProductoId: number }>(`
+            SELECT [ProductoId]
+            FROM   [oms].[Producto]
+            WHERE  [EmpresaId] = @empresaId
+              AND  [Activo]    = 1
+            ORDER BY [ProductoId] ASC
+          `),
+      'shopifyCatalog.findAllProductIds',
+    );
+    return result.recordset.map((r) => Number(r.ProductoId));
+  }
+
+  /**
    * Devuelve un mapa varianteId → stockDisponible para el array de IDs recibido.
    * Variantes sin registro en oms.Inventario se omiten del mapa (stock = 0 implícito).
    * Método público para que syncInventory pueda consultarlo sin cargar el agregado completo.

@@ -1,25 +1,35 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Post,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { Permissions } from '../auth/auth.decorators';
+import { Permissions, Public } from '../auth/auth.decorators';
 import type { SafeUser } from '../auth/auth.types';
 import { CreateShopifyTestProductDto } from './dto/create-shopify-test-product.dto';
 import { SyncShopifyProductDto } from './dto/sync-shopify-product.dto';
+import type { ShopifyWebhookOrderPayload } from './dto/shopify-webhook-order.dto';
+import { ShopifyWebhookGuard } from './guards/shopify-webhook.guard';
 import { ShopifyAuthService } from './shopify-auth.service';
+import { ShopifyOrdersService } from './shopify-orders.service';
+import type { ShopifyOrderWebhookResult } from './shopify-orders.service';
 import { ShopifyProductsService } from './shopify-products.service';
 import type {
   ShopifyArchiveProductResult,
+  ShopifySyncAllInventoryResult,
+  ShopifySyncAllProductsResult,
   ShopifySyncInventoryResult,
   ShopifySyncProductResult,
 } from './shopify-sync.types';
 import { ShopifyService } from './shopify.service';
+import { ShopifySchedulerService } from './scheduler/shopify-sync.scheduler';
 
 type RequestWithUser = Request & { user: SafeUser };
 
@@ -35,6 +45,8 @@ export class ShopifyController {
     private readonly shopifyAuthService: ShopifyAuthService,
     private readonly shopifyProductsService: ShopifyProductsService,
     private readonly shopifyService: ShopifyService,
+    private readonly shopifyScheduler: ShopifySchedulerService,
+    private readonly shopifyOrdersService: ShopifyOrdersService,
   ) {}
 
   @Get('test/token')
@@ -127,5 +139,84 @@ export class ShopifyController {
     @Req() req: RequestWithUser,
   ): Promise<ShopifySyncInventoryResult> {
     return this.shopifyProductsService.syncInventory(productoId, body, req.user);
+  }
+
+  // ----------------------------------------------------------
+  // Bulk sync OMS -> Shopify (Opción 3)
+  // ----------------------------------------------------------
+
+  /**
+   * Sincroniza todos los productos activos de una empresa a Shopify.
+   * Idempotente por producto: crea los nuevos, actualiza los existentes.
+   * Aplica rate-limiting de 500ms entre productos.
+   *
+   * @param body  { empresaId }
+   */
+  @Post('products/sync-all')
+  @Permissions('config.manage')
+  async syncAllProducts(
+    @Body() body: SyncShopifyProductDto,
+    @Req() req: RequestWithUser,
+  ): Promise<ShopifySyncAllProductsResult> {
+    if (req.user.storeId !== undefined && req.user.storeId !== String(body.empresaId)) {
+      throw new ForbiddenException('No tiene acceso a sincronizar productos de esta empresa');
+    }
+    return this.shopifyProductsService.syncAllProducts(body.empresaId);
+  }
+
+  /**
+   * Sincroniza el inventario de todos los productos activos de una empresa a Shopify.
+   * Requiere que los productos ya tengan variantes mapeadas con InventoryItemId.
+   *
+   * @param body  { empresaId }
+   */
+  @Post('inventory/sync-all')
+  @Permissions('config.manage')
+  async syncAllInventory(
+    @Body() body: SyncShopifyProductDto,
+    @Req() req: RequestWithUser,
+  ): Promise<ShopifySyncAllInventoryResult> {
+    if (req.user.storeId !== undefined && req.user.storeId !== String(body.empresaId)) {
+      throw new ForbiddenException('No tiene acceso a sincronizar inventario de esta empresa');
+    }
+    return this.shopifyProductsService.syncAllInventory(body.empresaId);
+  }
+
+  // ----------------------------------------------------------
+  // Sync completo manual (equivalente al /catalogo-zi/sync/full de ZI)
+  // ----------------------------------------------------------
+
+  /**
+   * Dispara un sync completo (productos + inventario) de forma manual.
+   * Usa la empresa configurada en SHOPIFY_SYNC_EMPRESA_ID.
+   * Respeta el lock de concurrencia del scheduler.
+   */
+  @Post('sync/full')
+  @Permissions('config.manage')
+  async runFullSync() {
+    return this.shopifyScheduler.runFullSync();
+  }
+
+  // ----------------------------------------------------------
+  // Webhooks Shopify → OMS (Opción 1)
+  // ----------------------------------------------------------
+
+  /**
+   * Recibe el webhook `orders/paid` de Shopify.
+   * Crea el Pedido + PedidoLineas en OMS y reserva stock.
+   *
+   * - @Public()         → bypass del AuthGuard (no hay sesión de usuario)
+   * - @UseGuards(...)   → HMAC-SHA256 con SHOPIFY_WEBHOOK_SECRET
+   * - @HttpCode(200)    → Shopify espera 200, no 201
+   */
+  @Post('webhooks/orders/paid')
+  @Public()
+  @UseGuards(ShopifyWebhookGuard)
+  @HttpCode(200)
+  async handleOrderPaid(
+    @Body() payload: ShopifyWebhookOrderPayload,
+  ): Promise<ShopifyOrderWebhookResult> {
+    const empresaId = parseInt(process.env.SHOPIFY_SYNC_EMPRESA_ID ?? '1', 10);
+    return this.shopifyOrdersService.handleOrderPaid(payload, empresaId);
   }
 }

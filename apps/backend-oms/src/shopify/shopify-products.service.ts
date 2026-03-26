@@ -22,6 +22,10 @@ import type {
 } from './shopify-products.types';
 import type {
   ShopifyArchiveProductResult,
+  ShopifySyncAllInventoryEntry,
+  ShopifySyncAllInventoryResult,
+  ShopifySyncAllProductEntry,
+  ShopifySyncAllProductsResult,
   ShopifySyncInventoryResult,
   ShopifySyncProductResult,
   ShopifySyncVariantResult,
@@ -228,8 +232,6 @@ export class ShopifyProductsService {
     dto: SyncShopifyProductDto,
     user: SafeUser,
   ): Promise<ShopifySyncProductResult> {
-    const startedAt = Date.now();
-
     if (!Number.isInteger(productoId) || productoId <= 0) {
       throw new BadRequestException('productoId debe ser un entero mayor a 0');
     }
@@ -241,13 +243,24 @@ export class ShopifyProductsService {
       );
     }
 
+    return this.syncProductCore(productoId, dto.empresaId);
+  }
+
+  /**
+   * Lógica core de sync de producto sin validación de usuario.
+   * Usado directamente por syncAllProducts y el scheduler automático.
+   */
+  private async syncProductCore(
+    productoId: number,
+    empresaId: number,
+  ): Promise<ShopifySyncProductResult> {
+    const startedAt = Date.now();
+
     // Resolver integración Shopify outbound activa
-    const integracion = await this.integracionRepo.findActiveForEmpresa(
-      dto.empresaId,
-    );
+    const integracion = await this.integracionRepo.findActiveForEmpresa(empresaId);
     if (!integracion) {
       throw new ConflictException(
-        `No hay integración Shopify activa para empresaId=${dto.empresaId}`,
+        `No hay integración Shopify activa para empresaId=${empresaId}`,
       );
     }
 
@@ -256,13 +269,13 @@ export class ShopifyProductsService {
     // Cargar agregado OMS del producto con precios resueltos
     const aggregate = await this.catalogRepo.findProductForSync(
       productoId,
-      dto.empresaId,
+      empresaId,
       config.catalog.pricePriority,
     );
 
     if (!aggregate) {
       throw new NotFoundException(
-        `Producto ${productoId} no encontrado o inactivo para empresaId=${dto.empresaId}`,
+        `Producto ${productoId} no encontrado o inactivo para empresaId=${empresaId}`,
       );
     }
 
@@ -272,43 +285,41 @@ export class ShopifyProductsService {
       );
     }
 
-    // Bloquear si alguna variante no tiene precio según la prioridad configurada
-    const variantesSinPrecio = aggregate.variants
-      .filter((v) => v.price === null)
-      .map((v) => `VarianteId=${v.varianteId} (SKU=${v.sku})`);
+    // Separar variantes con y sin precio.
+    // Las sin precio se omiten con warning — no bloquean el sync del resto.
+    const warnings: string[] = [];
+    const variantesSinPrecio = aggregate.variants.filter((v) => v.price === null);
+    const variantesConPrecio = aggregate.variants.filter((v) => v.price !== null);
 
     if (variantesSinPrecio.length > 0) {
-      throw new ConflictException(
-        `Las siguientes variantes no tienen precio según la prioridad configurada: ${variantesSinPrecio.join(', ')}`,
+      const skuList = variantesSinPrecio.map((v) => `SKU=${v.sku}`).join(', ');
+      warnings.push(`Variantes omitidas (sin precio configurado): ${skuList}`);
+      this.logger.warn(
+        `[syncProduct] productoId=${productoId}: ${variantesSinPrecio.length} variante(s) sin precio omitidas: ${skuList}`,
       );
     }
 
+    if (variantesConPrecio.length === 0) {
+      throw new ConflictException(
+        `Producto ${productoId}: ninguna variante tiene precio según la prioridad configurada`,
+      );
+    }
+
+    // Continuar el sync solo con las variantes que tienen precio
+    const syncableAggregate = { ...aggregate, variants: variantesConPrecio };
+
     // Determinar vendor y productType con fallbacks de ConfigJson
-    const vendor =
-      aggregate.vendor ||
-      config.catalog.defaultVendor ||
-      '';
+    const vendor = syncableAggregate.vendor || config.catalog.defaultVendor || '';
     const productType =
-      aggregate.productType ||
-      config.catalog.defaultProductType ||
-      '';
+      syncableAggregate.productType || config.catalog.defaultProductType || '';
 
     // Reservar un slot PENDIENTE antes de escribir en Shopify.
-    // Garantiza que si el proceso muere entre la escritura y el guardado del mapping,
-    // el retry encuentra el registro PENDIENTE y puede recuperarse sin duplicar.
     const reservedMapping = await this.mappingRepo.reserveProductMapping(
       integracion.integracionSalienteId,
       productoId,
     );
-
-    const warnings: string[] = [];
-    let writerResult: Awaited<
-      ReturnType<typeof this.productWriter.create>
-    >;
+    let writerResult: Awaited<ReturnType<typeof this.productWriter.create>>;
     let mode: 'CREATED' | 'UPDATED';
-    // varianteIdByWriterIndex[i] es el OMS varianteId que corresponde a writerResult.variants[i].
-    // Se construye antes de llamar al writer para que el cruce final sea siempre correcto,
-    // independientemente de si alguna variante fue filtrada en el path UPDATED.
     let varianteIdByWriterIndex: number[];
 
     const isPendingWithGid =
@@ -317,38 +328,32 @@ export class ShopifyProductsService {
 
     if (isPendingWithGid) {
       // ------ PATH RECOVERY ------
-      // El producto fue creado en Shopify en un intento anterior pero los mappings
-      // de variantes no se confirmaron. Recuperamos los IDs directamente de Shopify.
       this.logger.warn(
         `[syncProduct] Recuperando sync parcial para productoId=${productoId}, ` +
           `shopifyProductId=${reservedMapping!.externalProductId}`,
       );
-      varianteIdByWriterIndex = aggregate.variants.map((v) => v.varianteId);
+      varianteIdByWriterIndex = syncableAggregate.variants.map((v) => v.varianteId);
       writerResult = await this.productWriter.getProductVariants(
         reservedMapping!.externalProductId,
       );
       mode = 'CREATED';
     } else if (!isSincronizado) {
       // ------ PATH CREATED ------
-      // Sin mapping previo (slot recién reservado) o PENDIENTE con GID vacío
-      // (el intento anterior falló antes de llegar a Shopify).
-      varianteIdByWriterIndex = aggregate.variants.map((v) => v.varianteId);
+      varianteIdByWriterIndex = syncableAggregate.variants.map((v) => v.varianteId);
 
       writerResult = await this.productWriter.create({
-        title: aggregate.title,
-        descriptionHtml: aggregate.descriptionHtml,
+        title: syncableAggregate.title,
+        descriptionHtml: syncableAggregate.descriptionHtml,
         vendor,
         productType,
         status: config.catalog.publishStatus,
-        variants: aggregate.variants.map((v) => ({
+        variants: syncableAggregate.variants.map((v) => ({
           sku: v.sku,
-          price: v.price!, // garantizado no-null por la validación anterior
+          price: v.price!,
         })),
       });
       mode = 'CREATED';
 
-      // Guardar el GID de Shopify inmediatamente (aún PENDIENTE) para que un retry
-      // no cree un producto duplicado si lo siguiente falla.
       await this.mappingRepo.upsertProductMapping({
         integracionSalienteId: integracion.integracionSalienteId,
         productoId,
@@ -357,7 +362,6 @@ export class ShopifyProductsService {
       });
     } else {
       // ------ PATH UPDATED ------
-      // Cargar mappings de variantes existentes para pasar sus IDs a Shopify
       const existingVariantMappings = await this.mappingRepo.findVariantMappings(
         integracion.integracionSalienteId,
         productoId,
@@ -367,9 +371,7 @@ export class ShopifyProductsService {
         existingVariantMappings.map((m) => [m.varianteId, m]),
       );
 
-      // Clasificar variantes: las que ya tienen mapping se actualizan,
-      // las nuevas (sin mapping) se crean en Shopify via addVariants (B1).
-      const variantsWithIds = aggregate.variants.map((v) => ({
+      const variantsWithIds = syncableAggregate.variants.map((v) => ({
         varianteId: v.varianteId,
         id: variantMappingById.get(v.varianteId)?.externalVariantId ?? '',
         sku: v.sku,
@@ -385,14 +387,13 @@ export class ShopifyProductsService {
         );
       }
 
-      // Actualizar variantes ya mapeadas
       varianteIdByWriterIndex = variantsToUpdate.map((v) => v.varianteId);
 
       writerResult = await this.productWriter.update(
         reservedMapping!.externalProductId,
         {
-          title: aggregate.title,
-          descriptionHtml: aggregate.descriptionHtml,
+          title: syncableAggregate.title,
+          descriptionHtml: syncableAggregate.descriptionHtml,
           vendor,
           productType,
           variants: variantsToUpdate,
@@ -400,7 +401,6 @@ export class ShopifyProductsService {
       );
       mode = 'UPDATED';
 
-      // Crear variantes nuevas que no tenían mapping (B1)
       if (variantsToCreate.length > 0) {
         const addResult = await this.productWriter.addVariants(
           reservedMapping!.externalProductId,
@@ -412,9 +412,6 @@ export class ShopifyProductsService {
       }
     }
 
-    // Persistir mapping de variantes
-    // Cruzar writerResult.variants con varianteIdByWriterIndex por posición.
-    // Ambos arrays tienen el mismo largo y orden garantizados.
     const variantMappingInputs: UpsertVariantMappingInput[] =
       writerResult.variants
         .map((writerVariant, index) => {
@@ -433,8 +430,7 @@ export class ShopifyProductsService {
 
     await this.mappingRepo.upsertVariantMappings(variantMappingInputs);
 
-    // Confirmar SINCRONIZADO — todos los mappings de variantes guardados exitosamente.
-    // Completa el two-phase commit: PENDIENTE (pre-write) → SINCRONIZADO (post-write).
+    // Confirmar SINCRONIZADO — two-phase commit: PENDIENTE → SINCRONIZADO.
     await this.mappingRepo.upsertProductMapping({
       integracionSalienteId: integracion.integracionSalienteId,
       productoId,
@@ -444,7 +440,7 @@ export class ShopifyProductsService {
 
     const durationMs = Date.now() - startedAt;
     this.logger.log(
-      `Sync completado. empresaId=${dto.empresaId}, integracionId=${integracion.integracionSalienteId}, ` +
+      `Sync completado. empresaId=${empresaId}, integracionId=${integracion.integracionSalienteId}, ` +
         `productoId=${productoId}, mode=${mode}, shopifyProductId=${writerResult.productId}, ` +
         `durationMs=${durationMs}`,
     );
@@ -466,6 +462,41 @@ export class ShopifyProductsService {
       variants: variantResults,
       warnings,
     };
+  }
+
+  /**
+   * Sincroniza todos los productos activos de una empresa a Shopify.
+   * Aplica un delay de 500ms entre productos para respetar el rate-limit de Shopify.
+   * Los errores por producto se capturan individualmente — el batch no se detiene.
+   */
+  async syncAllProducts(empresaId: number): Promise<ShopifySyncAllProductsResult> {
+    const ids = await this.catalogRepo.findAllProductIds(empresaId);
+    let sincronizados = 0;
+    let errores = 0;
+    const resultados: ShopifySyncAllProductEntry[] = [];
+
+    for (let i = 0; i < ids.length; i++) {
+      const productoId = ids[i];
+      if (i > 0) await this.sleep(500);
+
+      try {
+        const result = await this.syncProductCore(productoId, empresaId);
+        sincronizados++;
+        resultados.push({
+          productoId,
+          ok: true,
+          mode: result.mode,
+          warnings: result.warnings.length > 0 ? result.warnings : undefined,
+        });
+      } catch (error) {
+        errores++;
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`syncAllProducts: error en productoId=${productoId}: ${message}`);
+        resultados.push({ productoId, ok: false, error: message });
+      }
+    }
+
+    return { total: ids.length, sincronizados, errores, resultados };
   }
 
   /**
@@ -544,10 +575,21 @@ export class ShopifyProductsService {
       );
     }
 
-    const integracion = await this.integracionRepo.findActiveForEmpresa(dto.empresaId);
+    return this.syncInventoryCore(productoId, dto.empresaId);
+  }
+
+  /**
+   * Lógica core de sync de inventario sin validación de usuario.
+   * Usado directamente por syncAllInventory y el scheduler automático.
+   */
+  private async syncInventoryCore(
+    productoId: number,
+    empresaId: number,
+  ): Promise<ShopifySyncInventoryResult> {
+    const integracion = await this.integracionRepo.findActiveForEmpresa(empresaId);
     if (!integracion) {
       throw new ConflictException(
-        `No hay integración Shopify activa para empresaId=${dto.empresaId}`,
+        `No hay integración Shopify activa para empresaId=${empresaId}`,
       );
     }
 
@@ -590,7 +632,7 @@ export class ShopifyProductsService {
     });
 
     this.logger.log(
-      `Inventario sincronizado. empresaId=${dto.empresaId}, productoId=${productoId}, ` +
+      `Inventario sincronizado. empresaId=${empresaId}, productoId=${productoId}, ` +
         `locationId=${locationId}, quantitiesSet=${setResult.quantitiesSet}`,
     );
 
@@ -608,6 +650,35 @@ export class ShopifyProductsService {
       variants: variantResults,
       warnings: [],
     };
+  }
+
+  /**
+   * Sincroniza el inventario de todos los productos activos de una empresa a Shopify.
+   * Aplica delay de 500ms entre productos. Los errores se capturan individualmente.
+   */
+  async syncAllInventory(empresaId: number): Promise<ShopifySyncAllInventoryResult> {
+    const ids = await this.catalogRepo.findAllProductIds(empresaId);
+    let sincronizados = 0;
+    let errores = 0;
+    const resultados: ShopifySyncAllInventoryEntry[] = [];
+
+    for (let i = 0; i < ids.length; i++) {
+      const productoId = ids[i];
+      if (i > 0) await this.sleep(500);
+
+      try {
+        const result = await this.syncInventoryCore(productoId, empresaId);
+        sincronizados++;
+        resultados.push({ productoId, ok: true, quantitiesSet: result.quantitiesSet });
+      } catch (error) {
+        errores++;
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`syncAllInventory: error en productoId=${productoId}: ${message}`);
+        resultados.push({ productoId, ok: false, error: message });
+      }
+    }
+
+    return { total: ids.length, sincronizados, errores, resultados };
   }
 
   // ----------------------------------------------------------
@@ -653,6 +724,10 @@ export class ShopifyProductsService {
   private normalizeSku(value: string): string {
     const normalized = this.normalizeRequiredText(value, 'sku', 120);
     return normalized.toUpperCase();
+  }
+
+  private async sleep(ms: number): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private normalizePrice(value: number): string {
