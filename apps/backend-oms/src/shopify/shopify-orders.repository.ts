@@ -216,17 +216,23 @@ export class ShopifyOrdersRepository {
     integracionSalienteId: number,
     shopifyVariantId: string,
   ): Promise<number | null> {
+    // El webhook envía variant_id como número (ej: 40761389563947).
+    // IntegracionVarianteExterna almacena el GID completo de GraphQL:
+    // "gid://shopify/ProductVariant/40761389563947"
+    // → construimos el GID para hacer match exacto.
+    const gid = `gid://shopify/ProductVariant/${shopifyVariantId}`;
+
     const result = await this.databaseService.execute<sql.IResult<VarianteRow>>(
       (pool) =>
         pool
           .request()
           .input('integracionSalienteId', sql.Int, integracionSalienteId)
-          .input('shopifyVariantId', sql.NVarChar(160), shopifyVariantId)
+          .input('gid', sql.NVarChar(160), gid)
           .query<VarianteRow>(`
             SELECT TOP 1 [VarianteId]
             FROM [oms].[IntegracionVarianteExterna]
             WHERE [IntegracionSalienteId] = @integracionSalienteId
-              AND [ExternalVariantId]     = @shopifyVariantId
+              AND [ExternalVariantId]     = @gid
               AND [Estado]               = N'SINCRONIZADO'
           `),
       'shopifyOrders.resolveVarianteId',

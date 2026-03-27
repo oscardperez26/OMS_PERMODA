@@ -131,52 +131,59 @@ export class ShopifyOrdersService {
       const shopifyProductId = item.product_id ? String(item.product_id) : null;
       const shopifyLineItemId = String(item.id);
 
-      // Resolver VarianteId OMS
-      let varianteId: number | null = null;
-      if (shopifyVariantId) {
-        varianteId = await this.shopifyOrdersRepo.resolveVarianteId(
-          integracionSalienteId,
+      try {
+        // Resolver VarianteId OMS
+        let varianteId: number | null = null;
+        if (shopifyVariantId) {
+          varianteId = await this.shopifyOrdersRepo.resolveVarianteId(
+            integracionSalienteId,
+            shopifyVariantId,
+          );
+          if (!varianteId) {
+            this.logger.warn(
+              `Pedido ${shopifyOrderId} → LineItem ${shopifyLineItemId}: ` +
+                `ShopifyVariantId=${shopifyVariantId} sin mapping en IntegracionVarianteExterna`,
+            );
+          }
+        }
+
+        const precioUnitario = parseFloat(item.price);
+        const total = precioUnitario * item.quantity;
+
+        await this.shopifyOrdersRepo.createPedidoLinea({
+          pedidoId,
+          shopifyLineItemId,
           shopifyVariantId,
-        );
-        if (!varianteId) {
-          this.logger.warn(
-            `Pedido ${shopifyOrderId} → LineItem ${shopifyLineItemId}: ` +
-              `ShopifyVariantId=${shopifyVariantId} sin mapping en IntegracionVarianteExterna`,
-          );
-        }
-      }
-
-      const precioUnitario = parseFloat(item.price);
-      const total = precioUnitario * item.quantity;
-
-      await this.shopifyOrdersRepo.createPedidoLinea({
-        pedidoId,
-        shopifyLineItemId,
-        shopifyVariantId,
-        shopifyProductId,
-        varianteId,
-        sku: item.sku,
-        nombre: item.name || item.title,
-        cantidad: item.quantity,
-        precioUnitario,
-        total,
-      });
-      lineasCreadas++;
-
-      // Reservar stock solo si hay VarianteId
-      if (varianteId) {
-        const reserved = await this.shopifyOrdersRepo.reserveStock(
+          shopifyProductId,
           varianteId,
-          item.quantity,
-        );
-        if (reserved) {
-          stockReservado++;
-        } else {
-          this.logger.warn(
-            `Pedido ${shopifyOrderId} → VarianteId=${varianteId}: ` +
-              `sin registro en oms.Inventario, stock no reservado`,
+          sku: item.sku,
+          nombre: item.name || item.title,
+          cantidad: item.quantity,
+          precioUnitario,
+          total,
+        });
+        lineasCreadas++;
+
+        // Reservar stock solo si hay VarianteId
+        if (varianteId) {
+          const reserved = await this.shopifyOrdersRepo.reserveStock(
+            varianteId,
+            item.quantity,
           );
+          if (reserved) {
+            stockReservado++;
+          } else {
+            this.logger.warn(
+              `Pedido ${shopifyOrderId} → VarianteId=${varianteId}: ` +
+                `sin registro en oms.Inventario, stock no reservado`,
+            );
+          }
         }
+      } catch (err) {
+        // Un fallo en una línea no detiene el procesamiento del resto
+        this.logger.error(
+          `Pedido ${shopifyOrderId} → LineItem ${shopifyLineItemId}: error al insertar — ${String(err)}`,
+        );
       }
     }
 

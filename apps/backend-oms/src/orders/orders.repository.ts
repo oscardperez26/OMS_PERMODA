@@ -836,8 +836,13 @@ export class OrdersRepository {
     configJson: string | null,
   ): string {
     const providerCode = this.extractProviderCode(configJson);
-    const providerPart = providerCode ?? integracionCodigo ?? 'SIN CONECTOR';
+    const providerPart = providerCode ?? integracionCodigo ?? null;
     const canalPart = canalCodigo ?? canalNombre ?? 'SIN CANAL';
+
+    // Sin conector identificado (ej: pedidos Shopify via IntegracionSaliente)
+    // → mostrar solo el canal para evitar el prefijo "SIN CONECTOR / "
+    if (!providerPart) return canalPart;
+
     return `${providerPart} / ${canalPart}`;
   }
 
