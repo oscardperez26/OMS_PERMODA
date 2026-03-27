@@ -148,8 +148,14 @@ export class ShopifyOrdersRepository {
    * La constraint UX_PedidoLinea_Shopify garantiza idempotencia
    * si se intenta insertar la misma línea dos veces.
    */
-  async createPedidoLinea(input: CreatePedidoLineaInput): Promise<void> {
-    await this.databaseService.execute(
+  /**
+   * Inserta una línea de pedido en oms.PedidoLinea de forma idempotente.
+   * Si la combinación (PedidoId, ShopifyLineItemId) ya existe no lanza error,
+   * simplemente omite el INSERT.
+   * @returns true si se insertó, false si ya existía.
+   */
+  async createPedidoLinea(input: CreatePedidoLineaInput): Promise<boolean> {
+    const result = await this.databaseService.execute<sql.IResult<{ inserted: number }>>(
       (pool) =>
         pool
           .request()
@@ -163,16 +169,28 @@ export class ShopifyOrdersRepository {
           .input('cantidad', sql.Int, input.cantidad)
           .input('precioUnitario', sql.Decimal(18, 2), input.precioUnitario)
           .input('total', sql.Decimal(18, 2), input.total)
-          .query(`
-            INSERT INTO [oms].[PedidoLinea]
-              ([PedidoId], [ShopifyLineItemId], [ShopifyVariantId], [ShopifyProductId],
-               [VarianteId], [SKU], [Nombre], [Cantidad], [PrecioUnitario], [Total])
-            VALUES
-              (@pedidoId, @shopifyLineItemId, @shopifyVariantId, @shopifyProductId,
-               @varianteId, @sku, @nombre, @cantidad, @precioUnitario, @total);
+          .query<{ inserted: number }>(`
+            IF NOT EXISTS (
+              SELECT 1 FROM [oms].[PedidoLinea]
+              WHERE [PedidoId]          = @pedidoId
+                AND [ShopifyLineItemId] = @shopifyLineItemId
+            )
+            BEGIN
+              INSERT INTO [oms].[PedidoLinea]
+                ([PedidoId], [ShopifyLineItemId], [ShopifyVariantId], [ShopifyProductId],
+                 [VarianteId], [SKU], [Nombre], [Cantidad], [PrecioUnitario], [Total])
+              VALUES
+                (@pedidoId, @shopifyLineItemId, @shopifyVariantId, @shopifyProductId,
+                 @varianteId, @sku, @nombre, @cantidad, @precioUnitario, @total);
+              SELECT 1 AS [inserted];
+            END
+            ELSE
+              SELECT 0 AS [inserted];
           `),
       'shopifyOrders.createPedidoLinea',
     );
+
+    return (result.recordset[0]?.inserted ?? 0) === 1;
   }
 
   // ----------------------------------------------------------

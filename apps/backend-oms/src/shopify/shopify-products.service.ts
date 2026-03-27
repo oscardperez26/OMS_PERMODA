@@ -593,15 +593,21 @@ export class ShopifyProductsService {
       );
     }
 
-    const locationId =
+    const rawLocationId =
       integracion.config.inventory?.locationId ??
       this.configService.get<string>('SHOPIFY_LOCATION_ID');
 
-    if (!locationId) {
+    if (!rawLocationId) {
       throw new ConflictException(
         'No se encontró locationId — configura inventory.locationId en ConfigJson o la variable SHOPIFY_LOCATION_ID',
       );
     }
+
+    // Shopify GraphQL requiere GID completo. Si el config almacena solo el número
+    // (ej: "89877512421") lo normalizamos aquí para no depender del formato del config.
+    const locationId = rawLocationId.startsWith('gid://')
+      ? rawLocationId
+      : `gid://shopify/Location/${rawLocationId}`;
 
     const variantMappings = await this.mappingRepo.findVariantMappings(
       integracion.integracionSalienteId,

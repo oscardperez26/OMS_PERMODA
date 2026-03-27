@@ -13,6 +13,7 @@ export type ShopifyOrderWebhookResult = {
   pedidoId: number;
   shopifyOrderId: string;
   lineasCreadas: number;
+  lineasFallidas: number;
   stockReservado: number;
   skipped?: boolean;
 };
@@ -60,70 +61,69 @@ export class ShopifyOrdersService {
     }
     const { integracionSalienteId } = integracion;
 
-    // 2. Idempotencia
+    // 2. Idempotencia a nivel de Pedido
     const existing = await this.shopifyOrdersRepo.findPedidoByShopifyOrderId(
       integracionSalienteId,
       shopifyOrderId,
     );
+
+    let pedidoId: number;
+
     if (existing) {
+      // El pedido ya existe: continuar al loop de líneas para insertar las faltantes.
+      // El INSERT idempotente en createPedidoLinea evita duplicados.
       this.logger.log(
-        `Pedido Shopify ${shopifyOrderId} ya procesado → PedidoId=${existing.pedidoId}`,
+        `Pedido Shopify ${shopifyOrderId} ya existe (PedidoId=${existing.pedidoId}), procesando líneas faltantes`,
       );
-      return {
-        ok: true,
-        pedidoId: existing.pedidoId,
-        shopifyOrderId,
-        lineasCreadas: 0,
-        stockReservado: 0,
-        skipped: true,
-      };
+      pedidoId = existing.pedidoId;
+    } else {
+      // 3. Resolver contexto de pedido (FKs) — solo para pedidos nuevos
+      const monedaCodigo = payload.currency ?? 'COP';
+      const ctx = await this.shopifyOrdersRepo.resolveOrderContext(empresaId, monedaCodigo);
+
+      // 4. Crear oms.Pedido
+      const clienteNombre = this.buildClienteNombre(payload);
+      const costoEnvio = parseFloat(
+        payload.total_shipping_price_set?.shop_money?.amount ?? '0',
+      );
+
+      const pedidoResult = await this.ordersRepo.createPedido({
+        empresaId,
+        empresaClienteId: null,
+        integracionId: integracionSalienteId,
+        canalVentaId: ctx.canalVentaId,
+        tiendaOrigenId: null,
+        monedaId: ctx.monedaId,
+        numeroPedido: `#${payload.order_number}`,
+        numeroExterno: shopifyOrderId,
+        estadoId: ctx.estadoId,
+        clienteNombre,
+        clienteDocumento: null,
+        clienteEmail: payload.email ?? payload.customer?.email ?? null,
+        clienteTelefono:
+          payload.shipping_address?.phone ?? payload.customer?.phone ?? null,
+        shippingPaisId: null,
+        shippingCiudadId: null,
+        shippingDireccion: payload.shipping_address?.address1 ?? null,
+        shippingBarrio: payload.shipping_address?.address2 ?? null,
+        shippingZip: payload.shipping_address?.zip ?? null,
+        subtotal: parseFloat(payload.subtotal_price),
+        descuento: parseFloat(payload.total_discounts),
+        impuestos: parseFloat(payload.total_tax),
+        costoEnvio,
+        total: parseFloat(payload.total_price),
+        pasarelaPagoId: null,
+        pagoReferencia: null,
+        pagoEstadoId: null,
+        createdAt: new Date(),
+      });
+
+      pedidoId = pedidoResult.pedidoId;
     }
-
-    // 3. Resolver contexto de pedido (FKs)
-    const monedaCodigo = payload.currency ?? 'COP';
-    const ctx = await this.shopifyOrdersRepo.resolveOrderContext(empresaId, monedaCodigo);
-
-    // 4. Crear oms.Pedido
-    const clienteNombre = this.buildClienteNombre(payload);
-    const costoEnvio = parseFloat(
-      payload.total_shipping_price_set?.shop_money?.amount ?? '0',
-    );
-
-    const pedidoResult = await this.ordersRepo.createPedido({
-      empresaId,
-      empresaClienteId: null,
-      integracionId: integracionSalienteId,
-      canalVentaId: ctx.canalVentaId,
-      tiendaOrigenId: null,
-      monedaId: ctx.monedaId,
-      numeroPedido: `#${payload.order_number}`,
-      numeroExterno: shopifyOrderId,
-      estadoId: ctx.estadoId,
-      clienteNombre,
-      clienteDocumento: null,
-      clienteEmail: payload.email ?? payload.customer?.email ?? null,
-      clienteTelefono:
-        payload.shipping_address?.phone ?? payload.customer?.phone ?? null,
-      shippingPaisId: null,
-      shippingCiudadId: null,
-      shippingDireccion: payload.shipping_address?.address1 ?? null,
-      shippingBarrio: payload.shipping_address?.address2 ?? null,
-      shippingZip: payload.shipping_address?.zip ?? null,
-      subtotal: parseFloat(payload.subtotal_price),
-      descuento: parseFloat(payload.total_discounts),
-      impuestos: parseFloat(payload.total_tax),
-      costoEnvio,
-      total: parseFloat(payload.total_price),
-      pasarelaPagoId: null,
-      pagoReferencia: null,
-      pagoEstadoId: null,
-      createdAt: new Date(),
-    });
-
-    const pedidoId = pedidoResult.pedidoId;
 
     // 5. Insertar líneas + reservar stock
     let lineasCreadas = 0;
+    let lineasFallidas = 0;
     let stockReservado = 0;
 
     for (const item of payload.line_items) {
@@ -150,37 +150,40 @@ export class ShopifyOrdersService {
         const precioUnitario = parseFloat(item.price);
         const total = precioUnitario * item.quantity;
 
-        await this.shopifyOrdersRepo.createPedidoLinea({
+        const inserted = await this.shopifyOrdersRepo.createPedidoLinea({
           pedidoId,
           shopifyLineItemId,
           shopifyVariantId,
           shopifyProductId,
           varianteId,
           sku: item.sku,
-          nombre: item.name || item.title,
+          nombre: item.name || item.title || `Item ${shopifyLineItemId}`,
           cantidad: item.quantity,
           precioUnitario,
           total,
         });
-        lineasCreadas++;
 
-        // Reservar stock solo si hay VarianteId
-        if (varianteId) {
-          const reserved = await this.shopifyOrdersRepo.reserveStock(
-            varianteId,
-            item.quantity,
-          );
-          if (reserved) {
-            stockReservado++;
-          } else {
-            this.logger.warn(
-              `Pedido ${shopifyOrderId} → VarianteId=${varianteId}: ` +
-                `sin registro en oms.Inventario, stock no reservado`,
+        if (inserted) {
+          lineasCreadas++;
+          // Reservar stock solo si la línea es nueva y tiene VarianteId
+          if (varianteId) {
+            const reserved = await this.shopifyOrdersRepo.reserveStock(
+              varianteId,
+              item.quantity,
             );
+            if (reserved) {
+              stockReservado++;
+            } else {
+              this.logger.warn(
+                `Pedido ${shopifyOrderId} → VarianteId=${varianteId}: ` +
+                  `sin registro en oms.Inventario, stock no reservado`,
+              );
+            }
           }
         }
       } catch (err) {
         // Un fallo en una línea no detiene el procesamiento del resto
+        lineasFallidas++;
         this.logger.error(
           `Pedido ${shopifyOrderId} → LineItem ${shopifyLineItemId}: error al insertar — ${String(err)}`,
         );
@@ -189,7 +192,7 @@ export class ShopifyOrdersService {
 
     this.logger.log(
       `Pedido Shopify ${shopifyOrderId} procesado → PedidoId=${pedidoId}, ` +
-        `lineas=${lineasCreadas}, stockReservado=${stockReservado}`,
+        `lineas=${lineasCreadas}, fallidas=${lineasFallidas}, stockReservado=${stockReservado}`,
     );
 
     return {
@@ -197,6 +200,7 @@ export class ShopifyOrdersService {
       pedidoId,
       shopifyOrderId,
       lineasCreadas,
+      lineasFallidas,
       stockReservado,
     };
   }

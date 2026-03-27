@@ -92,16 +92,24 @@ export class ZiPersistService {
       for (const combinacion of producto.combinaciones) {
         const tallaAtributo = combinacion.atributos.find((a) => a.id === 'talla');
         const colorAtributo = combinacion.atributos.find((a) => a.id === 'color');
+        const talla = tallaAtributo?.valor ?? '';
+        const color = colorAtributo?.valor ?? '';
+        // SKU = SKUBase-talla-color (ej: "105101671259-25-155")
+        // Si no hay talla/color usa solo el SKUBase para evitar SKUs con guiones vacíos.
+        const sku =
+          talla && color
+            ? `${mapped.producto.SKUBase}-${talla}-${color}`
+            : mapped.producto.SKUBase;
         await this.repository.upsertVariante({
           empresaId: this.empresaId,
           productoId: productoUpsert.productoId,
-          sku: combinacion.id,
+          sku,
           ean: combinacion.ean13,
           activo: mapped.producto.Activo,
           origenDatos: 'ZI',
           ziSyncedAt: new Date(),
-          externalTallaId: tallaAtributo?.valor ?? '',
-          externalColorId: colorAtributo?.valor ?? '',
+          externalTallaId: talla,
+          externalColorId: color,
         });
         variantesUpserted += 1;
       }
