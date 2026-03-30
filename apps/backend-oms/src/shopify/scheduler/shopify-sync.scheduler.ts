@@ -67,6 +67,7 @@ export class ShopifySchedulerService {
       return;
     }
 
+    this.running = true;
     try {
       const result = await this.productsService.syncAllInventory(this.getEmpresaId());
       this.logger.log(
@@ -75,6 +76,8 @@ export class ShopifySchedulerService {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Cron Shopify syncInventario fallo: ${message}`);
+    } finally {
+      this.running = false;
     }
   }
 

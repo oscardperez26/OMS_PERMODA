@@ -67,6 +67,7 @@ export class ZiPersistService {
 
       const productoUpsert = await this.repository.upsertProducto({
         empresaId: this.empresaId,
+        externalProductId: productoZiId,
         skuBase: mapped.producto.SKUBase,
         nombre: mapped.producto.Nombre,
         marca: mapped.producto.Marca,
@@ -90,11 +91,17 @@ export class ZiPersistService {
       });
 
       for (const combinacion of producto.combinaciones) {
-        const tallaAtributo = combinacion.atributos.find((a) => a.id === 'talla');
-        const colorAtributo = combinacion.atributos.find((a) => a.id === 'color');
-        const talla = tallaAtributo?.valor ?? '';
-        const color = colorAtributo?.valor ?? '';
-        // SKU = SKUBase-talla-color (ej: "105101671259-25-155")
+        // Extraer id_talla e id_color de combinacion.id ("{productoZiId}-{id_talla}-{id_color}")
+        // para garantizar consistencia con las APIs de precios y stock de ZI,
+        // que también usan estos IDs numéricos (no la etiqueta "XS" de atributo.valor).
+        const firstDash = combinacion.id.indexOf('-');
+        const lastDash = combinacion.id.lastIndexOf('-');
+        const talla =
+          firstDash !== -1 && lastDash > firstDash
+            ? combinacion.id.slice(firstDash + 1, lastDash)
+            : '';
+        const color = lastDash !== -1 ? combinacion.id.slice(lastDash + 1) : '';
+        // SKU = SKUBase-id_talla-id_color (ej: "105101671259-25-155", "105105691014-13-958")
         // Si no hay talla/color usa solo el SKUBase para evitar SKUs con guiones vacíos.
         const sku =
           talla && color
@@ -392,6 +399,72 @@ export class ZiPersistService {
       stockActualizados,
       errores,
     };
+  }
+
+  /**
+   * Fuerza la sincronización de productos ZI → OMS para TODOS los productos
+   * del catálogo, independientemente de si sus hashes cambiaron.
+   * Procesa en batches paralelos para reducir el tiempo total.
+   * Uso principal: poblar ExternalProductId en productos que nunca se han
+   * re-sincronizado desde que se añadió esa columna.
+   */
+  async persistForceProductSync(concurrency = 5): Promise<{
+    total: number;
+    actualizados: number;
+    errores: number;
+  }> {
+    const change = await this.catalogoZiService.getChange();
+    let actualizados = 0;
+    let errores = 0;
+
+    for (let i = 0; i < change.length; i += concurrency) {
+      const batch = change.slice(i, i + concurrency);
+      await Promise.all(
+        batch.map(async (item) => {
+          try {
+            await this.persistProducto(item.id);
+            actualizados += 1;
+          } catch (err) {
+            errores += 1;
+            this.logger.warn(
+              `forceProductSync: error producto=${item.id}: ${String(err)}`,
+            );
+          }
+        }),
+      );
+    }
+
+    return { total: change.length, actualizados, errores };
+  }
+
+  /** Fuerza la sincronización de precios ZI → OMS para TODOS los productos. */
+  async persistForcePricesSync(concurrency = 5): Promise<{
+    total: number;
+    actualizados: number;
+    errores: number;
+  }> {
+    const change = await this.catalogoZiService.getChange();
+    let actualizados = 0;
+    let errores = 0;
+
+    for (let i = 0; i < change.length; i += concurrency) {
+      const batch = change.slice(i, i + concurrency);
+      await Promise.all(
+        batch.map(async (item) => {
+          try {
+            await this.persistPrecios(item.id);
+            actualizados += 1;
+          } catch (err) {
+            errores += 1;
+            this.logger.warn(
+              `forcePricesSync: error producto=${item.id}: ${String(err)}`,
+            );
+          }
+        }),
+      );
+    }
+
+    return { total: change.length, actualizados, errores };
   }
 
   private getBatchSize(): number {

@@ -119,6 +119,18 @@ export class CatalogoZiController {
     return { producto, precios, stock };
   }
 
+  @Post('sync/force-products')
+  @Permissions('config.manage')
+  forceProductSync() {
+    return this.persistService.persistForceProductSync();
+  }
+
+  @Post('sync/force-prices')
+  @Permissions('config.manage')
+  forcePricesSync() {
+    return this.persistService.persistForcePricesSync();
+  }
+
   @Post('sync/categorias')
   @Permissions('config.manage')
   syncCategorias() {

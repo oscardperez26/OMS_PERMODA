@@ -73,6 +73,7 @@ type UpsertCategoriaInput = {
 
 type UpsertProductoInput = {
   empresaId: number;
+  externalProductId: number;
   skuBase: string;
   nombre: string;
   marca: string;
@@ -326,6 +327,7 @@ export class ZiSyncRepository {
         pool
           .request()
           .input('EmpresaId', sql.Int, input.empresaId)
+          .input('ExternalProductId', sql.Int, input.externalProductId)
           .input('SKUBase', sql.NVarChar(120), input.skuBase)
           .input('Nombre', sql.NVarChar(255), input.nombre)
           .input('Marca', sql.NVarChar(120), input.marca || null)
@@ -352,6 +354,7 @@ export class ZiSyncRepository {
                 [CategoriaId] = @CategoriaId,
                 [OrigenDatos] = @OrigenDatos,
                 [ZiSyncedAt] = @ZiSyncedAt,
+                [ExternalProductId] = @ExternalProductId,
                 [UpdatedAt] = SYSUTCDATETIME()
             WHEN NOT MATCHED THEN
               INSERT
@@ -365,7 +368,8 @@ export class ZiSyncRepository {
                 [CreatedAt],
                 [UpdatedAt],
                 [OrigenDatos],
-                [ZiSyncedAt]
+                [ZiSyncedAt],
+                [ExternalProductId]
               )
               VALUES
               (
@@ -378,7 +382,8 @@ export class ZiSyncRepository {
                 SYSUTCDATETIME(),
                 NULL,
                 @OrigenDatos,
-                @ZiSyncedAt
+                @ZiSyncedAt,
+                @ExternalProductId
               )
             OUTPUT
               $action AS [MergeAction],
@@ -845,7 +850,6 @@ export class ZiSyncRepository {
     externalTallaId: string,
     externalColorId: string,
   ): Promise<number | null> {
-    const skuZi = `${productoZiId}-${externalTallaId}-${externalColorId}`;
     const result = await this.databaseService.execute<
       sql.IResult<VarianteIdentityRow>
     >(
@@ -853,15 +857,22 @@ export class ZiSyncRepository {
         pool
           .request()
           .input('EmpresaId', sql.Int, empresaId)
-          .input('SkuZi', sql.NVarChar(120), skuZi)
+          .input('ExternalProductId', sql.Int, productoZiId)
+          .input('ExternalTallaId', sql.NVarChar(40), externalTallaId)
+          .input('ExternalColorId', sql.NVarChar(40), externalColorId)
           .query<VarianteIdentityRow>(`
             SET NOCOUNT ON;
-            SELECT TOP 1 [VarianteId]
-            FROM [oms].[ProductoVariante]
-            WHERE [EmpresaId] = @EmpresaId
-              AND [SKU] = @SkuZi
-              AND [OrigenDatos] = 'ZI'
-            ORDER BY [VarianteId] ASC;
+            SELECT TOP 1 pv.[VarianteId]
+            FROM [oms].[ProductoVariante] pv
+            INNER JOIN [oms].[Producto] p
+              ON p.[ProductoId] = pv.[ProductoId]
+             AND p.[EmpresaId]  = pv.[EmpresaId]
+            WHERE pv.[EmpresaId]       = @EmpresaId
+              AND pv.[ExternalTallaId] = @ExternalTallaId
+              AND pv.[ExternalColorId] = @ExternalColorId
+              AND pv.[OrigenDatos]     = 'ZI'
+              AND p.[ExternalProductId] = @ExternalProductId
+            ORDER BY pv.[VarianteId] ASC;
           `),
       'zi.resolverVarianteIdPorTallaColor',
     );
